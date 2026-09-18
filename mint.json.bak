@@ -1,0 +1,51 @@
+{
+  "name": "GragAPI",
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "i18n": {
+    "defaultLocale": "zh",
+    "locales": ["zh", "en"]
+  },
+  "topbarLinks": [
+    {
+      "name": "中文",
+      "url": "/index"
+    },
+    {
+      "name": "English",
+      "url": "/en/index"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "开始使用",
+      "pages": ["index", "introduction", "quickstart"]
+    },
+    {
+      "group": "API 参考",
+      "pages": [
+        "api-reference/introduction",
+        {
+          "group": "文本生成",
+          "pages": [
+            "api-reference/texts/openai/responses",
+            "api-reference/texts/openai/chat"
+          ]
+        }
+      ]
+    }
+  ],
+  "footerSocials": {
+    "twitter": "https://twitter.com/gragapi",
+    "github": "https://github.com/gragapi",
+    "discord": "https://discord.gg/gragapi"
+  }
+}

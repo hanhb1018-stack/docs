@@ -1,0 +1,352 @@
+---
+title: "Real-Person Asset Library API"
+---
+
+Complete ByteDance domestic and overseas real-person verification, LivenessFace asset management, and Seedance video calls through GragAPI.
+
+The real-person asset library stores images, videos, or audio that have been authorized and liveness-verified by the person themselves as trusted assets, which can then be submitted to Seedance via `asset://<AssetId>`.
+
+The "real-person verification" here means liveness detection and same-person comparison — not ID card, name, or police-database identity verification. Verification must be completed by the real person themselves on the returned H5 page.
+
+## 1. Endpoints and models
+
+All asset library requests use the same entry point:
+
+```http
+POST /volcark/?Action=<Action>&Version=2024-01-01
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+The `model` field in the request body is only used by GragAPI to select the domestic or overseas official channel and is not sent to the ByteDance upstream. We recommend using the same model and `ProjectName` throughout the entire verification and asset workflow.
+
+| Region                 | Recommended models                                                                                         | Notes                                          |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Domestic Volcano Ark  | `doubao-seedance-2-0`, `doubao-seedance-2-0-fast`, `doubao-seedance-2-0-mini`, `doubao-seedance-2-5`        | Uses the domestic official real-person channel |
+| Overseas BytePlus   | `dreamina-seedance-2-0`, `dreamina-seedance-2-0-fast`, `dreamina-seedance-2-0-mini`, `dreamina-seedance-2-5`  | Uses the overseas official real-person channel |
+
+Real-person assets are not automatically migrated or downgraded across domestic, overseas, or third-party channels. After creating a real-person Group/Asset, continue using the original model region and Project.
+
+## 2. Full workflow
+
+1. Call `CreateVisualValidateSession` to create a one-time verification session.
+2. Save the `BytedToken` in the response and have the real person open `H5Link` to complete liveness verification.
+3. After the H5 page redirects to `CallbackURL`, the server calls `GetVisualValidateResult`.
+4. Obtain `GroupId` from the successful result. This group's type is fixed to `LivenessFace`.
+5. Use `CreateAsset` to add images, videos, or audio to the group.
+6. Poll with `GetAsset` until the asset becomes `Active` or `Failed`.
+7. Only `Active` assets can be used for Seedance via `asset://<AssetId>`.
+
+The H5 callback is only a workflow notification. Even if `resultCode=10000`, the server must still call `GetVisualValidateResult` to obtain the trusted `GroupId`.
+
+When a domestic request hits the ZLHub channel with real-person capability enabled, `H5Link` is a GragAPI-hosted verification page: it hosts the vendor H5, and after the trusted Group is bound successfully it redirects to `CallbackURL` with the same ByteDance parameters. The caller's flow does not need to distinguish channels.
+
+## 3. Create a real-person verification session
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "CallbackURL": "https://api.gragapi.com/real-person/callback",
+    "ProjectName": "default"
+  }'
+```
+
+Typical response:
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "CreateVisualValidateSession",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "BytedToken": "one-time-token",
+    "H5Link": "https://example.byte-provider.com/verify/...",
+    "CallbackURL": "https://api.gragapi.com/real-person/callback"
+  }
+}
+```
+
+| Field          | Notes                                                                      |
+| -------------- | -------------------------------------------------------------------------- |
+| `CallbackURL` | Required; must be a public HTTPS URL.                                       |
+| `ProjectName` | Optional, defaults to `default`; must remain consistent in later requests.  |
+| `BytedToken`  | One-time verification credential, usually valid for 30 minutes; do not write into logs or databases. |
+| `H5Link`      | One-time real-person verification link; only hand it to the person granted this authorization. |
+
+If you do not have your own callback page, you can use the GragAPI-provided `https://api.gragapi.com/real-person/callback`. This page only indicates that the H5 operation has finished; it does not store or display callback parameters and does not represent successful verification. You must still call `GetVisualValidateResult` with the original `BytedToken` afterward.
+
+To specify the H5 language, append `lng=zh`, `lng=en`, or `lng=zh-Hant` after `H5Link`.
+
+## 4. Query the verification result
+
+After the real person completes the H5 flow, query with the original `BytedToken`:
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=GetVisualValidateResult&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "BytedToken": "one-time-token",
+    "ProjectName": "default"
+  }'
+```
+
+Successful result:
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetVisualValidateResult",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "GroupId": "group-real-person-example"
+  }
+}
+```
+
+`GroupId` is bound by GragAPI to the current API user, official channel, region, and Project. Real-person Groups cannot be created via `CreateAssetGroup`, nor used as the asset group for other users or other regions.
+
+## 5. Create a real-person asset
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=CreateAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "GroupId": "group-real-person-example",
+    "URL": "https://media.example.com/authorized-person.jpg",
+    "AssetType": "Image",
+    "Name": "main-portrait",
+    "ProjectName": "default"
+  }'
+```
+
+A successful response returns only the asset ID:
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "CreateAsset",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "Id": "asset-real-person-example"
+  }
+}
+```
+
+| Field          | Required | Notes                                                        |
+| -------------- | -------- | ------------------------------------------------------------ |
+| `GroupId`     | Yes      | The Group ID returned by the real-person verification result. |
+| `URL`         | Yes      | A public URL downloadable by the ByteDance upstream; Base64 is not supported. |
+| `AssetType`   | Yes      | `Image`, `Video`, or `Audio`.                                |
+| `Name`        | No       | Management name, up to 64 characters.                        |
+| `ProjectName` | No       | Defaults to `default`; must match the Group.                 |
+
+Each real-person Group can correspond to only one real person. Assets containing multiple people, differing from the verified person, or failing same-person comparison will enter `Failed`.
+
+Common media limits:
+
+| Type   | Formats                              | Size and duration                              |
+| ------ | ------------------------------------ | ---------------------------------------------- |
+| Image  | jpeg, png, webp, bmp, tiff, gif, heic/heif | Under 30 MB, 300–6000 px in width/height       |
+| Video  | mp4, mov                             | 2–30 s, up to 200 MB, 24–60 FPS                |
+| Audio  | wav, mp3                             | 2–30 s, up to 15 MB                            |
+
+`Moderation.Strategy=Skip` is not available.
+
+## 6. Query asset status
+
+`CreateAsset` is asynchronous. Query using the official `Id` field until it reaches a terminal state:
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=GetAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "Id": "asset-real-person-example",
+    "ProjectName": "default"
+  }'
+```
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetAsset",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "Id": "asset-real-person-example",
+    "GroupId": "group-real-person-example",
+    "AssetType": "Image",
+    "Status": "Active",
+    "Name": "main-portrait",
+    "ProjectName": "default"
+  }
+}
+```
+
+| `Status`     | Usable for inference | Suggested handling                                      |
+| ------------ | -------------------- | ------------------------------------------------------- |
+| `Processing` | No                   | Poll `GetAsset` with bounded retries.                   |
+| `Active`     | Yes                  | Use `asset://<Id>`.                                     |
+| `Failed`     | No                   | Stop polling, fix the asset based on the error reason, then recreate. |
+
+The asset URL in the query response is a short-lived address; do not store it or use it in Seedance requests.
+
+## 7. List, update, and delete
+
+The following Actions are supported:
+
+| Action              | Key fields                                                        | Notes                                              |
+| ------------------- | ----------------------------------------------------------------- | -------------------------------------------------- |
+| `ListAssetGroups`  | `Filter.GroupType=LivenessFace`, pagination, `ProjectName`        | Returns only the real-person Groups bound to the current user. |
+| `ListAssets`       | `Filter.GroupType=LivenessFace`, `GroupIds`, `Statuses`, pagination | Returns only the real-person assets bound to the current user. |
+| `GetAssetGroup`    | `Id`, `ProjectName`                                               | Query a real-person Group.                         |
+| `UpdateAsset`      | `Id`, `Name`, `ProjectName`                                       | Modify the asset name.                             |
+| `UpdateAssetGroup` | `Id`, `Name`, `Description`, `ProjectName`                        | Modify the Group name and description.             |
+| `DeleteAsset`      | `Id`, `ProjectName`                                               | Delete the asset; irreversible.                    |
+| `DeleteAssetGroup` | `Id`, `ProjectName`                                               | Delete the Group and its assets; irreversible.     |
+
+List example:
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=ListAssets&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "ProjectName": "default",
+    "PageNumber": 1,
+    "PageSize": 20,
+    "Filter": {
+      "GroupType": "LivenessFace",
+      "GroupIds": ["group-real-person-example"],
+      "Statuses": ["Active"]
+    }
+  }'
+```
+
+Delete example:
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=DeleteAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "Id": "asset-real-person-example",
+    "ProjectName": "default"
+  }'
+```
+
+After a delete request begins, the asset immediately stops accepting new `asset://` inference. If the upstream deletion fails, retry with the same official `Id`. Delete only accepts the `Id` field — not `ID`, `AssetId`, `AssetID`, or `asset_id`.
+
+## 8. Use real-person assets to generate video
+
+Only `Active` assets can be used for video. Native Seedance task example:
+
+```bash
+curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "content": [
+      {
+        "type": "text",
+        "text": "以 Image 1 中的人物为主角，生成一段自然光下的电影感短片。"
+      },
+      {
+        "type": "image_url",
+        "role": "reference_image",
+        "image_url": {
+          "url": "asset://asset-real-person-example"
+        }
+      }
+    ],
+    "resolution": "720p",
+    "ratio": "16:9",
+    "duration": 5,
+    "generate_audio": true
+  }'
+```
+
+For overseas calls, switch the model to the corresponding `dreamina-*` and continue using the Asset created by the overseas verification flow. Do not mix IDs between domestic and overseas Assets.
+
+The OpenAI-style `/v1/videos` endpoint also accepts `asset://` reference assets:
+
+```json
+{
+  "model": "doubao-seedance-2-5",
+  "prompt": "保持参考人物身份和主要外观，生成自然走动镜头。",
+  "input_reference": ["asset://asset-real-person-example"],
+  "seconds": 5,
+  "resolution": "720p",
+  "ratio": "16:9"
+}
+```
+
+## 9. Error responses
+
+Errors keep the ByteDance `ResponseMetadata.Error` structure:
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetAsset",
+    "Version": "2024-01-01",
+    "Service": "ark",
+    "Error": {
+      "Code": "ResourceNotFound.Asset",
+      "Message": "asset not found"
+    }
+  }
+}
+```
+
+Common handling:
+
+| Error                                             | Meaning                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------ |
+| `InvalidParameter.Version`                        | Real-person endpoints must use `Version=2024-01-01`.               |
+| `MissingParameter.Id`                             | Get/Update/Delete is missing the official `Id` field.              |
+| `channel_not_available`                           | The current Token has no available official channel for the corresponding region. |
+| `asset_not_found` / `ResourceNotFound.Asset`      | The asset does not exist or does not belong to the current user.   |
+| `asset_not_active`                                | The asset is not yet `Active`, has failed, or has been withdrawn.  |
+| `asset_region_mismatch`                           | The asset region does not match the requested model region.        |
+
+Upstream errors for real-person assets use neutral error messages to avoid echoing one-time credentials or temporary media URLs into responses and logs.
+
+## 10. Billing and compliance
+
+* Real-person verification and asset Create/Get/List/Update/Delete currently do not deduct the GragAPI model balance.
+* When generating video with a real-person `asset://`, billing still occurs once based on the actual Seedance tokens returned by the successful task.
+* Real-person verification is currently marked by the official channel as time-limited free; the future price and end time are not disclosed. Do not treat this status as a long-term free commitment.
+* The caller must obtain explicit, proactive, and revocable separate consent from the real person before verification, and provide deletion and withdrawal options.
+* Do not store face content, full `H5Link`, `BytedToken`, AK/SK, Authorization, or temporary asset URLs in logs, issues, support tickets, or databases.
+* The availability of the real-person H5, Group, and Asset depends on the corresponding domestic or overseas official channel entitlement. If the API returns permission or quota errors, contact the GragAPI administrator to confirm the activation status.
+
+For model parameters and video billing details, see [Seedance 2.5](/en/api-reference/videos/seedance-2-5), [Doubao Seedance 2.0](/en/api-reference/videos/seedance2), and [BytePlus Dreamina Seedance 2.0](/en/api-reference/videos/byteplus-seedance2).

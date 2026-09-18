@@ -1,0 +1,50 @@
+---
+title: "Responses"
+---
+
+A unified multimodal response interface supporting JSON mode, tool sequences, and mixed text-plus-image input.
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+`POST /v1/responses` is OpenAI's next-generation unified interface. It can mix text, images, and other input types in a single request and return results in a structured format.
+
+## Request example
+
+```bash
+curl -X POST "$BASE_URL/v1/responses" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4.1",
+    "input": [
+      {
+        "role": "user",
+        "content": [
+          {"type": "text", "text": "Summarize the key points of the attachment"}
+        ]
+      }
+    ],
+    "response_format": {"type": "json_schema"}
+  }'
+```
+
+## Streaming and compatibility
+
+- Streaming output: set `stream: true` to receive server-sent events (SSE) increments. When you need to stay compatible with the Chat Completions streaming format, you can convert on the SSE client side (GragAPI has built-in backward-compatibility handling).
+- Tool events: tool calls appear in the stream as `response.output_item.added`; the stream closes with aggregated `usage` token statistics.
+
+## Tips and notes
+
+- The `input` field can be a string or a composite array; an array is recommended so you can mix text, images, file references, and more.
+- Conversation history can be continued by adding multiple `role`/`content` segments to `input`.
+- `response_format` supports `json_schema`, `text`, and other options. Combined with GragAPI's flow-control strategy, it enables structured automation.
+- For tool calls, declare optional functions in `tools`; results appear in the `tool_calls` field of `output`.
+- Billing note: when tools such as Web Search Preview, Code Interpreter, or File Search are enabled, GragAPI attaches extra billing metadata in `usage` for reconciliation.

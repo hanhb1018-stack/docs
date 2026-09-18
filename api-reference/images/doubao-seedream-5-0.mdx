@@ -1,0 +1,173 @@
+---
+title: "doubao-seedream-5.0"
+---
+
+通过 OpenAI 兼容接口调用 Doubao Seedream 5.0 Pro 图片生成模型，支持文生图、图生图。
+
+所有请求都经由 GragAPI 转发到火山方舟，不需要自行签名，只需在 Header 中携带 GragAPI API Key。
+
+```bash
+export BASE_URL="https://api.gragapi.com/v1"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+统一使用：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 模型信息
+
+- **模型名称**：`doubao-seedream-5.0-pro`
+- **版本映射**：`doubao-seedream-5-0-pro-260628`
+- **能力**：文生图、图生图；支持 `response_format="url"` 或 `"b64_json"`
+- **分辨率**：`1K`、`1.5K`、`2K`，或精确尺寸（如 `2048x2048`）；不要套用 Seedream 4.0 的 `4K` 档位
+- **参数限制**：普通单图请求省略 `n`；不支持 `n>1`、`stream=true`、`tools`、`sequential_image_generation` 和 `sequential_image_generation_options`
+
+## 接口说明
+
+### 端点
+
+```http
+POST /v1/images/generations
+```
+
+### 请求头
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+控制台侧需要将 `doubao-seedream-*` 模型名绑定到 Doubao / VolcArk 渠道（`ChannelTypeVolcArk`），即可通过统一的 OpenAI 风格接口访问。
+
+## 请求参数
+
+### 基础参数（OpenAI 兼容）
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `model` | string | ✅ | 固定 `doubao-seedream-5.0-pro` |
+| `prompt` | string | ✅ | 图片描述文本，建议不超过 300 汉字或 600 英文单词 |
+| `size` | string | ❌ | `1K` / `1.5K` / `2K`，或精确尺寸如 `2048x2048` |
+| `n` | integer | ❌ | 单图请求省略此字段；不支持 `n>1` |
+| `response_format` | string | ❌ | `url`（默认）或 `b64_json` |
+| `quality` | string | ❌ | 图片质量，例如 `high` / `standard` |
+| `style` | string | ❌ | 图片风格，例如 `vivid` / `natural` |
+
+### 火山方舟专用参数
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `image` | string / string[] | 参考图片 URL 或完整 Data URI，不接受裸 Base64；单张可传字符串或单元素数组 |
+| `watermark` | boolean | 是否添加水印，默认 `true` |
+
+### Base64 参考图格式
+
+`image` 中的每张参考图必须是公网可访问的图片 URL，或以下完整 Data URI：
+
+- JPEG：`data:image/jpeg;base64,<完整Base64>`
+- PNG：`data:image/png;base64,<完整Base64>`
+
+MIME 类型必须与图片实际格式一致，逗号后紧接完整 Base64，不添加空格或换行。只传 `/9j/...` 或 `iVBOR...` 这样的裸 Base64，会被当作 URL 解析，可能返回 HTTP 400、`InvalidParameter`。`response_format="b64_json"` 只控制输出格式，不会为输入的 `image` 自动补前缀。
+
+## 响应格式
+
+### 非流式响应
+
+```json
+{
+  "created": 1589478378,
+  "data": [
+    {
+      "url": "https://...",
+      "size": "2048x2048"
+    }
+  ],
+  "usage": {
+    "output_tokens": 16384,
+    "total_tokens": 16384
+  }
+}
+```
+
+### Base64 响应（`response_format=b64_json`）
+
+```json
+{
+  "created": 1589478378,
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
+    }
+  ]
+}
+```
+
+`b64_json` 是不带 Data URI 前缀的裸 Base64。若要将生成结果再次作为 `image` 输入，需要补上 `data:image/jpeg;base64,` 或 `data:image/png;base64,` 前缀。
+
+## 使用示例
+
+### 文生图
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "doubao-seedream-5.0-pro",
+  "prompt": "一只可爱的熊猫在竹林里吃竹子，阳光透过树叶洒下斑驳的光影",
+  "size": "2048x2048",
+  "response_format": "url"
+}'
+```
+
+### 图生图（Base64 Data URI）
+
+将 `<完整JPEG图片Base64>` 替换为 JPEG 图片的完整 Base64，保留前面的 `data:image/jpeg;base64,`。PNG 图片改用 `data:image/png;base64,`。
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+  "model": "doubao-seedream-5.0-pro",
+  "prompt": "将这张图片转换为水彩画风格",
+  "image": [
+    "data:image/jpeg;base64,<完整JPEG图片Base64>"
+  ],
+  "size": "2048x2048",
+  "response_format": "b64_json"
+}'
+```
+
+成功后从 `data[0].b64_json` 读取并解码图片。单图也可将 `image` 写成一个完整 Data URI 字符串。
+
+## 常见问题
+
+### 如何使用 Seedream 5.0 Pro？
+
+用于文生图和图生图；使用上面的专用示例，不要套用组图或流式参数（`sequential_image_generation`、`stream` 等）。
+
+### 图片 URL 有效期多久？
+
+生成的图片 URL 通常在 24 小时内有效，请在有效期内下载并保存到自己的存储。
+
+### 如何去除水印？
+
+在请求体中设置 `"watermark": false` 即可关闭模型水印（前提是当前模型与账号配置允许关闭）。
+
+### 图生图时图片传不上去怎么办？
+
+- 确认 `image` 字段使用公网可访问的 HTTPS URL，或完整 Data URI（如 `data:image/jpeg;base64,<完整Base64>`）；
+- 出现 `InvalidParameter` / `invalid url specified` 时，检查是否误传了裸 Base64，并补上与实际格式匹配的前缀；
+- `response_format="b64_json"` 是输出设置，不能代替输入图片所需的 Data URI 前缀；
+- 图片较大时建议预先压缩，避免超过上游大小限制。
+
+## 计费说明
+
+- 按成功生成的图片张数计费；
+- 生成失败的图片通常不计费（以上游账单为准）；
+- 具体价格请在后台「模型价格管理」中查看 Doubao Seedream 相关条目。

@@ -1,0 +1,476 @@
+---
+title: "Doubao Seedance 2.0"
+---
+
+通过 GragAPI 调用国内版 Doubao Seedance 2.0 原生任务接口和素材库工作流。
+
+本页只覆盖 **国内版 Doubao Seedance 2.0**。海外 BytePlus Dreamina Seedance 2.0 使用独立模型、独立价格和独立素材能力，见 [BytePlus Dreamina Seedance 2.0](/api-reference/videos/byteplus-seedance2)。
+
+需要使用经过本人认证的真人人像、视频或音频时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
+
+GragAPI 对外提供火山方舟原生任务接口兼容。任务创建、查询和素材库请求字段尽可能保持官方原生形态；任务列表、取消/删除、素材库访问会限制在当前 GragAPI 租户可见范围内。
+
+## 1. 前置条件
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+统一请求头：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+调用方只需要使用 GragAPI 发放的 API Token。火山方舟 API Key、AK/SK、ProjectName 和 Endpoint 由平台统一托管。
+
+## 2. 模型
+
+| 对外模型                       | 官方版本别名                            | 说明                                                |
+| -------------------------- | --------------------------------- | ------------------------------------------------- |
+| `doubao-seedance-2-0`      | `doubao-seedance-2-0-260128`      | 国内标准模型，支持 `480p` / `720p` / `1080p` / `4k`        |
+| `doubao-seedance-2-0-fast` | `doubao-seedance-2-0-fast-260128` | 国内快速模型，仅支持 `480p` / `720p`，不支持 `1080p` / `4k`     |
+| `doubao-seedance-2-0-mini` | `doubao-seedance-2-0-mini-260615` | 国内 Mini 模型，仅支持 `480p` / `720p`，不支持 `1080p` / `4k` |
+
+请求中的 `model` 建议使用左侧稳定模型名。平台也接受右侧官方版本别名，并按标准模型、fast 模型或 mini 模型归一计费。国内 mini 也兼容官方点号拼写 `doubao-seedance-2.0-mini`。
+
+`seedance-2-0`、`seedance-2-0-260128`、`seedance-2-0-fast`、`seedance-2-0-fast-260128`、`seedance-2-0-mini`、`dreamina-seedance-2.0-mini` 不作为对外 API `model` 参数兼容。国内版也不提供 `filter-off` 派生模型名。
+
+查询和列表响应中的 `model` 回显创建请求中的 GragAPI 对外模型，避免向调用方暴露服务配置、计费明细或实现细节。
+
+如需锁定官方具体模型版本，请联系平台配置官方版本映射，例如 `doubao-seedance-2-0` -> `doubao-seedance-2-0-260128`。
+
+### 2.1 4K 能力
+
+国内标准模型支持 4K。请求体中 `resolution` 使用 `4k`；国内 fast 和 mini 模型不支持 `1080p` 或 `4k`，需要降级到 `480p` / `720p`。
+
+4K 输出为 **10-bit / H.265**。按 `ratio + resolution=4k` 推导的尺寸如下：
+
+| ratio  | 4K size     |
+| ------ | ----------- |
+| `16:9` | `3840x2160` |
+| `9:16` | `2160x3840` |
+| `1:1`  | `2880x2880` |
+| `4:3`  | `3326x2494` |
+| `3:4`  | `2494x3326` |
+| `21:9` | `4398x1886` |
+
+## 3. 国内价格
+
+国内版默认价按官方人民币 tokens 单价配置，并按平台美元汇率换算为 GragAPI Rate。
+
+| SKU                                 | 官方价格         |
+| ----------------------------------- | ------------ |
+| `doubao-seedance-2-0-480p-novideo`  | ¥46/M tokens |
+| `doubao-seedance-2-0-480p-video`    | ¥28/M tokens |
+| `doubao-seedance-2-0-720p-novideo`  | ¥46/M tokens |
+| `doubao-seedance-2-0-720p-video`    | ¥28/M tokens |
+| `doubao-seedance-2-0-1080p-novideo` | ¥51/M tokens |
+| `doubao-seedance-2-0-1080p-video`   | ¥31/M tokens |
+| `doubao-seedance-2-0-4k-novideo`    | ¥26/M tokens |
+| `doubao-seedance-2-0-4k-video`      | ¥16/M tokens |
+| `doubao-seedance-2-0-fast-novideo`  | ¥37/M tokens |
+| `doubao-seedance-2-0-fast-video`    | ¥22/M tokens |
+| `doubao-seedance-2-0-mini-novideo`  | ¥23/M tokens |
+| `doubao-seedance-2-0-mini-video`    | ¥14/M tokens |
+
+`video` 表示请求包含视频参考输入；`novideo` 表示不包含视频参考输入。平台只对成功出片任务结算，失败任务不会按成功出片计费。
+
+## 4. 任务接口
+
+| 功能       | 路径                                                            |
+| -------- | ------------------------------------------------------------- |
+| 创建任务     | `POST /volcark/api/v3/contents/generations/tasks`             |
+| 查询任务     | `GET /volcark/api/v3/contents/generations/tasks/{task_id}`    |
+| 查询租户任务列表 | `GET /volcark/api/v3/contents/generations/tasks`              |
+| 取消或删除任务  | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
+
+国内版主接入口径是火山方舟原生 task API。
+
+## 5. 创建任务
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "一艘纸船漂浮在清晨平静的水面上，电影感镜头，柔和自然光。"
+      }
+    ],
+    "duration": 4,
+    "ratio": "16:9",
+    "resolution": "4k",
+    "generate_audio": false,
+    "watermark": true,
+    "return_last_frame": true,
+    "execution_expires_after": 3600,
+    "priority": 0,
+    "safety_identifier": "user-hash-001",
+    "callback_url": "https://example.com/volcark/callback"
+  }'
+```
+
+典型响应：
+
+```json
+{
+  "id": "cgt-20260611204121-462cw"
+}
+```
+
+常用字段：
+
+| 字段                        | 说明                                                                     |
+| ------------------------- | ---------------------------------------------------------------------- |
+| `content[]`               | 官方多模态输入数组，至少包含 prompt 文本或参考素材                                          |
+| `duration`                | 视频时长，按官方模型能力校验                                                         |
+| `ratio`                   | `adaptive`、`16:9`、`9:16`、`1:1`、`4:3`、`3:4`、`21:9`                      |
+| `resolution`              | `480p`、`720p`、`1080p`、`4k`；4K 仅标准模型支持，fast 和 mini 模型不支持 `1080p` / `4k` |
+| `generate_audio`          | 是否生成音频                                                                 |
+| `watermark`               | 是否保留水印                                                                 |
+| `return_last_frame`       | 成功任务中返回 `content.last_frame_url`                                       |
+| `execution_expires_after` | 任务执行过期时间                                                               |
+| `priority`                | 队列优先级 `0-9`                                                            |
+| `safety_identifier`       | 终端用户稳定标识，建议传哈希后的用户 ID                                                  |
+| `callback_url`            | 火山方舟原生任务状态回调地址，必须是非空 HTTPS 公网 URL                                      |
+| `CallbackURL`             | 兼容别名；平台会规范化为 `callback_url` 后再提交给模型服务                                  |
+
+Mini 边界：`doubao-seedance-2-0-mini` 只支持 `480p` / `720p`，支持音频输入参考。`references.audio` 或原生 `content[].type=audio_url` 会按普通参考音频透传；`service_tier=flex`、`draft=true` 仍会在调用模型服务前被拒绝。
+
+### 视频编辑和视频延展
+
+火山方舟将视频生成、视频编辑和视频延展统一在同一个任务创建接口中表达，不需要切换到新的路径。调用方通过 `content[]` 传入待编辑或待延展的视频、参考图片或参考音频，再用文本 prompt 描述目标效果。
+
+| 场景        | 推荐输入                                                                                                                            |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| 视频编辑      | `text` + `video_url`，`video_url.role=reference_video`；可额外加入 `image_url.role=reference_image` 或 `audio_url.role=reference_audio` |
+| 向前或向后延展视频 | `text` + 1 个 `video_url.role=reference_video`，在 prompt 中说明向前/向后延展和是否保留原片段                                                       |
+| 多段视频衔接    | `text` + 2-3 个 `video_url.role=reference_video`，用 prompt 说明中间过渡和最终顺序                                                            |
+| 严格首帧或尾帧   | 使用 `image_url.role=first_frame` / `last_frame`；普通参考图继续使用 `reference_image`                                                      |
+
+GragAPI 默认要求先通过素材库上传图片、视频或音频，等素材状态变为 `Active` 后再以 `asset://<Asset_Id>` 传入。包含 `content[].type=video_url` 的任务会按视频参考输入 SKU 计费；未包含 `video_url` 的任务不会进入 `*-video` SKU。`doubao-seedance-2-0-mini` 支持音频参考输入，但音频参考本身不会把任务计入 `*-video` SKU。
+
+视频编辑示例：
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "编辑视频 1：保持原始镜头运动，把红色马克杯替换成玻璃茶壶，并参考图片 1 的材质风格。"
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": {
+          "url": "asset://asset-20260611210200-video1"
+        }
+      },
+      {
+        "type": "image_url",
+        "role": "reference_image",
+        "image_url": {
+          "url": "asset://asset-20260611210100-image1"
+        }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+视频延展示例：
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "将视频 1 向前延展，保持同一人物、光线和手持镜头运动，最后自然接入视频 1。"
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": {
+          "url": "asset://asset-20260611210200-video1"
+        }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+### 原生回调
+
+`POST /volcark/api/v3/contents/generations/tasks` 支持在顶层传入 `callback_url`。平台会先校验 URL，再随创建任务请求提交给模型服务。调用方只需要使用 GragAPI 公开模型名 `doubao-seedance-2-0`、`doubao-seedance-2-0-fast` 或 `doubao-seedance-2-0-mini`；服务侧配置、模型版本映射和凭证均由平台统一托管，不需要也不会在公开 API 中暴露。
+
+校验规则：
+
+* 必须是字符串，且去除首尾空白后不能为空。
+* 必须使用 `https`。
+* 域名必须解析到公网可路由地址；本地、私网、链路本地、多播、CGNAT 等地址会被拒绝。
+* 校验失败时，平台会在请求提交给模型服务前返回 HTTP `400`，错误码为 `invalid_request`。
+
+兼容字段 `CallbackURL` 会被规范化为 `callback_url`，不会继续把 `CallbackURL` 原字段提交给模型服务。如果两个字段同时存在，以 `callback_url` 为准。
+
+这是原生任务回调透传能力，不是 GragAPI 平台 webhook broker。回调投递、重试、签名和回调体结构均以模型服务原生能力为准。
+
+## 6. 查询任务
+
+```bash
+curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+成功响应示例：
+
+```json
+{
+  "id": "cgt-20260611204121-462cw",
+  "model": "doubao-seedance-2-0",
+  "status": "succeeded",
+  "content": {
+    "video_url": "https://...",
+    "last_frame_url": "https://..."
+  },
+  "usage": {
+    "completion_tokens": 130500,
+    "total_tokens": 130500
+  },
+  "created_at": 1781181681,
+  "updated_at": 1781181802,
+  "resolution": "4k",
+  "ratio": "16:9",
+  "duration": 4,
+  "framespersecond": 24,
+  "service_tier": "default",
+  "execution_expires_after": 3600,
+  "generate_audio": false,
+  "safety_identifier": "user-hash-001",
+  "priority": 0
+}
+```
+
+常见状态：
+
+* `queued`
+* `running`
+* `succeeded`
+* `failed`
+* `expired`
+* `cancelled`
+
+## 7. 查询租户任务列表
+
+```bash
+curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=doubao-seedance-2-0" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+列表接口是 **当前 GragAPI 租户作用域内** 的官方兼容列表，不返回其他租户或账号级全量任务。
+
+## 8. 取消或删除任务
+
+```bash
+curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+删除或取消只允许操作当前租户自己的任务。GragAPI 会保留本地任务审计和计费记录。
+
+## 9. 素材库工作流
+
+素材库能力随国内 Doubao Seedance 2.0 提供，用于完成：
+
+1. 创建素材组
+2. 上传图片、视频或音频素材
+3. 保存 `CreateAsset` 返回的 `Result.Id`
+4. 使用 `GetAsset` 查询素材生命周期，只有 `Active` 可进入生成任务
+
+所有 Asset API 挂载在：
+
+```http
+POST /volcark/?Action={ActionName}&Version=2024-01-01
+```
+
+支持的 Action：
+
+| 功能      | Action             |
+| ------- | ------------------ |
+| 创建素材组   | `CreateAssetGroup` |
+| 创建素材    | `CreateAsset`      |
+| 查询素材组列表 | `ListAssetGroups`  |
+| 查询素材列表  | `ListAssets`       |
+| 查询单个素材组 | `GetAssetGroup`    |
+| 查询单个素材  | `GetAsset`         |
+
+`CreateAssetGroup` 与 `CreateAsset` 成功时 `Result` 只返回 `Id`。素材状态、URL、审核或预处理失败原因不在 Create 响应中展开；调用方应保存 `Result.Id`，再用 `GetAsset` 或 `ListAssets` 查询生命周期。
+
+### 9.1 创建素材组
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "Name": "campaign-product-shots",
+    "GroupType": "AIGC",
+    "Description": "Assets for product videos"
+  }'
+```
+
+### 9.2 创建素材
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "GroupId": "group-20260611210000-abcd1",
+    "URL": "https://example.com/product.png",
+    "AssetType": "Image",
+    "Name": "product-front.png"
+  }'
+```
+
+典型响应：
+
+```json
+{
+  "ResponseMetadata": {
+    "Action": "CreateAsset",
+    "Service": "ark",
+    "Version": "2024-01-01"
+  },
+  "Result": {
+    "Id": "asset-20260611210100-efgh2"
+  }
+}
+```
+
+只有 `Status=Active` 的素材才能用于视频生成。素材 URL 必须公网可下载，不能依赖 Cookie、登录态或一次性链接。`CreateAsset` 返回 `Result.Id` 后，建议按 2、5、10、20 秒退避轮询 `GetAsset`，直到素材进入 `Active` 或 `Failed`。
+
+### 9.3 查询素材列表
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "Filter": {
+      "GroupType": "AIGC",
+      "GroupIds": ["group-20260611210000-abcd1"]
+    },
+    "PageNumber": 1,
+    "PageSize": 20
+  }'
+```
+
+`ListAssets` 必须按官方素材库契约使用 `Filter.GroupType=AIGC`。`ListAssets` 会在返回当前页前，对当前页中 `Processing`、`Pending` 或空状态的素材做一次尽力刷新；它不是轮询接口，也不保证每次都能立刻拿到上游最新状态。后台任务也会兜底刷新创建 1 小时内仍处于非终态的素材，超过 1 小时后后台不再继续扫描该素材；调用方仍可显式调用 `GetAsset` 查询单个素材的最新状态。
+
+典型响应：
+
+```json
+{
+  "ResponseMetadata": {
+    "Action": "ListAssets",
+    "Service": "ark",
+    "Version": "2024-01-01"
+  },
+  "Result": {
+    "Items": [
+      {
+        "Id": "asset-20260611210100-efgh2",
+        "GroupId": "group-20260611210000-abcd1",
+        "AssetType": "Image",
+        "Status": "Active"
+      }
+    ],
+    "TotalCount": 1,
+    "PageNumber": 1,
+    "PageSize": 20
+  }
+}
+```
+
+### 9.4 使用素材生成视频
+
+```bash
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "以素材图片作为首帧，镜头缓慢推进。"
+      },
+      {
+        "type": "image_url",
+        "role": "reference_image",
+        "image_url": {
+          "url": "asset://asset-20260611210100-efgh2"
+        }
+      }
+    ],
+    "duration": 4,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+平台也接受 `Asset://...`，并会在转发前规范化为 `asset://...`。
+
+如果素材是视频，使用 `type=video_url` 并设置 `role=reference_video`；该写法适用于视频编辑、视频延展和多段视频衔接。严格首帧或尾帧控制请改用图片素材并设置 `role=first_frame` / `last_frame`。
+
+## 10. 多租户和资源边界
+
+| 能力     | GragAPI 行为                              |
+| ------ | ------------------------------------- |
+| 任务查询   | 只能查询当前租户创建的任务                         |
+| 任务列表   | 只返回当前租户任务                             |
+| 取消/删除  | 只能操作当前租户任务                            |
+| 素材组/素材 | 只允许访问当前租户拥有的资源                        |
+| 素材引用   | `asset://` 绑定到当前租户的素材资源范围，避免跨范围或跨租户误用 |
+| 计费     | 按最终分辨率、是否含视频输入和成功任务 usage tokens 结算   |
+
+## 11. 常见错误
+
+| HTTP  | code                                | 场景                                    |
+| ----- | ----------------------------------- | ------------------------------------- |
+| `400` | `invalid_request`                   | 请求体不是合法 JSON，或缺少必填字段                  |
+| `400` | `invalid_duration`                  | `duration` 超出模型允许范围                   |
+| `400` | `moderation_skip_not_allowed`       | 素材库请求尝试使用 `Moderation.Strategy=Skip`  |
+| `403` | `InvalidAction`                     | 请求了未开放的 Asset `Update*` / `Delete*`   |
+| `404` | `task_not_found`                    | 任务不存在或不属于当前租户                         |
+| `404` | `ResourceNotFound.Asset`            | 素材不存在或不属于当前租户                         |
+| `404` | `ResourceNotFound.AssetGroup`       | 素材组不存在或不属于当前租户                        |
+| `409` | `InvalidAction.RunningTaskDeletion` | 正在运行的任务暂不支持删除                         |
+| `502` | `service_error`                     | 模型服务返回异常                              |
+| `503` | `service_unavailable`               | 当前账号暂未开通国内 Doubao Seedance 2.0 或素材库能力 |
+
+素材库控制面接口的错误响应使用火山/BytePlus 风格 `ResponseMetadata.Error`。素材审核或预处理失败不是 Create 错误响应，而是在 `GetAsset` / `ListAssets` 中以 `Status=Failed` 体现。

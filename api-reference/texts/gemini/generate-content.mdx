@@ -1,0 +1,115 @@
+---
+title: "Gemini 原生格式"
+---
+
+使用 Gemini 原生接口（generateContent / streamGenerateContent）进行对话与多模态交互。
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+## 接口
+
+| 用途 | 路径 |
+| --- | --- |
+| 文本/多模态生成 | `POST /v1beta/models/{model}:generateContent` |
+| 流式输出 | `POST /v1beta/models/{model}:streamGenerateContent?alt=sse` |
+
+原生接口支持 `Authorization: Bearer <TOKEN>` 鉴权，也支持 `x-goog-api-key: <TOKEN>`。
+
+## 快速开始
+
+```bash
+curl -X POST "$BASE_URL/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "你好"}]}]
+  }'
+```
+
+## 流式输出
+
+```bash
+curl -N "$BASE_URL/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "写一首诗"}]}]
+  }'
+```
+
+## 多模态输入
+
+原生接口通过 `contents[].parts[]` 承载多模态内容：文本用 `text`，媒体用 `inline_data`（`mime_type` + Base64 `data`）。
+
+### 音频理解
+
+```bash
+curl -X POST "$BASE_URL/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {"text": "转写这段音频"},
+        {"inline_data": {"mime_type": "audio/mp3", "data": "<BASE64>"}}
+      ]
+    }]
+  }'
+```
+
+图片同理使用 `inline_data`，`mime_type` 为 `image/png`、`image/jpeg` 等。`gemini-3-pro-preview-file` 模型支持通过 URL 直接分析视频文件，详细用法请参阅视频分析文档。
+
+## 思考模式（Reasoning）
+
+Gemini 2.5 和 3 系列支持思考推理能力，通过 `generationConfig.thinkingConfig` 配置。
+
+Gemini 3 系列使用 `thinkingLevel`：
+
+```json
+{
+  "generationConfig": {
+    "thinkingConfig": {"thinkingLevel": "high"}
+  }
+}
+```
+
+Gemini 2.5 系列使用 `thinkingBudget`：
+
+```json
+{
+  "generationConfig": {
+    "thinkingConfig": {"thinkingBudget": 8192}
+  }
+}
+```
+
+## 生成参数
+
+| 参数 | 说明 | 默认值 |
+| --- | --- | --- |
+| `temperature` | 随机性，0-2 | 1.0 |
+| `max_tokens` | 最大输出 token 数 | 模型默认 |
+| `top_p` | 核采样概率 | 0.95 |
+| `stop` | 停止序列 | - |
+
+Gemini 3 建议保持 `temperature` 为 1.0，过低可能导致推理性能下降。
+
+## SDK 示例（Python · Google SDK）
+
+```python
+from google import genai
+
+client = genai.Client(
+    api_key="your-token",
+    http_options={"base_url": "https://api.gragapi.com"},
+)
+
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents="你好",
+)
+print(response.text)
+```

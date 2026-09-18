@@ -1,0 +1,110 @@
+---
+title: "Messages API"
+---
+
+Call Claude models using the Anthropic Messages API protocol.
+
+GragAPI is compatible with the Anthropic Messages API and can be used directly with the official SDK or cURL.
+
+## Endpoint
+
+```http
+POST /v1/messages
+```
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+Requests must carry the `anthropic-version` header:
+
+```http
+Authorization: Bearer <TOKEN>
+anthropic-version: 2023-06-01
+Content-Type: application/json
+```
+
+## Request examples
+
+### cURL
+
+```bash
+curl -X POST "$BASE_URL/v1/messages" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4-6",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "Hi, please introduce yourself in one sentence."}
+    ]
+  }'
+```
+
+### Python SDK
+
+```bash
+pip install anthropic
+```
+
+```python
+import os
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key=os.environ["TOKEN"],
+    base_url="https://api.gragapi.com",
+)
+
+message = client.messages.create(
+    model="claude-opus-4-6",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "Hi, please introduce yourself in one sentence."}],
+)
+print(message)
+```
+
+### TypeScript SDK
+
+```bash
+npm install @anthropic-ai/sdk
+```
+
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: process.env.TOKEN!,
+  baseURL: "https://api.gragapi.com",
+});
+
+const message = await client.messages.create({
+  model: "claude-opus-4-6",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "Hi, please introduce yourself in one sentence." }],
+});
+console.log(message);
+```
+
+## Building approaches
+
+|  | Messages API | Claude Managed Agents |
+| --- | --- | --- |
+| **What it is** | Call models directly and orchestrate conversations and tools yourself | A configurable agent form on managed infrastructure |
+| **Better for** | Custom agent loops and fine-grained control over each call | Long-running, async-style tasks |
+
+## Recommended development path
+
+1. **Make your first call**: configure environment variables and send the first request with cURL or an SDK.
+2. **Understand the Messages API**: learn the `messages` structure, multi-turn conversations, and `stop_reason`.
+3. **Choose a model**: confirm available models via `GET /v1/models` or the console.
+4. **Extend capabilities**: tool calling, vision, and structured output follow the official Anthropic documentation.
+
+## Resources
+
+- **GragAPI console**: create and manage API keys, and review usage and quotas.
+- **GragAPI documentation**: platform capabilities and multi-product navigation.
+
+Gateway behavior is subject to the GragAPI console; native Anthropic capabilities follow the official documentation.

@@ -1,0 +1,85 @@
+---
+title: "Task Query"
+---
+
+Query Vidu video generation task status, or cancel a task.
+
+## Overview
+
+Video generation tasks run asynchronously. After a task is created, poll results or cancel the task through this endpoint.
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+- GragAPI endpoint: `GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
+- Vidu official endpoint: `GET https://api.vidu.cn/ent/v2/tasks/{task_id}/creations`
+
+The `task_id` parameter accepts both the upstream task ID and the platform `platform_id` (`video_<ULID>`).
+
+All requests use the GragAPI API Token:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Query task status
+
+```bash
+curl -X GET "$BASE_URL/vidu/ent/v2/tasks/$TASK_ID/creations" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Response example
+
+```json
+{
+  "id": "176843862716480",
+  "state": "success",
+  "credits": 10,
+  "creations": [
+    {
+      "id": "creation_123",
+      "url": "https://your.cdn/generate/abc.mp4",
+      "cover_url": "https://your.cdn/generate/abc.jpg",
+      "watermarked_url": "https://your.cdn/generate/abc_wm.mp4"
+    }
+  ]
+}
+```
+
+### Status enum
+
+| Status | Description |
+| --- | --- |
+| `created` | Task created |
+| `queueing` | Queued |
+| `processing` | Generating |
+| `success` | Generation succeeded |
+| `failed` | Generation failed |
+
+### Response fields
+
+| Field | Description |
+| --- | --- |
+| `creations[].url` | Temporary access URL of the generated video |
+| `creations[].cover_url` | Cover image URL |
+| `creations[].watermarked_url` | Watermarked video URL (when watermark is enabled) |
+| `credits` | Consumed credits (deducted on success) |
+
+## Cancel a task
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/tasks/$TASK_ID/cancel" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+On success, the consumed `credits` are returned (if any).
+
+## Polling suggestions
+
+- **Polling interval**: 3–5 seconds
+- **Timeout**: 5–10 minutes recommended, adjusted according to video duration
+- **Callback**: set `callback_url` when creating a task to receive automatic callbacks on state changes

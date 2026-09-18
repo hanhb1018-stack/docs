@@ -1,0 +1,156 @@
+{
+  "theme": "mint",
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "GragAPI",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "languages": [
+      {
+        "language": "zh",
+        "tabs": [
+          {
+            "tab": "开发指南",
+            "pages": ["index", "introduction", "quickstart"]
+          },
+          {
+            "tab": "API 参考",
+            "pages": [
+              "api-reference/introduction",
+              {
+                "group": "大语言模型（LLM）",
+                "pages": [
+                  "api-reference/texts/openai/chat-completions",
+                  "api-reference/texts/openai/responses",
+                  "api-reference/texts/claude/messages",
+                  "api-reference/texts/gemini/generate-content"
+                ]
+              },
+              {
+                "group": "图像模型",
+                "pages": [
+                  "api-reference/images/overview",
+                  "api-reference/images/doubao-seedream-5-0"
+                ]
+              },
+              {
+                "group": "视频模型",
+                "pages": [
+                  {
+                    "group": "Doubao",
+                    "pages": [
+                      "api-reference/videos/seedance-2-5",
+                      "api-reference/videos/seedance2",
+                      "api-reference/videos/byteplus-seedance2",
+                      "api-reference/videos/real-person-assets"
+                    ]
+                  },
+                  "api-reference/videos/minimax-h3",
+                  {
+                    "group": "Vidu",
+                    "pages": [
+                      "api-reference/videos/vidu-video-generation",
+                      "api-reference/videos/vidu-video-query"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "语音模型",
+                "pages": ["api-reference/audio/overview"]
+              }
+            ]
+          },
+          {
+            "tab": "更新日志",
+            "pages": ["changelog"]
+          }
+        ]
+      },
+      {
+        "language": "en",
+        "tabs": [
+          {
+            "tab": "Guide",
+            "pages": ["en/index", "en/introduction", "en/quickstart"]
+          },
+          {
+            "tab": "API Reference",
+            "pages": [
+              "en/api-reference/introduction",
+              {
+                "group": "Large Language Models (LLM)",
+                "pages": [
+                  "en/api-reference/texts/openai/chat-completions",
+                  "en/api-reference/texts/openai/responses",
+                  "en/api-reference/texts/claude/messages",
+                  "en/api-reference/texts/gemini/generate-content"
+                ]
+              },
+              {
+                "group": "Image Models",
+                "pages": [
+                  "en/api-reference/images/overview",
+                  "en/api-reference/images/doubao-seedream-5-0"
+                ]
+              },
+              {
+                "group": "Video Models",
+                "pages": [
+                  {
+                    "group": "Doubao",
+                    "pages": [
+                      "en/api-reference/videos/seedance-2-5",
+                      "en/api-reference/videos/seedance2",
+                      "en/api-reference/videos/byteplus-seedance2",
+                      "en/api-reference/videos/real-person-assets"
+                    ]
+                  },
+                  "en/api-reference/videos/minimax-h3",
+                  {
+                    "group": "Vidu",
+                    "pages": [
+                      "en/api-reference/videos/vidu-video-generation",
+                      "en/api-reference/videos/vidu-video-query"
+                    ]
+                  }
+                ]
+              },
+              {
+                "group": "Speech Models",
+                "pages": ["en/api-reference/audio/overview"]
+              }
+            ]
+          },
+          {
+            "tab": "Changelog",
+            "pages": ["en/changelog"]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "",
+        "icon": "envelope",
+        "href": "https://example.com/mail"
+      },
+      {
+        "label": "",
+        "icon": "weixin",
+        "href": "https://example.com/wechat"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "开始使用",
+      "href": "https://api.gragapi.com"
+    }
+  }
+}

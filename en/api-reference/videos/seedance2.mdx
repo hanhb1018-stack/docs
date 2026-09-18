@@ -1,0 +1,318 @@
+---
+title: "Doubao Seedance 2.0"
+---
+
+Call the domestic Doubao Seedance 2.0 model through GragAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the Volcano Ark native shape as closely as possible.
+
+<Info>
+This page only covers the **domestic Doubao Seedance 2.0**. The overseas [BytePlus Dreamina Seedance 2.0](/en/api-reference/videos/byteplus-seedance2) uses separate models, pricing, and asset capabilities.
+</Info>
+
+When you need to use real-person imagery, video, or audio that has been verified by the person themselves, first complete H5 verification and asset ingestion through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
+
+## Endpoint
+
+**POST** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+
+The domestic entry point is the Volcano Ark native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GragAPI tenant scope.
+
+| Feature | Method & path |
+| ------- | ---- |
+| Create task | `POST /volcark/api/v3/contents/generations/tasks` |
+| Query task | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` |
+| List tenant tasks | `GET /volcark/api/v3/contents/generations/tasks` |
+| Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
+
+## Authentication
+
+Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GragAPI; the Volcano Ark API key, AK/SK, project name, and endpoint are all hosted by the platform.
+
+| Header | Description |
+| ------- | ---- |
+| `Authorization` | `Bearer <API_KEY>` — the API token issued by GragAPI |
+| `Content-Type` | `application/json` |
+
+## Models
+
+| External model | Official version alias | Description |
+| ------- | ------- | ---- |
+| `doubao-seedance-2-0` | `doubao-seedance-2-0-260128` | Domestic standard model; supports `480p` / `720p` / `1080p` / `4k` |
+| `doubao-seedance-2-0-fast` | `doubao-seedance-2-0-fast-260128` | Domestic fast model; supports only `480p` / `720p` |
+| `doubao-seedance-2-0-mini` | `doubao-seedance-2-0-mini-260615` | Domestic Mini model; supports only `480p` / `720p` |
+
+For the `model` field, use the stable external model name on the left. The platform also accepts the official version alias on the right and normalizes billing as a standard, fast, or mini model. In query and list responses the `model` field echoes the GragAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
+
+The domestic standard model supports 4K: set `resolution` to `4k`; output is **10-bit / H.265**. The fast and mini models do not support `1080p` or `4k` and must fall back to `480p` / `720p`.
+
+| ratio | 4K size |
+| ------- | ---- |
+| `16:9` | `3840x2160` |
+| `9:16` | `2160x3840` |
+| `1:1` | `2880x2880` |
+| `4:3` | `3326x2494` |
+| `3:4` | `2494x3326` |
+| `21:9` | `4398x1886` |
+
+## Domestic pricing
+
+Default prices follow the official RMB token unit pricing, converted to the GragAPI rate at the platform USD exchange rate. Only successfully rendered tasks are settled.
+
+| SKU | Official price |
+| ------- | ---- |
+| `doubao-seedance-2-0-480p-novideo` | ¥46/M tokens |
+| `doubao-seedance-2-0-480p-video` | ¥28/M tokens |
+| `doubao-seedance-2-0-720p-novideo` | ¥46/M tokens |
+| `doubao-seedance-2-0-720p-video` | ¥28/M tokens |
+| `doubao-seedance-2-0-1080p-novideo` | ¥51/M tokens |
+| `doubao-seedance-2-0-1080p-video` | ¥31/M tokens |
+| `doubao-seedance-2-0-4k-novideo` | ¥26/M tokens |
+| `doubao-seedance-2-0-4k-video` | ¥16/M tokens |
+| `doubao-seedance-2-0-fast-novideo` | ¥37/M tokens |
+| `doubao-seedance-2-0-fast-video` | ¥22/M tokens |
+| `doubao-seedance-2-0-mini-novideo` | ¥23/M tokens |
+| `doubao-seedance-2-0-mini-video` | ¥14/M tokens |
+
+`video` means the request includes a video reference input; `novideo` means it does not.
+
+## Request parameters
+
+| Parameter | Type | Required | Description |
+| ------- | ---- | ---- | ---- |
+| `model` | string | Yes | Model ID, e.g. `doubao-seedance-2-0`. |
+| `content` | array | Yes | Official multimodal input array; at least a prompt text or reference asset. |
+| `duration` | integer | Yes | Video duration in seconds, validated against official model capability. |
+| `ratio` | string | No | Aspect ratio: `adaptive`, `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9`. |
+| `resolution` | string | No | `480p`, `720p`, `1080p`, `4k`; 4K only for the standard model. |
+| `generate_audio` | boolean | No | Whether to generate audio. |
+| `watermark` | boolean | No | Whether to keep the watermark. |
+| `return_last_frame` | boolean | No | Return `content.last_frame_url` on success. |
+| `execution_expires_after` | integer | No | Task execution expiry time. |
+| `priority` | integer | No | Queue priority `0-9`. |
+| `safety_identifier` | string | No | Stable end-user identifier; pass a hashed user ID. |
+| `callback_url` | string | No | Volcano Ark native callback URL; must be a non-empty public HTTPS URL. |
+
+## Create a task
+
+<CodeGroup>
+```bash cURL
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "A quiet cinematic shot of a paper boat floating on calm water, soft morning light."
+      }
+    ],
+    "duration": 4,
+    "ratio": "16:9",
+    "resolution": "4k",
+    "generate_audio": false
+  }'
+```
+
+```python Python
+import requests
+
+headers = {
+    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Content-Type": "application/json",
+}
+
+data = {
+    "model": "doubao-seedance-2-0",
+    "content": [
+        {"type": "text", "text": "A quiet cinematic shot of a paper boat floating on calm water, soft morning light."}
+    ],
+    "duration": 4,
+    "ratio": "16:9",
+    "resolution": "4k",
+    "generate_audio": False,
+}
+
+resp = requests.post(
+    "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks",
+    headers=headers,
+    json=data,
+)
+print(resp.json())
+```
+
+```javascript JavaScript
+const resp = await fetch("https://api.gragapi.com/volcark/api/v3/contents/generations/tasks", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "doubao-seedance-2-0",
+    content: [
+      { type: "text", text: "A quiet cinematic shot of a paper boat floating on calm water, soft morning light." }
+    ],
+    duration: 4,
+    ratio: "16:9",
+    resolution: "4k",
+    generate_audio: false
+  }),
+});
+console.log(await resp.json());
+```
+</CodeGroup>
+
+<Info>
+Task creation is asynchronous; a successful response only returns the task ID. Query the task to retrieve the final video result.
+</Info>
+
+```json Success response
+{ "id": "cgt-20260611204121-462cw" }
+```
+
+## Query a task
+
+**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+
+```bash cURL
+curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+```
+
+```json Success response
+{
+  "id": "cgt-20260611204121-462cw",
+  "model": "doubao-seedance-2-0",
+  "status": "succeeded",
+  "content": {
+    "video_url": "https://...",
+    "last_frame_url": "https://..."
+  },
+  "usage": {
+    "completion_tokens": 130500,
+    "total_tokens": 130500
+  },
+  "created_at": 1781181681,
+  "updated_at": 1781181802,
+  "resolution": "4k",
+  "ratio": "16:9",
+  "duration": 4,
+  "framespersecond": 24,
+  "generate_audio": false,
+  "safety_identifier": "user-hash-001",
+  "priority": 0
+}
+```
+
+Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancelled`.
+
+## List tenant tasks
+
+**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+
+```bash cURL
+curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=doubao-seedance-2-0" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+```
+
+The list endpoint is the official-compatible list within the current GragAPI tenant scope and does not return tasks from other tenants.
+
+## Cancel or delete a task
+
+**DELETE** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+
+```bash cURL
+curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+```
+
+You can only delete or cancel tasks that belong to the current tenant. GragAPI keeps local task audit and billing records.
+
+## Video editing and extension
+
+Video generation, editing, and extension are all expressed through the same creation endpoint. Pass the video, reference image, or reference audio to edit or extend via `content[]`, and describe the target result with a text prompt.
+
+| Scenario | Recommended input |
+| ------- | ---- |
+| Video editing | `text` + `video_url` (`role=reference_video`), optional `image_url` / `audio_url` references |
+| Extend forward or backward | `text` + 1 `video_url` (`role=reference_video`), state the direction in the prompt |
+| Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
+| Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
+
+```bash Video editing
+curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "Edit Video 1: replace the red mug with a glass teapot while preserving the original camera movement."
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": { "url": "asset://asset-20260611210200-video1" }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+## Asset library workflow
+
+The asset library comes with the domestic Doubao Seedance 2.0. All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-01-01`.
+
+| Feature | Action |
+| ------- | ---- |
+| Create asset group | `CreateAssetGroup` |
+| Create asset | `CreateAsset` |
+| List asset groups | `ListAssetGroups` |
+| List assets | `ListAssets` |
+| Get a single asset group | `GetAssetGroup` |
+| Get a single asset | `GetAsset` |
+
+```bash Create asset
+curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "GroupId": "group-20260611210000-abcd1",
+    "URL": "https://example.com/product.png",
+    "AssetType": "Image",
+    "Name": "product-front.png"
+  }'
+```
+
+```json Success response
+{
+  "ResponseMetadata": {
+    "Action": "CreateAsset",
+    "Service": "ark",
+    "Version": "2024-01-01"
+  },
+  "Result": { "Id": "asset-20260611210100-efgh2" }
+}
+```
+
+<Info>
+Only assets with `Status=Active` can be used for video generation. Asset URLs must be publicly downloadable. After `CreateAsset` returns `Result.Id`, poll `GetAsset` with backoff until the asset enters `Active` or `Failed`; on success, pass it as `asset://<Asset_Id>` in the generation task.
+</Info>
+
+## Error codes
+
+| Status | Error type | Description |
+| ------- | ------- | ---- |
+| 400 | `invalid_request` | The request body is not valid JSON or is missing required fields. |
+| 400 | `invalid_duration` | `duration` is outside the allowed range. |
+| 403 | `InvalidAction` | An asset `Update*` / `Delete*` operation that is not enabled was requested. |
+| 404 | `task_not_found` | The task does not exist or does not belong to the current tenant. |
+| 404 | `ResourceNotFound.Asset` | The asset does not exist or does not belong to the current tenant. |
+| 409 | `InvalidAction.RunningTaskDeletion` | A running task cannot be deleted. |
+| 502 | `service_error` | The model service returned an error. |
+| 503 | `service_unavailable` | The account has not yet enabled the domestic Doubao Seedance 2.0 or asset library capability. |

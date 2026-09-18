@@ -1,0 +1,173 @@
+---
+title: "doubao-seedream-5.0"
+---
+
+Call the Doubao Seedream 5.0 Pro image generation model through the OpenAI-compatible interface, supporting text-to-image and image-to-image.
+
+All requests are forwarded to Volcengine Ark through GragAPI. You do not need to sign requests yourself; just carry the GragAPI API Key in the header.
+
+```bash
+export BASE_URL="https://api.gragapi.com/v1"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+Consistently use:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Model info
+
+- **Model name**: `doubao-seedream-5.0-pro`
+- **Version mapping**: `doubao-seedream-5-0-pro-260628`
+- **Capabilities**: text-to-image and image-to-image; supports `response_format="url"` or `"b64_json"`
+- **Resolution**: `1K`, `1.5K`, `2K`, or an exact size (e.g. `2048x2048`); do not reuse Seedream 4.0's `4K` tier
+- **Parameter limits**: omit `n` for ordinary single-image requests; `n>1`, `stream=true`, `tools`, `sequential_image_generation`, and `sequential_image_generation_options` are not supported
+
+## Endpoint
+
+### Endpoint
+
+```http
+POST /v1/images/generations
+```
+
+### Request headers
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+On the console side, bind the `doubao-seedream-*` model name to a Doubao / VolcArk channel (`ChannelTypeVolcArk`) to access it through the unified OpenAI-style interface.
+
+## Request parameters
+
+### Base parameters (OpenAI-compatible)
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | string | ✅ | Fixed `doubao-seedream-5.0-pro` |
+| `prompt` | string | ✅ | Image description; recommended no more than 300 Chinese characters or 600 English words |
+| `size` | string | ❌ | `1K` / `1.5K` / `2K`, or an exact size such as `2048x2048` |
+| `n` | integer | ❌ | Omit for single-image requests; `n>1` is not supported |
+| `response_format` | string | ❌ | `url` (default) or `b64_json` |
+| `quality` | string | ❌ | Image quality, e.g. `high` / `standard` |
+| `style` | string | ❌ | Image style, e.g. `vivid` / `natural` |
+
+### Volcengine Ark-specific parameters
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `image` | string / string[] | Reference image URL or complete Data URI; bare Base64 is not accepted. A single image may be a string or a single-element array |
+| `watermark` | boolean | Whether to add a watermark; default `true` |
+
+### Base64 reference image format
+
+Each reference image in `image` must be a publicly accessible image URL, or one of these complete Data URIs:
+
+- JPEG: `data:image/jpeg;base64,<full Base64>`
+- PNG: `data:image/png;base64,<full Base64>`
+
+The MIME type must match the actual image format, with no spaces or line breaks immediately after the comma. Passing bare Base64 such as `/9j/...` or `iVBOR...` is parsed as a URL and may return HTTP 400 or `InvalidParameter`. `response_format="b64_json"` only controls the output format and will not automatically add a prefix for the input `image`.
+
+## Response format
+
+### Non-streaming response
+
+```json
+{
+  "created": 1589478378,
+  "data": [
+    {
+      "url": "https://...",
+      "size": "2048x2048"
+    }
+  ],
+  "usage": {
+    "output_tokens": 16384,
+    "total_tokens": 16384
+  }
+}
+```
+
+### Base64 response (`response_format=b64_json`)
+
+```json
+{
+  "created": 1589478378,
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgoAAAANSUhEUgAA..."
+    }
+  ]
+}
+```
+
+`b64_json` is raw Base64 without a Data URI prefix. To reuse the generated result as an `image` input, prepend `data:image/jpeg;base64,` or `data:image/png;base64,`.
+
+## Examples
+
+### Text-to-image
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "doubao-seedream-5.0-pro",
+  "prompt": "A cute panda eating bamboo in a bamboo forest, with dappled sunlight through the leaves",
+  "size": "2048x2048",
+  "response_format": "url"
+}'
+```
+
+### Image-to-image (Base64 Data URI)
+
+Replace `<full JPEG image Base64>` with the full Base64 of a JPEG image, keeping the leading `data:image/jpeg;base64,`. For PNG images, use `data:image/png;base64,` instead.
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  --data-raw '{
+  "model": "doubao-seedream-5.0-pro",
+  "prompt": "Convert this image to a watercolor style",
+  "image": [
+    "data:image/jpeg;base64,<full JPEG image Base64>"
+  ],
+  "size": "2048x2048",
+  "response_format": "b64_json"
+}'
+```
+
+On success, read and decode the image from `data[0].b64_json`. For a single image, `image` can also be written as a single complete Data URI string.
+
+## FAQ
+
+### How to use Seedream 5.0 Pro?
+
+Use it for text-to-image and image-to-image; use the dedicated examples above, and do not apply the group-generation or streaming parameters (`sequential_image_generation`, `stream`, etc.).
+
+### How long is the image URL valid?
+
+Generated image URLs are usually valid for 24 hours. Download and save them to your own storage within the validity period.
+
+### How to remove the watermark?
+
+Set `"watermark": false` in the request body to disable the model watermark (provided the current model and account configuration allow it).
+
+### What to do when images won't upload for image-to-image?
+
+- Confirm the `image` field uses a publicly accessible HTTPS URL or a complete Data URI (e.g. `data:image/jpeg;base64,<full Base64>`);
+- On `InvalidParameter` / `invalid url specified`, check whether bare Base64 was passed by mistake, and add a prefix matching the actual format;
+- `response_format="b64_json"` is an output setting and cannot replace the Data URI prefix required for input images;
+- For large images, compress them in advance to avoid exceeding the upstream size limit.
+
+## Billing
+
+- Billed by the number of successfully generated images;
+- Failed generations are usually not billed (subject to the upstream bill);
+- See the Doubao Seedream entries under "Model Pricing" in the console for specific prices.

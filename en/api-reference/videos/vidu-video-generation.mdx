@@ -1,0 +1,160 @@
+---
+title: "Video Generation"
+---
+
+Create Vidu video generation tasks through GragAPI, supporting text-to-video, image-to-video, first/last-frame, and reference-to-video.
+
+## 1. Overview
+
+| Mode | Path | Description |
+| --- | --- | --- |
+| Text-to-video | `/vidu/ent/v2/text2video` | Generate video from a text description |
+| Image-to-video | `/vidu/ent/v2/img2video` | Generate video from a single image |
+| First/last frame | `/vidu/ent/v2/start-end2video` | Generate a transition video from a first frame + last frame |
+| Reference-to-video | `/vidu/ent/v2/reference2video` | Generate video from reference images + text description |
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+- GragAPI endpoint: `POST $BASE_URL/vidu/ent/v2/{action}`
+- Vidu official endpoint: `POST https://api.vidu.cn/ent/v2/{action}`
+
+All requests use the GragAPI API Token:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 2. Available models
+
+| Scenario | Models |
+| --- | --- |
+| Image-to-video | `viduq3-turbo`, `viduq3-pro`, `viduq2-pro-fast`, `viduq2-pro`, `viduq2-turbo`, `viduq1`, `viduq1-classic`, `vidu2.0`, `vidu1.5` |
+| First/last frame | `viduq3-turbo`, `viduq3-pro`, `viduq2-pro-fast`, `viduq2-pro`, `viduq2-turbo`, `viduq1`, `viduq1-classic`, `vidu2.0` |
+| Text-to-video | `viduq3-turbo`, `viduq3-pro`, `viduq2`, `viduq1`, `vidu2.0`, `vidu1.5` |
+| Reference-to-video | `viduq2`, `viduq1`, `vidu2.0`, `vidu1.5` |
+
+## 3. Common parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `model` | string | ✅ | Model name |
+| `duration` | int | ❌ | Video duration in seconds; varies by model |
+| `resolution` | string | ❌ | Resolution: `540p` / `720p` / `1080p` |
+| `movement_amplitude` | string | ❌ | Camera motion: `auto` / `small` / `medium` / `large` |
+| `off_peak` | bool | ❌ | Off-peak mode; half price when enabled |
+| `watermark` | bool | ❌ | Whether to add a watermark |
+| `wm_position` | string | ❌ | Watermark position |
+| `wm_url` | string | ❌ | Watermark image URL |
+| `callback_url` | string | ❌ | Callback URL |
+
+## 4. Text-to-video
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/text2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq3-turbo",
+    "prompt": "A girl runs toward the camera and winks with a smile.",
+    "audio": true,
+    "duration": 5,
+    "resolution": "720p",
+    "style": "general",
+    "off_peak": false
+  }'
+```
+
+Mode-specific parameters:
+
+- `prompt` (required): prompt, up to 2000 characters
+- `style`: `general` (general) or `anime` (anime)
+- `audio`: whether video and audio are generated together (q3 series only)
+
+## 5. Image-to-video
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/img2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq3-turbo",
+    "images": ["https://your.cdn.com/first.png"],
+    "prompt": "The astronaut waved and the camera moved up.",
+    "audio": true,
+    "duration": 5,
+    "resolution": "720p",
+    "off_peak": true
+  }'
+```
+
+Mode-specific parameters:
+
+- `images` (required): image URL array, must contain exactly 1 image
+
+## 6. First/last-frame generation
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/start-end2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq2-pro",
+    "images": [
+      "https://your.cdn.com/start.png",
+      "https://your.cdn.com/end.png"
+    ],
+    "duration": 5,
+    "resolution": "1080p"
+  }'
+```
+
+Mode-specific parameters:
+
+- `images` (required): image URL array, must contain exactly 2 images (first frame + last frame)
+
+## 7. Reference-to-video
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/reference2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq1",
+    "images": [
+      "https://your.cdn.com/ref-1.jpg",
+      "https://your.cdn.com/ref-2.jpg"
+    ],
+    "prompt": "A mouse runs toward the camera, smiling and blinking.",
+    "duration": 5,
+    "resolution": "1080p"
+  }'
+```
+
+Mode-specific parameters:
+
+- `images` (required): reference image URL array, 1–7 images
+- `prompt` (required): prompt, up to 2000 characters
+
+## 8. Response example
+
+```json
+{
+  "task_id": "176843862716480",
+  "platform_id": "video_01JSGXXXXXXXXXXXXXXXXXX",
+  "state": "created"
+}
+```
+
+`task_id` / `id` is the Vidu upstream task ID and can be used directly with Vidu's official query interface. `platform_id` is GragAPI's unified tracking ID (`video_<ULID>`) and can be used for platform-side query and cancel operations. Query and cancel both accept either ID.
+
+A successful creation only means the task is enqueued; get the final result through the [Task Query](/en/api-reference/videos/vidu-video-query) endpoint.
+
+## 9. Notes
+
+- **Off-peak mode**: `off_peak=true` halves the price but may delay generation
+- **Resolution and duration**: the q3 series supports 1–16 seconds; the Q2 series supports 1–8 seconds; `vidu2.0` supports 4s/8s; `vidu1.5` does not support first/last frame
+- **Async tasks**: all generations are asynchronous; poll or set a callback to get results

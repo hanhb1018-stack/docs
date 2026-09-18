@@ -1,0 +1,292 @@
+---
+title: "GPT生图"
+---
+
+通过 OpenAI 兼容接口使用 gpt-image-2 token 计费通道进行图像生成与编辑。
+
+## GPT Image 2.5
+
+`gpt-image-2.5-sunburst` 和 `gpt-image-2.5-flare` 复用本文的生图、编辑及平台异步接口。使用前需要在 OpenAI 官方或兼容渠道开通对应模型；将示例中的 `model` 替换为准确模型名即可。两款模型支持 `low`、`medium`、`high`、`xhigh`、`max`、`auto`。单次出图数量按各模型的渠道能力独立配置，未配置时最多 1 张。返回 URL 需要平台图片存储配置。默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。2.5 不使用 `gpt-image-2-low-*` 按张 SKU。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。有上游 `usage` 时按该用量结算；缺失时按成功返回图片数量、尺寸和 2.5 质量系数估算。`auto` 的用量取决于上游选择，缺失 usage 的结果只代表平台估算。实际模型供给和参数支持需以渠道验收为准。
+
+## 快速开始
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "A futuristic skyline at dusk",
+  "size": "1024x1024",
+  "quality": "medium",
+  "response_format": "b64_json"
+}'
+```
+
+Python SDK:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://api.gragapi.com/v1", api_key="$TOKEN")
+
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A futuristic skyline at dusk",
+    size="1024x1024",
+    quality="medium",
+    response_format="b64_json",
+)
+
+print(result.data[0].b64_json)
+```
+
+## 文生图 `/v1/images/generations`
+
+### 参数表
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `prompt` | string | 是 | 图像描述文本 |
+| `model` | string | 是 | 固定 `gpt-image-2` |
+| `n` | integer | 否 | 生成数量，默认 1；部分兼容渠道仅支持 `n=1` |
+| `size` | string | 否 | `widthxheight` 或 `auto`，默认 `1024x1024` |
+| `quality` | string | 否 | `low` / `medium` / `high` / `auto`；平台默认 `low` |
+| `background` | string | 否 | `transparent` / `opaque` / `auto` |
+| `output_format` | string | 否 | `png` / `jpeg`；`webp` 为官方字段但不保证所有渠道可用 |
+| `output_compression` | integer | 否 | 0-100，仅 JPEG / WebP 生效 |
+| `response_format` | string | 否 | `url` / `b64_json`，默认 `b64_json` |
+| `moderation` | string | 否 | `low` / `auto` |
+| `user` | string | 否 | 终端用户标识 |
+
+`stream` 和 `partial_images` 是 OpenAI 官方定义的字段，但 `gpt-image-2` 官方标注不支持流式图片生成。传入时不会返回可用图片流事件。
+
+### 分辨率规则
+
+token 计费通道按 OpenAI 兼容能力处理尺寸。`size` 参数格式为 `widthxheight` 或 `auto`，常见约束如下：
+
+| 约束 | 规则 |
+|---|---|
+| 最大边长 | 任一边不超过 3840 px |
+| 最小总像素 | width x height 不低于 655,360 |
+| 最大总像素 | width x height 不超过 8,294,400 |
+| 对齐要求 | 宽和高都必须是 16 的倍数 |
+| 宽高比限制 | 长边 : 短边不超过 3:1 |
+
+常用值：
+
+| `size` | 用途 |
+|---|---|
+| `auto` | 模型根据 prompt 自动选择尺寸 |
+| `1024x1024` | 通用方图 |
+| `1536x1024` | 横版 3:2 |
+| `1024x1536` | 竖版 2:3 |
+| `2048x2048` | 2K 方图 |
+| `2048x1152` | 2K 横版 16:9 |
+| `1152x2048` | 2K 竖版 9:16 |
+
+具体可用尺寸仍以账号实际路由到的通道能力为准。
+
+## 响应体
+
+```json
+{
+  "created": 1762789802,
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgoAAAANSUhEUg...",
+      "revised_prompt": "A futuristic skyline at dusk with neon lights"
+    }
+  ],
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 4096,
+    "total_tokens": 4108
+  }
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `created` | 创建时间戳 |
+| `data[].b64_json` | Base64 编码图片，`response_format=b64_json` 时返回 |
+| `data[].url` | 图片 URL，`response_format=url` 时返回 |
+| `data[].revised_prompt` | 模型优化后的提示词 |
+| `usage` | token 用量；token 计费通道会优先按平台记录或上游返回的 usage 结算 |
+
+## URL 输出
+
+设置 `response_format=url` 可获取图片 URL：
+
+```python
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A clean studio product photo of a matte white ceramic mug",
+    size="1024x1024",
+    quality="low",
+    response_format="url",
+)
+
+print(result.data[0].url)
+```
+
+平台对 URL 输出采用本地托底策略：
+
+1. 请求图片结果。
+
+2. 将图片转存到平台对象存储。
+
+3. 在 `data[].url` 返回可访问 URL。
+
+行为是确定性的：
+
+- 若平台已配置对象存储，返回 `data[].url`。
+
+- 若未配置对象存储，返回 `image_url_not_available`。
+
+- 不会静默降级为 `b64_json`。
+
+## 改图 `/v1/images/edits`
+
+### JSON 请求体
+
+通过 `images[].image_url` 或 `images[].file_id` 指定底图：
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "换种风格",
+  "size": "1024x1024",
+  "quality": "medium",
+  "images": [
+    { "image_url": "https://example.com/base-image.png" }
+  ]
+}'
+```
+
+多参考图示例：
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "参考第 1 张的主体轮廓、第 2 张的配色和第 3 张的材质，生成一张干净的电商主图",
+  "size": "1024x1024",
+  "quality": "high",
+  "images": [
+    { "image_url": "https://example.com/reference-subject.png" },
+    { "image_url": "https://example.com/reference-color.png" },
+    { "image_url": "https://example.com/reference-texture.png" }
+  ]
+}'
+```
+
+### Multipart 上传
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "image=@base.png" \
+  -F "mask=@mask.png" \
+  -F "prompt=在天空中加入热气球"
+```
+
+### 改图参数表
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `prompt` | string | 是 | 编辑指令 |
+| `model` | string | 是 | 固定 `gpt-image-2` |
+| `images` | array | 否 | 输入图像列表，最多 14 张 |
+| `images[].image_url` | string | 否 | 图像的公开可访问 URL |
+| `images[].file_id` | string | 否 | 通过 Files API 上传后获得的文件 ID |
+| `mask` | object | 否 | 蒙版，结构同图像引用 |
+| `size` | string | 否 | 输出尺寸，默认 `1024x1024` |
+| `quality` | string | 否 | `low` / `medium` / `high` / `auto`，默认 `low` |
+| `background` | string | 否 | `transparent` / `opaque` / `auto` |
+| `input_fidelity` | string | 否 | `high` / `low` |
+| `output_format` | string | 否 | `png` / `jpeg` |
+| `output_compression` | integer | 否 | 0-100 |
+| `moderation` | string | 否 | `low` / `auto` |
+| `response_format` | string | 否 | `url` / `b64_json` |
+| `n` | integer | 否 | 生成数量，默认 1 |
+| `user` | string | 否 | 终端用户标识 |
+
+`images[].image_url` 和 `images[].file_id` 二选一。部分兼容渠道会由平台在内部改写为 multipart 请求以保证可执行，不影响对外接口形态。
+
+## 异步图片任务
+
+平台提供托管异步图片任务接口。异步接口不是 OpenAI 官方后台任务协议，而是平台先创建 `image_<ULID>` 任务，再由后台 worker 执行同步图像请求，最后通过轮询接口返回托管图片 URL。
+
+### 文生图任务
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/generations/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "A clean studio product photo of a matte white ceramic mug",
+  "size": "1024x1024",
+  "quality": "low",
+  "response_format": "url"
+}'
+```
+
+查询任务：
+
+```bash
+curl -X GET "https://api.gragapi.com/v1/images/generations/{id}" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 改图任务
+
+```bash
+curl -X POST "https://api.gragapi.com/v1/images/edits/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "prompt=将这张图片转换为干净的电商主图" \
+  -F "response_format=url" \
+  -F "image=@/path/to/base.png"
+```
+
+| 状态 | 说明 |
+|---|---|
+| `pending` | 排队中 |
+| `in_progress` | 后台执行中 |
+| `completed` | 已完成，读取 `data[].url` |
+| `failed` | 失败，读取 `error.code` / `error.message` |
+
+异步任务要求平台已配置公开可访问的对象存储。未配置时，创建任务会返回 `storage_not_configured`。
+
+## 计费
+
+token 计费通道按平台记录或上游返回的 token 用量结算：
+
+| 类型 | 价格口径 |
+|---|---|
+| text input | 按输入文本 token |
+| cached text input | 按缓存命中输入 token |
+| image input | 改图或多模态图片输入 token |
+| image output | 图片输出 token |
+
+单张预估只用于成本预估，实际账单以消费日志和控制台「模型价格」页面为准。
+
+按张计费和 token 计费的折扣、单价、账单字段不同。对账时以消费日志中的实际金额为准，不要把展示用 token bucket 当成额外账单行。
+
+## 错误码
+
+| 错误码 | 说明 |
+|---|---|
+| `image_url_not_available` | 请求 URL 输出但平台未配置对象存储 |
+| `n_not_supported` | 当前通道不支持 `n>1`，请拆分请求 |
+| `unsupported_image_input` | 异步改图暂不支持该输入形式 |
+| `content_policy_violation` | 内容审核未通过 |
+| `suspected_black_image_from_upstream` | 返回疑似纯黑图，已拦截 |

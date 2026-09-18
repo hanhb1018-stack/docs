@@ -1,0 +1,72 @@
+---
+title: "Chat Completions"
+---
+
+Use GragAPI's OpenAI-compatible chat completion and tool-calling interface.
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+`POST /v1/chat/completions` is the most commonly used chat generation endpoint. It supports streaming output, function calling (`tools`/`functions`), and JSON mode.
+
+## Request example
+
+```bash
+curl -X POST "$BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "You are GragAPI's product assistant."},
+      {"role": "user", "content": "Introduce GragAPI in three sentences."}
+    ],
+    "temperature": 0.7
+  }'
+```
+
+## Common usage
+
+- **Streaming**: set `stream: true` in the request body. Add `-N` for cURL, or use `requests.post(..., stream=True)` in Python to read line by line.
+- **Function calling**: describe callable functions via `tools` and `tool_choice`, then parse `tool_calls` in the response and run your business logic.
+- **JSON constraint**: set `response_format` to `{"type": "json_schema"}` to have the model return structured data strictly.
+
+GragAPI automatically aligns differences across common compatible interfaces, reducing adaptation cost when switching models.
+
+## GragAPI extension fields
+
+The following fields are GragAPI's extensions on top of the standard OpenAI response body, used to expose billing details of the upstream model.
+
+### `usage.prompt_tokens_details`
+
+| Field | Meaning | Applicable models |
+| --- | --- | --- |
+| `cached_tokens` | Number of input tokens that hit the cache | All cache-enabled models |
+| `cached_write_tokens` | Total cache writes (= 5m + 1h) | Claude |
+| `cached_write_5m_tokens` | Tokens written to the 5-minute cache | Claude |
+| `cached_write_1h_tokens` | Tokens written to the 1-hour cache | Claude |
+
+`prompt_tokens` is the total input tokens (including cache hits and cache writes). Cache-write fields are `omitempty`, so models without cache writes (e.g. GPT) do not output them.
+
+```json
+{
+  "usage": {
+    "prompt_tokens": 58518,
+    "prompt_tokens_details": {
+      "cached_tokens": 11944,
+      "cached_write_tokens": 46109,
+      "cached_write_5m_tokens": 29762,
+      "cached_write_1h_tokens": 16347
+    }
+  }
+}
+```
+
+Combined with the unit-price fields in billing reconciliation, you can estimate the cache-write cost of a single request directly from the response body.

@@ -1,0 +1,160 @@
+---
+title: "视频生成"
+---
+
+通过 GragAPI 创建 Vidu 视频生成任务，支持文生视频、图生视频、首尾帧与参考生视频。
+
+## 1. 概述
+
+| 模式 | 路径 | 说明 |
+| --- | --- | --- |
+| 文生视频 | `/vidu/ent/v2/text2video` | 纯文本描述生成视频 |
+| 图生视频 | `/vidu/ent/v2/img2video` | 单张图片生成视频 |
+| 首尾帧 | `/vidu/ent/v2/start-end2video` | 首帧 + 尾帧生成过渡视频 |
+| 参考生视频 | `/vidu/ent/v2/reference2video` | 参考图 + 文本描述生成视频 |
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+- GragAPI 接口：`POST $BASE_URL/vidu/ent/v2/{action}`
+- Vidu 官方接口：`POST https://api.vidu.cn/ent/v2/{action}`
+
+所有请求使用 GragAPI API Token：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 2. 可用模型
+
+| 场景 | 模型 |
+| --- | --- |
+| 图生 | `viduq3-turbo`、`viduq3-pro`、`viduq2-pro-fast`、`viduq2-pro`、`viduq2-turbo`、`viduq1`、`viduq1-classic`、`vidu2.0`、`vidu1.5` |
+| 首尾帧 | `viduq3-turbo`、`viduq3-pro`、`viduq2-pro-fast`、`viduq2-pro`、`viduq2-turbo`、`viduq1`、`viduq1-classic`、`vidu2.0` |
+| 文生 | `viduq3-turbo`、`viduq3-pro`、`viduq2`、`viduq1`、`vidu2.0`、`vidu1.5` |
+| 参考生 | `viduq2`、`viduq1`、`vidu2.0`、`vidu1.5` |
+
+## 3. 通用参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `model` | string | ✅ | 模型名称 |
+| `duration` | int | ❌ | 视频时长（秒），不同模型取值不同 |
+| `resolution` | string | ❌ | 分辨率：`540p` / `720p` / `1080p` |
+| `movement_amplitude` | string | ❌ | 镜头运动：`auto` / `small` / `medium` / `large` |
+| `off_peak` | bool | ❌ | 错峰模式，开启后半价 |
+| `watermark` | bool | ❌ | 是否添加水印 |
+| `wm_position` | string | ❌ | 水印位置 |
+| `wm_url` | string | ❌ | 水印图片 URL |
+| `callback_url` | string | ❌ | 回调地址 |
+
+## 4. 文生视频
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/text2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq3-turbo",
+    "prompt": "A girl runs toward the camera and winks with a smile.",
+    "audio": true,
+    "duration": 5,
+    "resolution": "720p",
+    "style": "general",
+    "off_peak": false
+  }'
+```
+
+专属参数：
+
+- `prompt`（必填）：提示词，最长 2000 字符
+- `style`：风格，`general`（通用）或 `anime`（动漫）
+- `audio`：是否音画同出（仅 q3 系列支持）
+
+## 5. 图生视频
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/img2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq3-turbo",
+    "images": ["https://your.cdn.com/first.png"],
+    "prompt": "The astronaut waved and the camera moved up.",
+    "audio": true,
+    "duration": 5,
+    "resolution": "720p",
+    "off_peak": true
+  }'
+```
+
+专属参数：
+
+- `images`（必填）：图片 URL 数组，必须 1 张
+
+## 6. 首尾帧生成
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/start-end2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq2-pro",
+    "images": [
+      "https://your.cdn.com/start.png",
+      "https://your.cdn.com/end.png"
+    ],
+    "duration": 5,
+    "resolution": "1080p"
+  }'
+```
+
+专属参数：
+
+- `images`（必填）：图片 URL 数组，必须 2 张（首帧 + 尾帧）
+
+## 7. 参考生视频
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/reference2video" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "viduq1",
+    "images": [
+      "https://your.cdn.com/ref-1.jpg",
+      "https://your.cdn.com/ref-2.jpg"
+    ],
+    "prompt": "A mouse runs toward the camera, smiling and blinking.",
+    "duration": 5,
+    "resolution": "1080p"
+  }'
+```
+
+专属参数：
+
+- `images`（必填）：参考图 URL 数组，1–7 张
+- `prompt`（必填）：提示词，最长 2000 字符
+
+## 8. 返回示例
+
+```json
+{
+  "task_id": "176843862716480",
+  "platform_id": "video_01JSGXXXXXXXXXXXXXXXXXX",
+  "state": "created"
+}
+```
+
+`task_id` / `id` 为 Vidu 上游原始任务 ID，可直接用于 Vidu 官方查询接口。`platform_id` 为 GragAPI 平台统一追踪 ID（`video_<ULID>`），可用于平台内查询、取消等操作。查询和取消接口同时接受两种 ID。
+
+创建成功仅代表任务入队，需通过 [任务查询](/api-reference/videos/vidu-video-query) 接口获取最终结果。
+
+## 9. 注意事项
+
+- **错峰模式**：`off_peak=true` 时价格减半，但生成时间可能延迟
+- **分辨率与时长**：q3 系列支持 1–16 秒；Q2 系列支持 1–8 秒；`vidu2.0` 支持 4s/8s；`vidu1.5` 不支持首尾帧
+- **异步任务**：所有生成都是异步的，请轮询或设置回调获取结果

@@ -1,0 +1,352 @@
+---
+title: "真人素材库 API"
+---
+
+通过 GragAPI 完成字节国内与海外真人认证、LivenessFace 素材管理和 Seedance 视频调用。
+
+真人素材库用于把经过本人授权和活体认证的图片、视频或音频保存为可信素材，再通过 `asset://<AssetId>` 提交给 Seedance。
+
+这里的“真人认证”是活体检测和同人比对，不是身份证、姓名或公安库实名核验。认证必须由真人本人在返回的 H5 页面完成。
+
+## 1. 接口与模型
+
+所有素材库请求使用同一个入口：
+
+```http
+POST /volcark/?Action=<Action>&Version=2024-01-01
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+请求体中的 `model` 只用于 GragAPI 选择国内或海外官方渠道，不会发送给字节上游。建议在整条认证和素材流程中始终使用同一个模型和 `ProjectName`。
+
+| 区域          | 推荐模型                                                                                                      | 说明           |
+| ----------- | --------------------------------------------------------------------------------------------------------- | ------------ |
+| 国内火山方舟      | `doubao-seedance-2-0`、`doubao-seedance-2-0-fast`、`doubao-seedance-2-0-mini`、`doubao-seedance-2-5`         | 使用国内官方真人素材渠道 |
+| 海外 BytePlus | `dreamina-seedance-2-0`、`dreamina-seedance-2-0-fast`、`dreamina-seedance-2-0-mini`、`dreamina-seedance-2-5` | 使用海外官方真人素材渠道 |
+
+真人素材不会在国内、海外或第三方渠道之间自动迁移或降级。已经创建真人 Group/Asset 后，请继续使用原模型地域和 Project。
+
+## 2. 完整流程
+
+1. 调用 `CreateVisualValidateSession` 创建一次性认证会话。
+2. 保存响应中的 `BytedToken`，让真人本人打开 `H5Link` 完成活体认证。
+3. H5 跳转到 `CallbackURL` 后，服务端调用 `GetVisualValidateResult`。
+4. 从成功结果取得 `GroupId`。该组类型固定为 `LivenessFace`。
+5. 使用 `CreateAsset` 向该 Group 添加图片、视频或音频。
+6. 用 `GetAsset` 轮询，直到素材变为 `Active` 或 `Failed`。
+7. 只有 `Active` 素材可以通过 `asset://<AssetId>` 用于 Seedance。
+
+H5 回调只能作为流程通知。即使 `resultCode=10000`，服务端仍应调用 `GetVisualValidateResult` 获取可信 `GroupId`。
+
+当国内请求命中已启用真人能力的 ZLHub 渠道时，`H5Link` 是 GragAPI 托管认证页：页面承载供应商 H5，并在可信 Group 绑定成功后按同样的字节参数跳转 `CallbackURL`。调用方流程无需区分渠道。
+
+## 3. 创建真人认证会话
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "CallbackURL": "https://api.gragapi.com/real-person/callback",
+    "ProjectName": "default"
+  }'
+```
+
+典型响应：
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "CreateVisualValidateSession",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "BytedToken": "one-time-token",
+    "H5Link": "https://example.byte-provider.com/verify/...",
+    "CallbackURL": "https://api.gragapi.com/real-person/callback"
+  }
+}
+```
+
+| 字段            | 说明                             |
+| ------------- | ------------------------------ |
+| `CallbackURL` | 必填，必须是公网 HTTPS URL             |
+| `ProjectName` | 可选，默认 `default`；后续请求必须保持一致     |
+| `BytedToken`  | 一次性认证凭证，通常 30 分钟内有效；不要写入日志或数据库 |
+| `H5Link`      | 一次性真人认证地址，只交给本次获得授权的真人本人       |
+
+没有自有回调页面时，可以直接使用 GragAPI 提供的 `https://api.gragapi.com/real-person/callback`。该页面只提示 H5 操作已经结束，不保存或展示回调参数，也不代表认证成功；之后仍须使用原 `BytedToken` 调用 `GetVisualValidateResult`。
+
+如需指定 H5 语言，可在 `H5Link` 后追加 `lng=zh`、`lng=en` 或 `lng=zh-Hant`。
+
+## 4. 查询认证结果
+
+真人本人完成 H5 后，用原 `BytedToken` 查询：
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=GetVisualValidateResult&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "BytedToken": "one-time-token",
+    "ProjectName": "default"
+  }'
+```
+
+成功结果：
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetVisualValidateResult",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "GroupId": "group-real-person-example"
+  }
+}
+```
+
+`GroupId` 已由 GragAPI 绑定到当前 API 用户、官方渠道、地域和 Project。真人 Group 不能通过 `CreateAssetGroup` 创建，也不能作为其他用户或其他地域的素材组使用。
+
+## 5. 创建真人素材
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=CreateAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "GroupId": "group-real-person-example",
+    "URL": "https://media.example.com/authorized-person.jpg",
+    "AssetType": "Image",
+    "Name": "main-portrait",
+    "ProjectName": "default"
+  }'
+```
+
+成功响应只返回素材 ID：
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "CreateAsset",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "Id": "asset-real-person-example"
+  }
+}
+```
+
+| 字段            | 必填 | 说明                        |
+| ------------- | -- | ------------------------- |
+| `GroupId`     | 是  | 真人认证结果返回的 Group ID        |
+| `URL`         | 是  | 字节上游可下载的公网 URL；不支持 Base64 |
+| `AssetType`   | 是  | `Image`、`Video` 或 `Audio` |
+| `Name`        | 否  | 管理名称，最长 64 字符             |
+| `ProjectName` | 否  | 默认 `default`，必须与 Group 一致 |
+
+每个真人 Group 只能对应一位真人。包含多人、与认证本人不同或无法完成同人比对的素材会进入 `Failed`。
+
+常用媒体边界：
+
+| 类型 | 格式                                   | 大小与时长                       |
+| -- | ------------------------------------ | --------------------------- |
+| 图片 | jpeg、png、webp、bmp、tiff、gif、heic/heif | 小于 30 MB，宽高 300–6000 px     |
+| 视频 | mp4、mov                              | 2–30 秒，不超过 200 MB，24–60 FPS |
+| 音频 | wav、mp3                              | 2–30 秒，不超过 15 MB            |
+
+`Moderation.Strategy=Skip` 不开放。
+
+## 6. 查询素材状态
+
+`CreateAsset` 是异步操作。使用官方字段 `Id` 查询，直到进入终态：
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=GetAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "Id": "asset-real-person-example",
+    "ProjectName": "default"
+  }'
+```
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetAsset",
+    "Version": "2024-01-01",
+    "Service": "ark"
+  },
+  "Result": {
+    "Id": "asset-real-person-example",
+    "GroupId": "group-real-person-example",
+    "AssetType": "Image",
+    "Status": "Active",
+    "Name": "main-portrait",
+    "ProjectName": "default"
+  }
+}
+```
+
+| `Status`     | 是否可用于推理 | 建议处理                |
+| ------------ | ------- | ------------------- |
+| `Processing` | 否       | 有界轮询 `GetAsset`     |
+| `Active`     | 是       | 使用 `asset://<Id>`   |
+| `Failed`     | 否       | 停止轮询，按错误原因修正素材后重新创建 |
+
+查询响应中的素材 URL 是短期地址，不要保存或用于 Seedance 请求。
+
+## 7. 列表、更新和删除
+
+支持以下 Action：
+
+| Action             | 关键字段                                                     | 说明                  |
+| ------------------ | -------------------------------------------------------- | ------------------- |
+| `ListAssetGroups`  | `Filter.GroupType=LivenessFace`、分页、`ProjectName`         | 只返回当前用户绑定的真人 Group  |
+| `ListAssets`       | `Filter.GroupType=LivenessFace`、`GroupIds`、`Statuses`、分页 | 只返回当前用户绑定的真人素材      |
+| `GetAssetGroup`    | `Id`、`ProjectName`                                       | 查询真人 Group          |
+| `UpdateAsset`      | `Id`、`Name`、`ProjectName`                                | 修改素材名称              |
+| `UpdateAssetGroup` | `Id`、`Name`、`Description`、`ProjectName`                  | 修改 Group 名称和描述      |
+| `DeleteAsset`      | `Id`、`ProjectName`                                       | 删除素材，不可恢复           |
+| `DeleteAssetGroup` | `Id`、`ProjectName`                                       | 删除 Group 及组内素材，不可恢复 |
+
+列表示例：
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=ListAssets&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "ProjectName": "default",
+    "PageNumber": 1,
+    "PageSize": 20,
+    "Filter": {
+      "GroupType": "LivenessFace",
+      "GroupIds": ["group-real-person-example"],
+      "Statuses": ["Active"]
+    }
+  }'
+```
+
+删除示例：
+
+```bash
+curl -X POST "$BASE_URL/volcark/?Action=DeleteAsset&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "Id": "asset-real-person-example",
+    "ProjectName": "default"
+  }'
+```
+
+删除请求开始后，该素材会立即停止接受新的 `asset://` 推理。上游删除失败时，可以使用同一个官方 `Id` 重试。Delete 只接受字段 `Id`，不接受 `ID`、`AssetId`、`AssetID` 或 `asset_id`。
+
+## 8. 使用真人素材生成视频
+
+只有 `Active` 素材可以用于视频。原生 Seedance 任务示例：
+
+```bash
+curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "content": [
+      {
+        "type": "text",
+        "text": "以 Image 1 中的人物为主角，生成一段自然光下的电影感短片。"
+      },
+      {
+        "type": "image_url",
+        "role": "reference_image",
+        "image_url": {
+          "url": "asset://asset-real-person-example"
+        }
+      }
+    ],
+    "resolution": "720p",
+    "ratio": "16:9",
+    "duration": 5,
+    "generate_audio": true
+  }'
+```
+
+海外调用把模型换成对应的 `dreamina-*`，并继续使用海外认证流程创建的 Asset。不要在国内、海外 Asset 之间混用 ID。
+
+OpenAI 风格 `/v1/videos` 也接受 `asset://` 参考素材：
+
+```json
+{
+  "model": "doubao-seedance-2-5",
+  "prompt": "保持参考人物身份和主要外观，生成自然走动镜头。",
+  "input_reference": ["asset://asset-real-person-example"],
+  "seconds": 5,
+  "resolution": "720p",
+  "ratio": "16:9"
+}
+```
+
+## 9. 错误响应
+
+错误保持字节 `ResponseMetadata.Error` 结构：
+
+```json
+{
+  "ResponseMetadata": {
+    "RequestId": "0217...",
+    "Action": "GetAsset",
+    "Version": "2024-01-01",
+    "Service": "ark",
+    "Error": {
+      "Code": "ResourceNotFound.Asset",
+      "Message": "asset not found"
+    }
+  }
+}
+```
+
+常见处理：
+
+| 错误                                           | 含义                            |
+| -------------------------------------------- | ----------------------------- |
+| `InvalidParameter.Version`                   | 真人接口必须使用 `Version=2024-01-01` |
+| `MissingParameter.Id`                        | Get/Update/Delete 缺少官方字段 `Id` |
+| `channel_not_available`                      | 当前 Token 没有可用的对应地域官方渠道        |
+| `asset_not_found` / `ResourceNotFound.Asset` | 素材不存在或不属于当前用户绑定               |
+| `asset_not_active`                           | 素材尚未 Active、已经失败或已撤回          |
+| `asset_region_mismatch`                      | 素材与请求模型地域不一致                  |
+
+真人素材上游错误会使用中性错误信息，避免把一次性凭证或临时媒体 URL 回显到响应和日志。
+
+## 10. 计费与合规
+
+* 真人认证和素材 Create/Get/List/Update/Delete 当前不扣 GragAPI 模型余额。
+* 使用真人 `asset://` 生成视频时，仍按成功任务返回的实际 Seedance Token 正常计费一次。
+* 真人认证当前由官方标注为限时免费，但未来价格和结束时间未公开；请勿把该状态视为长期免费承诺。
+* 调用方必须在认证前取得真人本人明确、主动且可撤回的单独同意，并提供删除和撤回入口。
+* 不要在日志、Issue、客服工单或数据库中保存人脸内容、完整 `H5Link`、`BytedToken`、AK/SK、Authorization 或临时素材 URL。
+* 真人 H5、Group 和 Asset 的可用性取决于对应国内或海外官方渠道权益；如接口返回权限或配额错误，请联系 GragAPI 管理员确认开通状态。
+
+模型参数和视频计费详情见 [Seedance 2.5](/api-reference/videos/seedance-2-5)、[Doubao Seedance 2.0](/api-reference/videos/seedance2) 和 [BytePlus Dreamina Seedance 2.0](/api-reference/videos/byteplus-seedance2)。

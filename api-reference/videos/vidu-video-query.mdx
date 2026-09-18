@@ -1,0 +1,85 @@
+---
+title: "任务查询"
+---
+
+查询 Vidu 视频生成任务状态，或取消任务。
+
+## 概述
+
+视频生成任务为异步执行，创建成功后需通过本接口轮询结果或取消任务。
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+- GragAPI 接口：`GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
+- Vidu 官方接口：`GET https://api.vidu.cn/ent/v2/tasks/{task_id}/creations`
+
+`task_id` 参数同时接受上游原始任务 ID 和平台 `platform_id`（`video_<ULID>`）。
+
+所有请求使用 GragAPI API Token：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 查询任务状态
+
+```bash
+curl -X GET "$BASE_URL/vidu/ent/v2/tasks/$TASK_ID/creations" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 返回示例
+
+```json
+{
+  "id": "176843862716480",
+  "state": "success",
+  "credits": 10,
+  "creations": [
+    {
+      "id": "creation_123",
+      "url": "https://your.cdn/generate/abc.mp4",
+      "cover_url": "https://your.cdn/generate/abc.jpg",
+      "watermarked_url": "https://your.cdn/generate/abc_wm.mp4"
+    }
+  ]
+}
+```
+
+### 状态枚举
+
+| 状态 | 说明 |
+| --- | --- |
+| `created` | 任务已创建 |
+| `queueing` | 排队中 |
+| `processing` | 生成中 |
+| `success` | 生成成功 |
+| `failed` | 生成失败 |
+
+### 返回字段
+
+| 字段 | 说明 |
+| --- | --- |
+| `creations[].url` | 生成视频的临时访问 URL |
+| `creations[].cover_url` | 封面图 URL |
+| `creations[].watermarked_url` | 带水印视频 URL（开启水印时） |
+| `credits` | 消耗积分（成功时扣除） |
+
+## 取消任务
+
+```bash
+curl -X POST "$BASE_URL/vidu/ent/v2/tasks/$TASK_ID/cancel" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+取消成功后返回已消耗的 `credits`（若有）。
+
+## 轮询建议
+
+- **轮询间隔**：3–5 秒
+- **超时时间**：建议 5–10 分钟，根据视频时长调整
+- **回调机制**：创建任务时设置 `callback_url`，状态变化时自动回调

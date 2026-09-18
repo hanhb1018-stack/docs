@@ -1,0 +1,72 @@
+---
+title: "通用对话接口"
+---
+
+通过 GragAPI 兼容 OpenAI 的对话补全与工具调用接口。
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+`POST /v1/chat/completions` 是最常用的对话生成接口，支持流式输出、函数调用（tools/functions）以及 JSON mode。
+
+## 请求示例
+
+```bash
+curl -X POST "$BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [
+      {"role": "system", "content": "你是 GragAPI 的产品助理。"},
+      {"role": "user", "content": "用三句话介绍 GragAPI。"}
+    ],
+    "temperature": 0.7
+  }'
+```
+
+## 常见用法
+
+- **流式输出**：在请求体中设置 `stream: true`。cURL 请添加 `-N` 选项，Python 端可组合 `requests.post(..., stream=True)` 逐行读取。
+- **函数调用**：通过 `tools` 与 `tool_choice` 描述可调用的函数，后续在响应中解析 `tool_calls` 并执行业务逻辑。
+- **JSON 约束**：配合 `response_format` 设置为 `{"type": "json_schema"}`，可让模型严格返回结构化数据。
+
+GragAPI 会自动对齐常见兼容接口中的差异字段，减少模型切换带来的适配成本。
+
+## GragAPI 扩展字段
+
+以下字段是 GragAPI 在标准 OpenAI 响应体基础上的扩展，用于暴露上游模型的计费明细。
+
+### `usage.prompt_tokens_details`
+
+| 字段 | 含义 | 适用模型 |
+| --- | --- | --- |
+| `cached_tokens` | 命中缓存的输入 token 数 | 所有支持缓存的模型 |
+| `cached_write_tokens` | 缓存写入总量（= 5m + 1h） | Claude |
+| `cached_write_5m_tokens` | 写入 5 分钟有效期缓存的 token 数 | Claude |
+| `cached_write_1h_tokens` | 写入 1 小时有效期缓存的 token 数 | Claude |
+
+其中 `prompt_tokens` 为输入 token 总量（含缓存命中与缓存写入）。缓存写入相关字段为 `omitempty`，GPT 等无缓存写入的模型不会输出。
+
+```json
+{
+  "usage": {
+    "prompt_tokens": 58518,
+    "prompt_tokens_details": {
+      "cached_tokens": 11944,
+      "cached_write_tokens": 46109,
+      "cached_write_5m_tokens": 29762,
+      "cached_write_1h_tokens": 16347
+    }
+  }
+}
+```
+
+结合计费对账中的单价字段，可直接从响应体实时估算单次请求的缓存写入费用。

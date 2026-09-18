@@ -1,0 +1,110 @@
+---
+title: "Claude 消息接口"
+---
+
+使用 Anthropic Messages API 协议调用 Claude 模型。
+
+GragAPI 兼容 Anthropic Messages API，可直接使用官方 SDK 或 cURL 调用。
+
+## 接口地址
+
+```http
+POST /v1/messages
+```
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+请求需携带 `anthropic-version` 头：
+
+```http
+Authorization: Bearer <TOKEN>
+anthropic-version: 2023-06-01
+Content-Type: application/json
+```
+
+## 请求示例
+
+### cURL
+
+```bash
+curl -X POST "$BASE_URL/v1/messages" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "anthropic-version: 2023-06-01" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "claude-opus-4-6",
+    "max_tokens": 1024,
+    "messages": [
+      {"role": "user", "content": "你好，请用一句话自我介绍。"}
+    ]
+  }'
+```
+
+### Python SDK
+
+```bash
+pip install anthropic
+```
+
+```python
+import os
+import anthropic
+
+client = anthropic.Anthropic(
+    api_key=os.environ["TOKEN"],
+    base_url="https://api.gragapi.com",
+)
+
+message = client.messages.create(
+    model="claude-opus-4-6",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": "你好，请用一句话自我介绍。"}],
+)
+print(message)
+```
+
+### TypeScript SDK
+
+```bash
+npm install @anthropic-ai/sdk
+```
+
+```typescript
+import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic({
+  apiKey: process.env.TOKEN!,
+  baseURL: "https://api.gragapi.com",
+});
+
+const message = await client.messages.create({
+  model: "claude-opus-4-6",
+  max_tokens: 1024,
+  messages: [{ role: "user", content: "你好，请用一句话自我介绍。" }],
+});
+console.log(message);
+```
+
+## 构建方式
+
+|  | Messages API | Claude Managed Agents |
+| --- | --- | --- |
+| **是什么** | 直接调用模型、自行编排对话与工具 | 托管基础设施上的可配置 Agent 形态 |
+| **更适合** | 自定义 Agent 循环与细粒度控制每次调用 | 长时运行、异步类任务 |
+
+## 推荐开发路径
+
+1. **完成第一次调用**：配置环境变量，用 cURL 或 SDK 发出首条请求。
+2. **理解 Messages API**：掌握 `messages` 结构、多轮对话与 `stop_reason` 等。
+3. **选择模型**：通过 `GET /v1/models` 或控制台确认可用模型。
+4. **扩展能力**：工具调用、视觉、结构化输出等以 Anthropic 官方文档为准。
+
+## 开发资源
+
+- **GragAPI 控制台**：创建与管理 API 密钥、查看调用与配额。
+- **GragAPI 用户文档**：平台能力说明与多产品线导航。
+
+网关行为以 GragAPI 控制台说明为准；Anthropic 原生能力以官方文档为准。

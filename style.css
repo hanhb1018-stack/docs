@@ -1,0 +1,9 @@
+/* 固定滚动条占位，避免切换页面时内容左右位移 */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* 页脚“技术支持: mintlify”移到右侧 */
+#footer {
+  justify-content: flex-end;
+}

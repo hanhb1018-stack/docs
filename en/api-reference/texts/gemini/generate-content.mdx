@@ -1,0 +1,115 @@
+---
+title: "Gemini Native Format"
+---
+
+Use the Gemini native interface (generateContent / streamGenerateContent) for conversation and multimodal interaction.
+
+```bash
+export BASE_URL="https://api.gragapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+## Endpoints
+
+| Purpose | Path |
+| --- | --- |
+| Text / multimodal generation | `POST /v1beta/models/{model}:generateContent` |
+| Streaming output | `POST /v1beta/models/{model}:streamGenerateContent?alt=sse` |
+
+The native interface supports `Authorization: Bearer <TOKEN>`, and also `x-goog-api-key: <TOKEN>`.
+
+## Quick start
+
+```bash
+curl -X POST "$BASE_URL/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "Hello"}]}]
+  }'
+```
+
+## Streaming output
+
+```bash
+curl -N "$BASE_URL/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{"parts": [{"text": "Write a poem"}]}]
+  }'
+```
+
+## Multimodal input
+
+The native interface carries multimodal content through `contents[].parts[]`: text uses `text`, and media uses `inline_data` (`mime_type` + Base64 `data`).
+
+### Audio understanding
+
+```bash
+curl -X POST "$BASE_URL/v1beta/models/gemini-2.5-flash:generateContent" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contents": [{
+      "parts": [
+        {"text": "Transcribe this audio"},
+        {"inline_data": {"mime_type": "audio/mp3", "data": "<BASE64>"}}
+      ]
+    }]
+  }'
+```
+
+Images similarly use `inline_data` with a `mime_type` of `image/png`, `image/jpeg`, and so on. The `gemini-3-pro-preview-file` model can analyze video files directly via URL; see the video analysis documentation for details.
+
+## Reasoning
+
+The Gemini 2.5 and 3 series support reasoning, configured through `generationConfig.thinkingConfig`.
+
+The Gemini 3 series uses `thinkingLevel`:
+
+```json
+{
+  "generationConfig": {
+    "thinkingConfig": {"thinkingLevel": "high"}
+  }
+}
+```
+
+The Gemini 2.5 series uses `thinkingBudget`:
+
+```json
+{
+  "generationConfig": {
+    "thinkingConfig": {"thinkingBudget": 8192}
+  }
+}
+```
+
+## Generation parameters
+
+| Parameter | Description | Default |
+| --- | --- | --- |
+| `temperature` | Randomness, 0-2 | 1.0 |
+| `max_tokens` | Maximum output tokens | Model default |
+| `top_p` | Nucleus sampling probability | 0.95 |
+| `stop` | Stop sequences | - |
+
+Gemini 3 recommends keeping `temperature` at 1.0; too low a value may degrade reasoning.
+
+## SDK example (Python · Google SDK)
+
+```python
+from google import genai
+
+client = genai.Client(
+    api_key="your-token",
+    http_options={"base_url": "https://api.gragapi.com"},
+)
+
+response = client.models.generate_content(
+    model="gemini-2.5-flash",
+    contents="Hello",
+)
+print(response.text)
+```
