@@ -137,14 +137,8 @@
   "navbar": {
     "links": [
       {
-        "label": "",
-        "icon": "envelope",
-        "href": "https://example.com/mail"
-      },
-      {
-        "label": "",
-        "icon": "weixin",
-        "href": "https://example.com/wechat"
+        "label": "联系我们",
+        "href": "https://gregapi.com/"
       }
     ],
     "primary": {
