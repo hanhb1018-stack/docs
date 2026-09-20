@@ -2,18 +2,18 @@
 title: "BytePlus Dreamina Seedance 2.0"
 ---
 
-通过 GragAPI 调用 BytePlus 海外 Dreamina Seedance 2.0 原生任务接口和素材库工作流。
+通过 GregAPI 调用 BytePlus 海外 Dreamina Seedance 2.0 原生任务接口和素材库工作流。
 
 本页只覆盖 **海外 BytePlus Dreamina Seedance 2.0**。国内 Doubao Seedance 2.0 使用独立模型、独立价格和独立素材能力，不在本页混写。
 
 需要使用经过本人认证的真人人像、视频或音频时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成海外 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
 
-GragAPI 对外提供 BytePlus 原生接口兼容。任务创建、查询和素材库请求的字段尽可能保持 BytePlus 原生形态；任务列表、取消/删除、素材库访问会限制在当前 GragAPI 租户可见范围内。
+GregAPI 对外提供 BytePlus 原生接口兼容。任务创建、查询和素材库请求的字段尽可能保持 BytePlus 原生形态；任务列表、取消/删除、素材库访问会限制在当前 GregAPI 租户可见范围内。
 
 ## 1. 前置条件
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -24,7 +24,7 @@ Authorization: Bearer <TOKEN>
 Content-Type: application/json
 ```
 
-调用方只需要使用 GragAPI 发放的 API Token。BytePlus API Key、AK/SK、ProjectName 和 Endpoint 由平台统一托管。
+调用方只需要使用 GregAPI 发放的 API Token。BytePlus API Key、AK/SK、ProjectName 和 Endpoint 由平台统一托管。
 
 ## 2. 模型
 
@@ -44,7 +44,7 @@ Content-Type: application/json
 
 `seedance-2-0`、`seedance-2-0-260128`、`seedance-2-0-fast`、`seedance-2-0-fast-260128`、`seedance-2-0-mini`、`dreamina-seedance-2.0-mini` 属于控制台或资源页短 ID，不作为对外 API `model` 参数兼容。`dreamina-seedance-2-0-filter-off-260128`、`dreamina-seedance-2-0-260128-filter-off`、`dreamina-seedance-2-0-fast-filter-off-260128`、`dreamina-seedance-2-0-fast-260128-filter-off` 不是 BytePlus 官方模型名，平台也不做兼容映射。
 
-查询和列表响应中的 `model` 回显创建请求中的 GragAPI 对外模型，避免向调用方暴露服务配置、计费明细或实现细节。计费和权限以创建请求中的 GragAPI 对外模型、最终分辨率和参考输入类型为准。
+查询和列表响应中的 `model` 回显创建请求中的 GregAPI 对外模型，避免向调用方暴露服务配置、计费明细或实现细节。计费和权限以创建请求中的 GregAPI 对外模型、最终分辨率和参考输入类型为准。
 
 海外 BytePlus Dreamina Seedance 2.0 的 4K 示例使用 `dreamina-seedance-2-0` 标准模型。`dreamina-seedance-2-0-fast` 可用于低延迟场景，`dreamina-seedance-2-0-mini` 可用于更低成本场景，但两者都不能请求 `1080p` 或 `4k`。`doubao-seedance-2-0-fast` 和 `doubao-seedance-2-0-mini` 是国内 Doubao 语境下的模型名，不作为海外 BytePlus 官方可用示例。
 
@@ -100,7 +100,7 @@ Content-Type: application/json
 ## 5. 创建任务
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -149,7 +149,7 @@ Filter-Off 调用只需要替换 `model`，其他请求字段与普通海外 Dre
 }
 ```
 
-GragAPI native 响应默认不追加 `platform_id`，以保持 BytePlus 原生响应形态。
+GregAPI native 响应默认不追加 `platform_id`，以保持 BytePlus 原生响应形态。
 
 常用字段：
 
@@ -181,12 +181,12 @@ BytePlus 将视频生成、视频编辑和视频延展统一在同一个任务�
 | 多段视频衔接    | `text` + 2-3 个 `video_url.role=reference_video`，用 prompt 说明中间过渡和最终顺序                                                            |
 | 严格首帧或尾帧   | 使用 `image_url.role=first_frame` / `last_frame`；普通参考图继续使用 `reference_image`                                                      |
 
-GragAPI 默认要求先通过素材库上传图片、视频或音频，等素材状态变为 `Active` 后再以 `asset://<Asset_Id>` 传入。包含 `content[].type=video_url` 的任务会按视频参考输入 SKU 计费；未包含 `video_url` 的任务不会进入 `*-video` SKU。`dreamina-seedance-2-0-mini` 支持音频参考输入，但音频参考本身不会把任务计入 `*-video` SKU。
+GregAPI 默认要求先通过素材库上传图片、视频或音频，等素材状态变为 `Active` 后再以 `asset://<Asset_Id>` 传入。包含 `content[].type=video_url` 的任务会按视频参考输入 SKU 计费；未包含 `video_url` 的任务不会进入 `*-video` SKU。`dreamina-seedance-2-0-mini` 支持音频参考输入，但音频参考本身不会把任务计入 `*-video` SKU。
 
 视频编辑示例：
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -221,7 +221,7 @@ curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks"
 视频延展示例：
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -259,12 +259,12 @@ curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks"
 
 兼容字段 `CallbackURL` 会被规范化为 `callback_url`，不会继续把 `CallbackURL` 原字段提交给模型服务。如果两个字段同时存在，以 `callback_url` 为准。
 
-这是原生任务回调透传能力，不是 GragAPI 平台 webhook broker。回调投递、重试、签名和回调体结构均以模型服务原生能力为准。
+这是原生任务回调透传能力，不是 GregAPI 平台 webhook broker。回调投递、重试、签名和回调体结构均以模型服务原生能力为准。
 
 ## 6. 查询任务
 
 ```bash
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -313,7 +313,7 @@ curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-2026
 ## 7. 查询租户任务列表
 
 ```bash
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -342,15 +342,15 @@ curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num
 | `page_num`        | 页码，从 `1` 开始                                                   |
 | `page_size`       | 每页数量                                                          |
 | `filter.status`   | `queued`、`running`、`succeeded`、`failed`、`expired`、`cancelled` |
-| `filter.model`    | 创建请求中的 GragAPI 对外模型                                             |
+| `filter.model`    | 创建请求中的 GregAPI 对外模型                                             |
 | `filter.task_ids` | 逗号分隔的 BytePlus 原生任务 ID                                        |
 
-列表接口是 **当前 GragAPI 租户作用域内** 的 BytePlus 兼容列表，不返回其他租户或账号级全量任务。
+列表接口是 **当前 GregAPI 租户作用域内** 的 BytePlus 兼容列表，不返回其他租户或账号级全量任务。
 
 ## 8. 取消或删除任务
 
 ```bash
-curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl -X DELETE "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -367,7 +367,7 @@ curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/task
 }
 ```
 
-GragAPI 会保留本地任务审计和计费记录。对不支持运行中删除的任务，终态任务删除会在 GragAPI 租户内本地隐藏，运行中任务返回 `409`。删除或取消只允许操作当前租户自己的任务。
+GregAPI 会保留本地任务审计和计费记录。对不支持运行中删除的任务，终态任务删除会在 GregAPI 租户内本地隐藏，运行中任务返回 `409`。删除或取消只允许操作当前租户自己的任务。
 
 ## 9. 素材库工作流
 
@@ -402,7 +402,7 @@ POST /volcark/?Action={ActionName}&Version=2024-01-01
 ### 9.1 创建素材组
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -432,7 +432,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAssetGroup&Version=2
 ### 9.2 创建素材
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -470,7 +470,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-0
 ### 9.3 查询素材
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -492,7 +492,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=GetAsset&Version=2024-01-0
 ### 9.4 查询素材列表
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -506,7 +506,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=ListAssets&Version=2024-01
   }'
 ```
 
-`ListAssets` 和 `ListAssetGroups` 只返回当前 GragAPI 租户可见的素材；调用方需按官方素材库契约提供 `Filter.GroupType=AIGC`。
+`ListAssets` 和 `ListAssetGroups` 只返回当前 GregAPI 租户可见的素材；调用方需按官方素材库契约提供 `Filter.GroupType=AIGC`。
 
 `ListAssets` 会在返回当前页前，对当前页中 `Processing`、`Pending` 或空状态的素材做一次尽力刷新；它不是轮询接口，也不保证每次都能立刻拿到上游最新状态。后台任务也会兜底刷新创建 1 小时内仍处于非终态的素材，超过 1 小时后后台不再继续扫描该素材；调用方仍可显式调用 `GetAsset` 查询单个素材的最新状态。
 
@@ -540,7 +540,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=ListAssets&Version=2024-01
 素材进入 `Active` 后，用 `asset://<Asset_Id>` 作为 BytePlus content 输入：
 
 ```bash
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -571,9 +571,9 @@ curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks"
 
 ## 11. 多租户边界
 
-| 能力     | GragAPI 行为                                 |
+| 能力     | GregAPI 行为                                 |
 | ------ | ---------------------------------------- |
-| 任务创建   | 请求参数尽量保持 BytePlus 原生形态，服务端兼容差异由 GragAPI 处理 |
+| 任务创建   | 请求参数尽量保持 BytePlus 原生形态，服务端兼容差异由 GregAPI 处理 |
 | 任务查询   | 只能查询当前租户创建的任务，响应字段按 BytePlus 兼容层归一       |
 | 任务列表   | 只返回当前租户任务，不返回 BytePlus 账号级全量任务           |
 | 取消/删除  | 只能操作当前租户任务，并保留平台审计记录                     |

@@ -11,7 +11,7 @@ title: "GPT生图"
 ## 快速开始
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations" \
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -28,7 +28,7 @@ Python SDK:
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="https://api.gragapi.com/v1", api_key="$TOKEN")
+client = OpenAI(base_url="https://api.gregapi.com/v1", api_key="$TOKEN")
 
 result = client.images.generate(
     model="gpt-image-2",
@@ -153,7 +153,7 @@ print(result.data[0].url)
 通过 `images[].image_url` 或 `images[].file_id` 指定底图：
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/edits" \
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -170,7 +170,7 @@ curl -X POST "https://api.gragapi.com/v1/images/edits" \
 多参考图示例：
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/edits" \
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -189,7 +189,7 @@ curl -X POST "https://api.gragapi.com/v1/images/edits" \
 ### Multipart 上传
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/edits" \
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gpt-image-2" \
   -F "image=@base.png" \
@@ -227,7 +227,7 @@ curl -X POST "https://api.gragapi.com/v1/images/edits" \
 ### 文生图任务
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations/async" \
+curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -242,14 +242,14 @@ curl -X POST "https://api.gragapi.com/v1/images/generations/async" \
 查询任务：
 
 ```bash
-curl -X GET "https://api.gragapi.com/v1/images/generations/{id}" \
+curl -X GET "https://api.gregapi.com/v1/images/generations/{id}" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 改图任务
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/edits/async" \
+curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gpt-image-2" \
   -F "prompt=将这张图片转换为干净的电商主图" \

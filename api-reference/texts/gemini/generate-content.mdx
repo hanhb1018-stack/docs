@@ -5,7 +5,7 @@ title: "Gemini 原生格式"
 使用 Gemini 原生接口（generateContent / streamGenerateContent）进行对话与多模态交互。
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -104,7 +104,7 @@ from google import genai
 
 client = genai.Client(
     api_key="your-token",
-    http_options={"base_url": "https://api.gragapi.com"},
+    http_options={"base_url": "https://api.gregapi.com"},
 )
 
 response = client.models.generate_content(

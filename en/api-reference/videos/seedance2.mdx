@@ -2,7 +2,7 @@
 title: "Doubao Seedance 2.0"
 ---
 
-Call the domestic Doubao Seedance 2.0 model through GragAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the Volcano Ark native shape as closely as possible.
+Call the domestic Doubao Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the Volcano Ark native shape as closely as possible.
 
 <Info>
 This page only covers the **domestic Doubao Seedance 2.0**. The overseas [BytePlus Dreamina Seedance 2.0](/en/api-reference/videos/byteplus-seedance2) uses separate models, pricing, and asset capabilities.
@@ -12,9 +12,9 @@ When you need to use real-person imagery, video, or audio that has been verified
 
 ## Endpoint
 
-**POST** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+**POST** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
-The domestic entry point is the Volcano Ark native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GragAPI tenant scope.
+The domestic entry point is the Volcano Ark native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
 
 | Feature | Method & path |
 | ------- | ---- |
@@ -25,11 +25,11 @@ The domestic entry point is the Volcano Ark native task API. Task listing, cance
 
 ## Authentication
 
-Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GragAPI; the Volcano Ark API key, AK/SK, project name, and endpoint are all hosted by the platform.
+Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GregAPI; the Volcano Ark API key, AK/SK, project name, and endpoint are all hosted by the platform.
 
 | Header | Description |
 | ------- | ---- |
-| `Authorization` | `Bearer <API_KEY>` — the API token issued by GragAPI |
+| `Authorization` | `Bearer <API_KEY>` — the API token issued by GregAPI |
 | `Content-Type` | `application/json` |
 
 ## Models
@@ -40,7 +40,7 @@ Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY
 | `doubao-seedance-2-0-fast` | `doubao-seedance-2-0-fast-260128` | Domestic fast model; supports only `480p` / `720p` |
 | `doubao-seedance-2-0-mini` | `doubao-seedance-2-0-mini-260615` | Domestic Mini model; supports only `480p` / `720p` |
 
-For the `model` field, use the stable external model name on the left. The platform also accepts the official version alias on the right and normalizes billing as a standard, fast, or mini model. In query and list responses the `model` field echoes the GragAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
+For the `model` field, use the stable external model name on the left. The platform also accepts the official version alias on the right and normalizes billing as a standard, fast, or mini model. In query and list responses the `model` field echoes the GregAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
 
 The domestic standard model supports 4K: set `resolution` to `4k`; output is **10-bit / H.265**. The fast and mini models do not support `1080p` or `4k` and must fall back to `480p` / `720p`.
 
@@ -55,7 +55,7 @@ The domestic standard model supports 4K: set `resolution` to `4k`; output is **1
 
 ## Domestic pricing
 
-Default prices follow the official RMB token unit pricing, converted to the GragAPI rate at the platform USD exchange rate. Only successfully rendered tasks are settled.
+Default prices follow the official RMB token unit pricing, converted to the GregAPI rate at the platform USD exchange rate. Only successfully rendered tasks are settled.
 
 | SKU | Official price |
 | ------- | ---- |
@@ -95,7 +95,7 @@ Default prices follow the official RMB token unit pricing, converted to the Grag
 
 <CodeGroup>
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -133,7 +133,7 @@ data = {
 }
 
 resp = requests.post(
-    "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks",
+    "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks",
     headers=headers,
     json=data,
 )
@@ -141,7 +141,7 @@ print(resp.json())
 ```
 
 ```javascript JavaScript
-const resp = await fetch("https://api.gragapi.com/volcark/api/v3/contents/generations/tasks", {
+const resp = await fetch("https://api.gregapi.com/volcark/api/v3/contents/generations/tasks", {
   method: "POST",
   headers: {
     "Authorization": "Bearer $GRAPAPI_API_KEY",
@@ -172,10 +172,10 @@ Task creation is asynchronous; a successful response only returns the task ID. Q
 
 ## Query a task
 
-**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -208,25 +208,25 @@ Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancell
 
 ## List tenant tasks
 
-**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
 ```bash cURL
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=doubao-seedance-2-0" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=doubao-seedance-2-0" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
-The list endpoint is the official-compatible list within the current GragAPI tenant scope and does not return tasks from other tenants.
+The list endpoint is the official-compatible list within the current GregAPI tenant scope and does not return tasks from other tenants.
 
 ## Cancel or delete a task
 
-**DELETE** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**DELETE** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl -X DELETE "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
-You can only delete or cancel tasks that belong to the current tenant. GragAPI keeps local task audit and billing records.
+You can only delete or cancel tasks that belong to the current tenant. GregAPI keeps local task audit and billing records.
 
 ## Video editing and extension
 
@@ -240,7 +240,7 @@ Video generation, editing, and extension are all expressed through the same crea
 | Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
 
 ```bash Video editing
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -277,7 +277,7 @@ The asset library comes with the domestic Doubao Seedance 2.0. All Asset APIs ar
 | Get a single asset | `GetAsset` |
 
 ```bash Create asset
-curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

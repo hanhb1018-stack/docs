@@ -2,7 +2,7 @@
 title: "视频生成"
 ---
 
-通过 GragAPI 创建 Vidu 视频生成任务，支持文生视频、图生视频、首尾帧与参考生视频。
+通过 GregAPI 创建 Vidu 视频生成任务，支持文生视频、图生视频、首尾帧与参考生视频。
 
 ## 1. 概述
 
@@ -14,14 +14,14 @@ title: "视频生成"
 | 参考生视频 | `/vidu/ent/v2/reference2video` | 参考图 + 文本描述生成视频 |
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
-- GragAPI 接口：`POST $BASE_URL/vidu/ent/v2/{action}`
+- GregAPI 接口：`POST $BASE_URL/vidu/ent/v2/{action}`
 - Vidu 官方接口：`POST https://api.vidu.cn/ent/v2/{action}`
 
-所有请求使用 GragAPI API Token：
+所有请求使用 GregAPI API Token：
 
 ```http
 Authorization: Bearer <TOKEN>
@@ -149,7 +149,7 @@ curl -X POST "$BASE_URL/vidu/ent/v2/reference2video" \
 }
 ```
 
-`task_id` / `id` 为 Vidu 上游原始任务 ID，可直接用于 Vidu 官方查询接口。`platform_id` 为 GragAPI 平台统一追踪 ID（`video_<ULID>`），可用于平台内查询、取消等操作。查询和取消接口同时接受两种 ID。
+`task_id` / `id` 为 Vidu 上游原始任务 ID，可直接用于 Vidu 官方查询接口。`platform_id` 为 GregAPI 平台统一追踪 ID（`video_<ULID>`），可用于平台内查询、取消等操作。查询和取消接口同时接受两种 ID。
 
 创建成功仅代表任务入队，需通过 [任务查询](/api-reference/videos/vidu-video-query) 接口获取最终结果。
 

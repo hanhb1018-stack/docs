@@ -9,16 +9,16 @@ Query Vidu video generation task status, or cancel a task.
 Video generation tasks run asynchronously. After a task is created, poll results or cancel the task through this endpoint.
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
-- GragAPI endpoint: `GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
+- GregAPI endpoint: `GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
 - Vidu official endpoint: `GET https://api.vidu.cn/ent/v2/tasks/{task_id}/creations`
 
 The `task_id` parameter accepts both the upstream task ID and the platform `platform_id` (`video_<ULID>`).
 
-All requests use the GragAPI API Token:
+All requests use the GregAPI API Token:
 
 ```http
 Authorization: Bearer <TOKEN>

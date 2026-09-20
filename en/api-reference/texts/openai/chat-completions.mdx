@@ -2,10 +2,10 @@
 title: "Chat Completions"
 ---
 
-Use GragAPI's OpenAI-compatible chat completion and tool-calling interface.
+Use GregAPI's OpenAI-compatible chat completion and tool-calling interface.
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -25,8 +25,8 @@ curl -X POST "$BASE_URL/v1/chat/completions" \
   -d '{
     "model": "gpt-4o-mini",
     "messages": [
-      {"role": "system", "content": "You are GragAPI's product assistant."},
-      {"role": "user", "content": "Introduce GragAPI in three sentences."}
+      {"role": "system", "content": "You are GregAPI's product assistant."},
+      {"role": "user", "content": "Introduce GregAPI in three sentences."}
     ],
     "temperature": 0.7
   }'
@@ -38,11 +38,11 @@ curl -X POST "$BASE_URL/v1/chat/completions" \
 - **Function calling**: describe callable functions via `tools` and `tool_choice`, then parse `tool_calls` in the response and run your business logic.
 - **JSON constraint**: set `response_format` to `{"type": "json_schema"}` to have the model return structured data strictly.
 
-GragAPI automatically aligns differences across common compatible interfaces, reducing adaptation cost when switching models.
+GregAPI automatically aligns differences across common compatible interfaces, reducing adaptation cost when switching models.
 
-## GragAPI extension fields
+## GregAPI extension fields
 
-The following fields are GragAPI's extensions on top of the standard OpenAI response body, used to expose billing details of the upstream model.
+The following fields are GregAPI's extensions on top of the standard OpenAI response body, used to expose billing details of the upstream model.
 
 ### `usage.prompt_tokens_details`
 

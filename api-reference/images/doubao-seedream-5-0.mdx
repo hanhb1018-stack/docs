@@ -4,10 +4,10 @@ title: "doubao-seedream-5.0"
 
 通过 OpenAI 兼容接口调用 Doubao Seedream 5.0 Pro 图片生成模型，支持文生图、图生图。
 
-所有请求都经由 GragAPI 转发到火山方舟，不需要自行签名，只需在 Header 中携带 GragAPI API Key。
+所有请求都经由 GregAPI 转发到火山方舟，不需要自行签名，只需在 Header 中携带 GregAPI API Key。
 
 ```bash
-export BASE_URL="https://api.gragapi.com/v1"
+export BASE_URL="https://api.gregapi.com/v1"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -113,7 +113,7 @@ MIME 类型必须与图片实际格式一致，逗号后紧接完整 Base64，�
 ### 文生图
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations" \
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +129,7 @@ curl -X POST "https://api.gragapi.com/v1/images/generations" \
 将 `<完整JPEG图片Base64>` 替换为 JPEG 图片的完整 Base64，保留前面的 `data:image/jpeg;base64,`。PNG 图片改用 `data:image/png;base64,`。
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations" \
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   --data-raw '{

@@ -2,23 +2,23 @@
 title: "Seedance 2.5"
 ---
 
-通过 GragAPI 调用国内 Doubao 与海外 BytePlus Dreamina Seedance 2.5。
+通过 GregAPI 调用国内 Doubao 与海外 BytePlus Dreamina Seedance 2.5。
 
-Seedance 2.5 同时提供国内 Doubao 和海外 BytePlus Dreamina 版本。两者共用 GragAPI 的任务接口和请求结构，但模型名、价格与联网搜索能力不同。需要使用经过本人认证的真人素材时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成对应地域的 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
+Seedance 2.5 同时提供国内 Doubao 和海外 BytePlus Dreamina 版本。两者共用 GregAPI 的任务接口和请求结构，但模型名、价格与联网搜索能力不同。需要使用经过本人认证的真人素材时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成对应地域的 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
 
 ## 1. 模型与价格
 
-| 区域 | GragAPI 稳定模型名 | 官方版本 ID | 无视频输入 | 含视频输入 |
+| 区域 | GregAPI 稳定模型名 | 官方版本 ID | 无视频输入 | 含视频输入 |
 | --- | --- | --- | --- | --- |
 | 国内 | `doubao-seedance-2-5` | `doubao-seedance-2-5-260628` | ¥70/M tokens | ¥42/M tokens |
 | 海外 | `dreamina-seedance-2-5` | `dreamina-seedance-2-5-260628` | \$10.70/M tokens | \$6.40/M tokens |
 
-建议在请求中使用稳定模型名。平台也接受对应的官方版本 ID，并自动映射到稳定模型；查询和列表响应仍回显稳定模型名。`video` 档表示 `content[]` 中包含 `video_url`，否则使用 `novideo` 档。480p 与 720p 单价相同；只对成功生成的视频结算，实际视频用量以查询响应中的 `usage.completion_tokens` 为准。国内模型还支持纯文本任务使用 `tools: [{"type":"web_search"}]`。联网搜索按响应中的 `usage.tool_usage.web_search` 实际次数独立结算；海外模型不支持该工具，具体客户价格以 GragAPI 控制台为准。
+建议在请求中使用稳定模型名。平台也接受对应的官方版本 ID，并自动映射到稳定模型；查询和列表响应仍回显稳定模型名。`video` 档表示 `content[]` 中包含 `video_url`，否则使用 `novideo` 档。480p 与 720p 单价相同；只对成功生成的视频结算，实际视频用量以查询响应中的 `usage.completion_tokens` 为准。国内模型还支持纯文本任务使用 `tools: [{"type":"web_search"}]`。联网搜索按响应中的 `usage.tool_usage.web_search` 实际次数独立结算；海外模型不支持该工具，具体客户价格以 GregAPI 控制台为准。
 
 ## 2. 接口
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -29,7 +29,7 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | 查询任务列表 | `GET /volcark/api/v3/contents/generations/tasks` |
 | 取消或删除任务 | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
-所有请求使用 GragAPI API Token：
+所有请求使用 GregAPI API Token：
 
 ```http
 Authorization: Bearer <TOKEN>
@@ -61,7 +61,7 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
   }'
 ```
 
-海外调用只需把 `model` 改为 `dreamina-seedance-2-5`；接口地址仍使用 GragAPI 的 `BASE_URL`。创建成功返回任务 ID：
+海外调用只需把 `model` 改为 `dreamina-seedance-2-5`；接口地址仍使用 GregAPI 的 `BASE_URL`。创建成功返回任务 ID：
 
 ```json
 {
@@ -80,7 +80,7 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
 | `video_url` | `reference_video` | 10 |
 | `audio_url` | `reference_audio` | 10 |
 
-图片、视频和音频合计最多 50 个。GragAPI 托管素材可使用 `asset://<Asset_Id>`；素材需先完成上传和处理，再提交生成任务。
+图片、视频和音频合计最多 50 个。GregAPI 托管素材可使用 `asset://<Asset_Id>`；素材需先完成上传和处理，再提交生成任务。
 
 ```json
 {

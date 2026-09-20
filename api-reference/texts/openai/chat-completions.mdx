@@ -2,10 +2,10 @@
 title: "通用对话接口"
 ---
 
-通过 GragAPI 兼容 OpenAI 的对话补全与工具调用接口。
+通过 GregAPI 兼容 OpenAI 的对话补全与工具调用接口。
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -25,8 +25,8 @@ curl -X POST "$BASE_URL/v1/chat/completions" \
   -d '{
     "model": "gpt-4o-mini",
     "messages": [
-      {"role": "system", "content": "你是 GragAPI 的产品助理。"},
-      {"role": "user", "content": "用三句话介绍 GragAPI。"}
+      {"role": "system", "content": "你是 GregAPI 的产品助理。"},
+      {"role": "user", "content": "用三句话介绍 GregAPI。"}
     ],
     "temperature": 0.7
   }'
@@ -38,11 +38,11 @@ curl -X POST "$BASE_URL/v1/chat/completions" \
 - **函数调用**：通过 `tools` 与 `tool_choice` 描述可调用的函数，后续在响应中解析 `tool_calls` 并执行业务逻辑。
 - **JSON 约束**：配合 `response_format` 设置为 `{"type": "json_schema"}`，可让模型严格返回结构化数据。
 
-GragAPI 会自动对齐常见兼容接口中的差异字段，减少模型切换带来的适配成本。
+GregAPI 会自动对齐常见兼容接口中的差异字段，减少模型切换带来的适配成本。
 
-## GragAPI 扩展字段
+## GregAPI 扩展字段
 
-以下字段是 GragAPI 在标准 OpenAI 响应体基础上的扩展，用于暴露上游模型的计费明细。
+以下字段是 GregAPI 在标准 OpenAI 响应体基础上的扩展，用于暴露上游模型的计费明细。
 
 ### `usage.prompt_tokens_details`
 

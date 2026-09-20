@@ -2,7 +2,7 @@
 title: "MiniMax-H3"
 ---
 
-Call the MiniMax-H3 and MiniMax-H3-Max video generation (v2) capabilities through GragAPI. MiniMax's official v2 capability creates tasks with `POST /v2/video_generation` and queries them with `GET /v2/query/video_generation/{task_id}`; GragAPI exposes these as proxy endpoints, and both require a Bearer token.
+Call the MiniMax-H3 and MiniMax-H3-Max video generation (v2) capabilities through GregAPI. MiniMax's official v2 capability creates tasks with `POST /v2/video_generation` and queries them with `GET /v2/query/video_generation/{task_id}`; GregAPI exposes these as proxy endpoints, and both require a Bearer token.
 
 ## 1. Models and capabilities
 
@@ -11,12 +11,12 @@ Call the MiniMax-H3 and MiniMax-H3-Max video generation (v2) capabilities throug
 | `MiniMax-H3` | `768P` / `2K` | 4–15 seconds | Text-to-video, first/last frame, reference material |
 | `MiniMax-H3-Max` | `480P` / `768P` | 5–15 seconds | Text and first/last-frame images only; reference material is not accepted |
 
-`minimax-h3-768p-second`, `minimax-h3-2k-second`, `minimax-h3-extra-input-image`, `minimax-h3-max-480p-second`, and `minimax-h3-max-768p-second` are GragAPI's internal billing component SKUs. They cannot be used as `model` values, nor are they configurable model allowlist entries.
+`minimax-h3-768p-second`, `minimax-h3-2k-second`, `minimax-h3-extra-input-image`, `minimax-h3-max-480p-second`, and `minimax-h3-max-768p-second` are GregAPI's internal billing component SKUs. They cannot be used as `model` values, nor are they configurable model allowlist entries.
 
 ## 2. Endpoints
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -25,7 +25,7 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | Create task | `POST /minimaxi/v2/video_generation` |
 | Query task | `GET /minimaxi/v2/query/video_generation/{task_id}` |
 
-All requests use the GragAPI API Token:
+All requests use the GregAPI API Token:
 
 ```http
 Authorization: Bearer <TOKEN>
@@ -74,7 +74,7 @@ curl -X POST "$BASE_URL/minimaxi/v2/video_generation" \
   }'
 ```
 
-A successful creation returns only GragAPI's stable public identifiers:
+A successful creation returns only GregAPI's stable public identifiers:
 
 ```json
 {
@@ -112,11 +112,11 @@ H3-Max supports only the first/last-frame mode; reference material is not suppor
 
 Each `image_url.url`, `video_url.url`, and `audio_url.url` may only use these locators:
 
-- A public `https://` URL. GragAPI performs DNS fail-closed and private/loopback address blocking; HTTP, `file:`, `ftp:`, `blob:`, `javascript:`, and protocol-relative URLs are not accepted.
+- A public `https://` URL. GregAPI performs DNS fail-closed and private/loopback address blocking; HTTP, `file:`, `ftp:`, `blob:`, `javascript:`, and protocol-relative URLs are not accepted.
 - A strict `data:<mime>;base64,<payload>`. The metadata must be exactly `<mime>;base64` with no whitespace, and the payload must be non-empty strict Base64.
 - An authority-only `mm_file://<positive-int64>`. Only a positive decimal int64 authority is allowed, with no userinfo, port, path, query, or fragment.
 
-For data URIs, GragAPI validates the decoded per-file size and MIME:
+For data URIs, GregAPI validates the decoded per-file size and MIME:
 
 | Input type | Allowed MIME | Decoded limit |
 | --- | --- | --- |
@@ -124,7 +124,7 @@ For data URIs, GragAPI validates the decoded per-file size and MIME:
 | `video_url` | `video/mp4` | 50 MiB |
 | `audio_url` | `audio/wav`, `audio/mp3` | 15 MiB |
 
-Public HTTPS URLs and `mm_file` references are not fetched or locally inspected by GragAPI; official media-format constraints are validated upstream. The full JSON request body is capped at 64 MiB; the Base64 expansion of data URIs and other fields count toward this limit, so the actual decoded size available will be lower than the per-file cap.
+Public HTTPS URLs and `mm_file` references are not fetched or locally inspected by GregAPI; official media-format constraints are validated upstream. The full JSON request body is capped at 64 MiB; the Base64 expansion of data URIs and other fields count toward this limit, so the actual decoded size available will be lower than the per-file cap.
 
 ## 6. Query a task
 
@@ -158,4 +158,4 @@ The query response keeps the upstream `task` object and appends `platform_id` at
 ## 7. Billing and notes
 
 - On success, `task.content.url` is an upstream signed URL and will expire; the exact validity depends on the URL and the upstream response. Use it promptly and do not write the full signed URL into logs or long-term storage.
-- Billing for creation failures, task failures, or cancellations is subject to the GragAPI account and actual task settlement records.
+- Billing for creation failures, task failures, or cancellations is subject to the GregAPI account and actual task settlement records.

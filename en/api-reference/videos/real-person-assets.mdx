@@ -2,7 +2,7 @@
 title: "Real-Person Asset Library API"
 ---
 
-Complete ByteDance domestic and overseas real-person verification, LivenessFace asset management, and Seedance video calls through GragAPI.
+Complete ByteDance domestic and overseas real-person verification, LivenessFace asset management, and Seedance video calls through GregAPI.
 
 The real-person asset library stores images, videos, or audio that have been authorized and liveness-verified by the person themselves as trusted assets, which can then be submitted to Seedance via `asset://<AssetId>`.
 
@@ -19,11 +19,11 @@ Content-Type: application/json
 ```
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
-The `model` field in the request body is only used by GragAPI to select the domestic or overseas official channel and is not sent to the ByteDance upstream. We recommend using the same model and `ProjectName` throughout the entire verification and asset workflow.
+The `model` field in the request body is only used by GregAPI to select the domestic or overseas official channel and is not sent to the ByteDance upstream. We recommend using the same model and `ProjectName` throughout the entire verification and asset workflow.
 
 | Region                 | Recommended models                                                                                         | Notes                                          |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
@@ -44,7 +44,7 @@ Real-person assets are not automatically migrated or downgraded across domestic,
 
 The H5 callback is only a workflow notification. Even if `resultCode=10000`, the server must still call `GetVisualValidateResult` to obtain the trusted `GroupId`.
 
-When a domestic request hits the ZLHub channel with real-person capability enabled, `H5Link` is a GragAPI-hosted verification page: it hosts the vendor H5, and after the trusted Group is bound successfully it redirects to `CallbackURL` with the same ByteDance parameters. The caller's flow does not need to distinguish channels.
+When a domestic request hits the ZLHub channel with real-person capability enabled, `H5Link` is a GregAPI-hosted verification page: it hosts the vendor H5, and after the trusted Group is bound successfully it redirects to `CallbackURL` with the same ByteDance parameters. The caller's flow does not need to distinguish channels.
 
 ## 3. Create a real-person verification session
 
@@ -54,7 +54,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
   -H "Content-Type: application/json" \
   -d '{
     "model": "doubao-seedance-2-5",
-    "CallbackURL": "https://api.gragapi.com/real-person/callback",
+    "CallbackURL": "https://api.gregapi.com/real-person/callback",
     "ProjectName": "default"
   }'
 ```
@@ -72,7 +72,7 @@ Typical response:
   "Result": {
     "BytedToken": "one-time-token",
     "H5Link": "https://example.byte-provider.com/verify/...",
-    "CallbackURL": "https://api.gragapi.com/real-person/callback"
+    "CallbackURL": "https://api.gregapi.com/real-person/callback"
   }
 }
 ```
@@ -84,7 +84,7 @@ Typical response:
 | `BytedToken`  | One-time verification credential, usually valid for 30 minutes; do not write into logs or databases. |
 | `H5Link`      | One-time real-person verification link; only hand it to the person granted this authorization. |
 
-If you do not have your own callback page, you can use the GragAPI-provided `https://api.gragapi.com/real-person/callback`. This page only indicates that the H5 operation has finished; it does not store or display callback parameters and does not represent successful verification. You must still call `GetVisualValidateResult` with the original `BytedToken` afterward.
+If you do not have your own callback page, you can use the GregAPI-provided `https://api.gregapi.com/real-person/callback`. This page only indicates that the H5 operation has finished; it does not store or display callback parameters and does not represent successful verification. You must still call `GetVisualValidateResult` with the original `BytedToken` afterward.
 
 To specify the H5 language, append `lng=zh`, `lng=en`, or `lng=zh-Hant` after `H5Link`.
 
@@ -119,7 +119,7 @@ Successful result:
 }
 ```
 
-`GroupId` is bound by GragAPI to the current API user, official channel, region, and Project. Real-person Groups cannot be created via `CreateAssetGroup`, nor used as the asset group for other users or other regions.
+`GroupId` is bound by GregAPI to the current API user, official channel, region, and Project. Real-person Groups cannot be created via `CreateAssetGroup`, nor used as the asset group for other users or other regions.
 
 ## 5. Create a real-person asset
 
@@ -342,11 +342,11 @@ Upstream errors for real-person assets use neutral error messages to avoid echoi
 
 ## 10. Billing and compliance
 
-* Real-person verification and asset Create/Get/List/Update/Delete currently do not deduct the GragAPI model balance.
+* Real-person verification and asset Create/Get/List/Update/Delete currently do not deduct the GregAPI model balance.
 * When generating video with a real-person `asset://`, billing still occurs once based on the actual Seedance tokens returned by the successful task.
 * Real-person verification is currently marked by the official channel as time-limited free; the future price and end time are not disclosed. Do not treat this status as a long-term free commitment.
 * The caller must obtain explicit, proactive, and revocable separate consent from the real person before verification, and provide deletion and withdrawal options.
 * Do not store face content, full `H5Link`, `BytedToken`, AK/SK, Authorization, or temporary asset URLs in logs, issues, support tickets, or databases.
-* The availability of the real-person H5, Group, and Asset depends on the corresponding domestic or overseas official channel entitlement. If the API returns permission or quota errors, contact the GragAPI administrator to confirm the activation status.
+* The availability of the real-person H5, Group, and Asset depends on the corresponding domestic or overseas official channel entitlement. If the API returns permission or quota errors, contact the GregAPI administrator to confirm the activation status.
 
 For model parameters and video billing details, see [Seedance 2.5](/en/api-reference/videos/seedance-2-5), [Doubao Seedance 2.0](/en/api-reference/videos/seedance2), and [BytePlus Dreamina Seedance 2.0](/en/api-reference/videos/byteplus-seedance2).

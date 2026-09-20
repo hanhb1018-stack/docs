@@ -2,7 +2,7 @@
 title: "BytePlus Dreamina Seedance 2.0"
 ---
 
-Call the overseas BytePlus Dreamina Seedance 2.0 model through GragAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the BytePlus native shape as closely as possible.
+Call the overseas BytePlus Dreamina Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the BytePlus native shape as closely as possible.
 
 <Info>
 This page only covers the **overseas BytePlus Dreamina Seedance 2.0**. The domestic [Doubao Seedance 2.0](/en/api-reference/videos/seedance2) uses separate models, pricing, and asset capabilities.
@@ -12,9 +12,9 @@ When you need to use real-person imagery, video, or audio that has been verified
 
 ## Endpoint
 
-**POST** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+**POST** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
-The overseas entry point is the BytePlus native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GragAPI tenant scope.
+The overseas entry point is the BytePlus native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
 
 | Feature | Method & path |
 | ------- | ---- |
@@ -25,11 +25,11 @@ The overseas entry point is the BytePlus native task API. Task listing, cancella
 
 ## Authentication
 
-Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GragAPI; the BytePlus API key, AK/SK, project name, and endpoint are all hosted by the platform.
+Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GregAPI; the BytePlus API key, AK/SK, project name, and endpoint are all hosted by the platform.
 
 | Header | Description |
 | ------- | ---- |
-| `Authorization` | `Bearer <API_KEY>` — the API token issued by GragAPI |
+| `Authorization` | `Bearer <API_KEY>` — the API token issued by GregAPI |
 | `Content-Type` | `application/json` |
 
 ## Models
@@ -48,7 +48,7 @@ For the `model` field, use the stable external model name on the left. For ByteP
 - `dreamina-seedance-2-0-fast-260128` → `dreamina-seedance-2-0-fast`
 - `dreamina-seedance-2-0-mini-260615` → `dreamina-seedance-2-0-mini`
 
-`seedance-2-0`, `seedance-2-0-260128`, `seedance-2-0-fast`, `seedance-2-0-fast-260128`, `seedance-2-0-mini`, and `dreamina-seedance-2.0-mini` are console or resource-page short IDs and are not accepted as the external `model` parameter. `dreamina-seedance-2-0-filter-off-260128`, `dreamina-seedance-2-0-260128-filter-off`, `dreamina-seedance-2-0-fast-filter-off-260128`, and `dreamina-seedance-2-0-fast-260128-filter-off` are not official BytePlus model names, and the platform does not map them. In query and list responses the `model` field echoes the GragAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
+`seedance-2-0`, `seedance-2-0-260128`, `seedance-2-0-fast`, `seedance-2-0-fast-260128`, `seedance-2-0-mini`, and `dreamina-seedance-2.0-mini` are console or resource-page short IDs and are not accepted as the external `model` parameter. `dreamina-seedance-2-0-filter-off-260128`, `dreamina-seedance-2-0-260128-filter-off`, `dreamina-seedance-2-0-fast-filter-off-260128`, and `dreamina-seedance-2-0-fast-260128-filter-off` are not official BytePlus model names, and the platform does not map them. In query and list responses the `model` field echoes the GregAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
 
 ### 4K capability
 
@@ -110,7 +110,7 @@ The overseas Mini supports only `480p` / `720p` and supports audio reference inp
 
 <CodeGroup>
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -160,7 +160,7 @@ data = {
 }
 
 resp = requests.post(
-    "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks",
+    "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks",
     headers=headers,
     json=data,
 )
@@ -168,7 +168,7 @@ print(resp.json())
 ```
 
 ```javascript JavaScript
-const resp = await fetch("https://api.gragapi.com/volcark/api/v3/contents/generations/tasks", {
+const resp = await fetch("https://api.gregapi.com/volcark/api/v3/contents/generations/tasks", {
   method: "POST",
   headers: {
     "Authorization": "Bearer $GRAPAPI_API_KEY",
@@ -217,15 +217,15 @@ A Filter-Off call only replaces `model`; other request fields stay the same as t
 ```
 
 <Info>
-Task creation is asynchronous; a successful response only returns the task ID. Query the task to retrieve the final video result. The GragAPI native response does not append `platform_id` by default, preserving the BytePlus native response shape.
+Task creation is asynchronous; a successful response only returns the task ID. Query the task to retrieve the final video result. The GregAPI native response does not append `platform_id` by default, preserving the BytePlus native response shape.
 </Info>
 
 ## Query a task
 
-**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -262,10 +262,10 @@ Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancell
 
 ## List tenant tasks
 
-**GET** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks`
+**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
 ```bash cURL
-curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
+curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -290,17 +290,17 @@ curl "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks?page_num
 | `page_num` | Page number, starting from `1` |
 | `page_size` | Items per page |
 | `filter.status` | `queued`, `running`, `succeeded`, `failed`, `expired`, `cancelled` |
-| `filter.model` | The GragAPI external model from the creation request |
+| `filter.model` | The GregAPI external model from the creation request |
 | `filter.task_ids` | Comma-separated BytePlus native task IDs |
 
-The list endpoint is the BytePlus-compatible list within the current GragAPI tenant scope and does not return other tenants' or account-level full task lists.
+The list endpoint is the BytePlus-compatible list within the current GregAPI tenant scope and does not return other tenants' or account-level full task lists.
 
 ## Cancel or delete a task
 
-**DELETE** `https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**DELETE** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl -X DELETE "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl -X DELETE "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -317,7 +317,7 @@ A running task may return `409`:
 }
 ```
 
-GragAPI keeps local task audit and billing records. For tasks that do not support in-flight deletion, deleting a terminal task hides it locally within the GragAPI tenant, while a running task returns `409`. You can only delete or cancel tasks that belong to the current tenant.
+GregAPI keeps local task audit and billing records. For tasks that do not support in-flight deletion, deleting a terminal task hides it locally within the GregAPI tenant, while a running task returns `409`. You can only delete or cancel tasks that belong to the current tenant.
 
 ## Video editing and extension
 
@@ -330,10 +330,10 @@ Video generation, editing, and extension are all expressed through the same crea
 | Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
 | Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
 
-GragAPI requires you to first upload images, videos, or audio through the asset library and wait until the asset becomes `Active` before passing it as `asset://<Asset_Id>`. Tasks that include `content[].type=video_url` are billed under the video-reference-input SKU; tasks without `video_url` do not enter the `*-video` SKU.
+GregAPI requires you to first upload images, videos, or audio through the asset library and wait until the asset becomes `Active` before passing it as `asset://<Asset_Id>`. Tasks that include `content[].type=video_url` are billed under the video-reference-input SKU; tasks without `video_url` do not enter the `*-video` SKU.
 
 ```bash Video editing
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -362,7 +362,7 @@ curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks"
 ```
 
 ```bash Video extension
-curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -394,7 +394,7 @@ curl -X POST "https://api.gragapi.com/volcark/api/v3/contents/generations/tasks"
 - The domain must resolve to a publicly routable address; local, private, link-local, multicast, and CGNAT addresses are rejected.
 - On validation failure, the platform returns HTTP `400` with error code `invalid_request` before submitting to the model service.
 
-The compatibility field `CallbackURL` is normalized to `callback_url`. If both are present, `callback_url` takes precedence. This is native task callback passthrough, not a GragAPI webhook broker; callback delivery, retry, signing, and payload structure all follow the model service's native capabilities.
+The compatibility field `CallbackURL` is normalized to `callback_url`. If both are present, `callback_url` takes precedence. This is native task callback passthrough, not a GregAPI webhook broker; callback delivery, retry, signing, and payload structure all follow the model service's native capabilities.
 
 ## Asset library workflow
 
@@ -416,7 +416,7 @@ All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-0
 ### Create asset group
 
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -442,7 +442,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAssetGroup&Version=2
 ### Create asset
 
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -474,7 +474,7 @@ curl -X POST "https://api.gragapi.com/volcark/?Action=CreateAsset&Version=2024-0
 ### Query an asset
 
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -488,7 +488,7 @@ Common statuses: `Processing`, `Active`, `Failed`. After `CreateAsset` returns `
 ### List assets
 
 ```bash cURL
-curl -X POST "https://api.gragapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+curl -X POST "https://api.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -503,7 +503,7 @@ Only assets with `Status=Active` can be used for video generation. Asset URLs mu
 
 ## Multi-tenant boundary
 
-Task listing, cancellation/deletion, and asset library access are all restricted to the current GragAPI tenant scope and do not return other tenants' or account-level full tasks and assets. Billing and permissions are based on the GragAPI external model from the creation request, the final resolution, and the reference input type.
+Task listing, cancellation/deletion, and asset library access are all restricted to the current GregAPI tenant scope and do not return other tenants' or account-level full tasks and assets. Billing and permissions are based on the GregAPI external model from the creation request, the final resolution, and the reference input type.
 
 ## Error codes
 

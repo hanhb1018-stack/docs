@@ -4,10 +4,10 @@ title: "doubao-seedream-5.0"
 
 Call the Doubao Seedream 5.0 Pro image generation model through the OpenAI-compatible interface, supporting text-to-image and image-to-image.
 
-All requests are forwarded to Volcengine Ark through GragAPI. You do not need to sign requests yourself; just carry the GragAPI API Key in the header.
+All requests are forwarded to Volcengine Ark through GregAPI. You do not need to sign requests yourself; just carry the GregAPI API Key in the header.
 
 ```bash
-export BASE_URL="https://api.gragapi.com/v1"
+export BASE_URL="https://api.gregapi.com/v1"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -113,7 +113,7 @@ The MIME type must match the actual image format, with no spaces or line breaks 
 ### Text-to-image
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations" \
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +129,7 @@ curl -X POST "https://api.gragapi.com/v1/images/generations" \
 Replace `<full JPEG image Base64>` with the full Base64 of a JPEG image, keeping the leading `data:image/jpeg;base64,`. For PNG images, use `data:image/png;base64,` instead.
 
 ```bash
-curl -X POST "https://api.gragapi.com/v1/images/generations" \
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   --data-raw '{

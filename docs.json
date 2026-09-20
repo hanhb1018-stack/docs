@@ -1,7 +1,7 @@
 {
   "theme": "mint",
   "$schema": "https://mintlify.com/docs.json",
-  "name": "GragAPI",
+  "name": "GregAPI",
   "colors": {
     "primary": "#0D9373",
     "light": "#07C983",
@@ -150,7 +150,7 @@
     "primary": {
       "type": "button",
       "label": "开始使用",
-      "href": "https://api.gragapi.com"
+      "href": "https://gregapi.com/"
     }
   }
 }

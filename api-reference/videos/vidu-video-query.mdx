@@ -9,16 +9,16 @@ title: "任务查询"
 视频生成任务为异步执行，创建成功后需通过本接口轮询结果或取消任务。
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
-- GragAPI 接口：`GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
+- GregAPI 接口：`GET $BASE_URL/vidu/ent/v2/tasks/{task_id}/creations`
 - Vidu 官方接口：`GET https://api.vidu.cn/ent/v2/tasks/{task_id}/creations`
 
 `task_id` 参数同时接受上游原始任务 ID 和平台 `platform_id`（`video_<ULID>`）。
 
-所有请求使用 GragAPI API Token：
+所有请求使用 GregAPI API Token：
 
 ```http
 Authorization: Bearer <TOKEN>

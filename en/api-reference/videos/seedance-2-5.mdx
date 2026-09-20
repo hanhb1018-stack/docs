@@ -2,23 +2,23 @@
 title: "Seedance 2.5"
 ---
 
-Call the domestic Doubao and overseas BytePlus Dreamina Seedance 2.5 through GragAPI.
+Call the domestic Doubao and overseas BytePlus Dreamina Seedance 2.5 through GregAPI.
 
-Seedance 2.5 offers both a domestic Doubao and an overseas BytePlus Dreamina variant. The two share GragAPI's task interface and request structure, but differ in model names, pricing, and web-search capability. When you need to use real-person imagery that has been verified by the person themselves, first complete the H5 verification and asset ingestion for the relevant region through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
+Seedance 2.5 offers both a domestic Doubao and an overseas BytePlus Dreamina variant. The two share GregAPI's task interface and request structure, but differ in model names, pricing, and web-search capability. When you need to use real-person imagery that has been verified by the person themselves, first complete the H5 verification and asset ingestion for the relevant region through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
 
 ## 1. Models and pricing
 
-| Region | GragAPI stable model | Official version ID | No video input | With video input |
+| Region | GregAPI stable model | Official version ID | No video input | With video input |
 | --- | --- | --- | --- | --- |
 | Domestic | `doubao-seedance-2-5` | `doubao-seedance-2-5-260628` | ¥70/M tokens | ¥42/M tokens |
 | Overseas | `dreamina-seedance-2-5` | `dreamina-seedance-2-5-260628` | \$10.70/M tokens | \$6.40/M tokens |
 
-We recommend using the stable model name in requests. The platform also accepts the corresponding official version ID and maps it to the stable model automatically; query and list responses still echo the stable model name. The `video` tier means `content[]` contains `video_url`; otherwise the `novideo` tier applies. 480p and 720p share the same unit price; only successfully generated videos are billed, and the actual video usage is based on `usage.completion_tokens` in the query response. The domestic model additionally supports `tools: [{"type":"web_search"}]` for text-only tasks. Web search is billed separately according to the actual `usage.tool_usage.web_search` count in the response; the overseas model does not support this tool, and specific customer pricing is subject to the GragAPI console.
+We recommend using the stable model name in requests. The platform also accepts the corresponding official version ID and maps it to the stable model automatically; query and list responses still echo the stable model name. The `video` tier means `content[]` contains `video_url`; otherwise the `novideo` tier applies. 480p and 720p share the same unit price; only successfully generated videos are billed, and the actual video usage is based on `usage.completion_tokens` in the query response. The domestic model additionally supports `tools: [{"type":"web_search"}]` for text-only tasks. Web search is billed separately according to the actual `usage.tool_usage.web_search` count in the response; the overseas model does not support this tool, and specific customer pricing is subject to the GregAPI console.
 
 ## 2. Endpoint
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -29,7 +29,7 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | List tasks | `GET /volcark/api/v3/contents/generations/tasks` |
 | Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
-All requests use the GragAPI API Token:
+All requests use the GregAPI API Token:
 
 ```http
 Authorization: Bearer <TOKEN>
@@ -61,7 +61,7 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
   }'
 ```
 
-For overseas calls, simply change `model` to `dreamina-seedance-2-5`; the endpoint still uses GragAPI's `BASE_URL`. A successful creation returns the task ID:
+For overseas calls, simply change `model` to `dreamina-seedance-2-5`; the endpoint still uses GregAPI's `BASE_URL`. A successful creation returns the task ID:
 
 ```json
 {
@@ -80,7 +80,7 @@ For overseas calls, simply change `model` to `dreamina-seedance-2-5`; the endpoi
 | `video_url` | `reference_video` | 10 |
 | `audio_url` | `reference_audio` | 10 |
 
-Images, videos, and audio together may total at most 50 items. GragAPI-managed assets can be referenced with `asset://<Asset_Id>`; assets must be uploaded and processed before submitting a generation task.
+Images, videos, and audio together may total at most 50 items. GregAPI-managed assets can be referenced with `asset://<Asset_Id>`; assets must be uploaded and processed before submitting a generation task.
 
 ```json
 {

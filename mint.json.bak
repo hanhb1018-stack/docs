@@ -1,5 +1,5 @@
 {
-  "name": "GragAPI",
+  "name": "GregAPI",
   "favicon": "/favicon.svg",
   "colors": {
     "primary": "#0D9373",
@@ -44,8 +44,8 @@
     }
   ],
   "footerSocials": {
-    "twitter": "https://twitter.com/gragapi",
-    "github": "https://github.com/gragapi",
-    "discord": "https://discord.gg/gragapi"
+    "twitter": "https://twitter.com/gregapi",
+    "github": "https://github.com/gregapi",
+    "discord": "https://discord.gg/gregapi"
   }
 }

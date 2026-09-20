@@ -2,7 +2,7 @@
 title: "MiniMax-H3"
 ---
 
-通过 GragAPI 调用 MiniMax-H3 与 MiniMax-H3-Max 视频生成（v2）能力。MiniMax 官方 v2 能力使用 `POST /v2/video_generation` 创建任务、`GET /v2/query/video_generation/{task_id}` 查询任务，GragAPI 以代理接口形式对外提供，两者都必须携带 Bearer Token。
+通过 GregAPI 调用 MiniMax-H3 与 MiniMax-H3-Max 视频生成（v2）能力。MiniMax 官方 v2 能力使用 `POST /v2/video_generation` 创建任务、`GET /v2/query/video_generation/{task_id}` 查询任务，GregAPI 以代理接口形式对外提供，两者都必须携带 Bearer Token。
 
 ## 1. 模型与能力
 
@@ -11,12 +11,12 @@ title: "MiniMax-H3"
 | `MiniMax-H3` | `768P` / `2K` | 4–15 秒 | 文生视频、首/尾帧、参考素材 |
 | `MiniMax-H3-Max` | `480P` / `768P` | 5–15 秒 | 仅文本与首/尾帧图片，不接受参考素材 |
 
-`minimax-h3-768p-second`、`minimax-h3-2k-second`、`minimax-h3-extra-input-image`、`minimax-h3-max-480p-second`、`minimax-h3-max-768p-second` 是 GragAPI 内部计费组件 SKU，不能作为 `model` 取值，也不是可配置的模型 allowlist 条目。
+`minimax-h3-768p-second`、`minimax-h3-2k-second`、`minimax-h3-extra-input-image`、`minimax-h3-max-480p-second`、`minimax-h3-max-768p-second` 是 GregAPI 内部计费组件 SKU，不能作为 `model` 取值，也不是可配置的模型 allowlist 条目。
 
 ## 2. 接口
 
 ```bash
-export BASE_URL="https://api.gragapi.com"
+export BASE_URL="https://api.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -25,7 +25,7 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | 创建任务 | `POST /minimaxi/v2/video_generation` |
 | 查询任务 | `GET /minimaxi/v2/query/video_generation/{task_id}` |
 
-所有请求使用 GragAPI API Token：
+所有请求使用 GregAPI API Token：
 
 ```http
 Authorization: Bearer <TOKEN>
@@ -74,7 +74,7 @@ curl -X POST "$BASE_URL/minimaxi/v2/video_generation" \
   }'
 ```
 
-创建成功只返回 GragAPI 的稳定公共标识：
+创建成功只返回 GregAPI 的稳定公共标识：
 
 ```json
 {
@@ -112,11 +112,11 @@ H3-Max 只支持首/尾帧模式，不支持参考素材。
 
 每个 `image_url.url`、`video_url.url`、`audio_url.url` 只能使用以下 locator：
 
-- 公网 `https://` URL。GragAPI 会对 URL 做 DNS fail-closed 和私网/回环地址拦截；不接受 HTTP、`file:`、`ftp:`、`blob:`、`javascript:` 或协议相对 URL。
+- 公网 `https://` URL。GregAPI 会对 URL 做 DNS fail-closed 和私网/回环地址拦截；不接受 HTTP、`file:`、`ftp:`、`blob:`、`javascript:` 或协议相对 URL。
 - 严格的 `data:<mime>;base64,<payload>`。metadata 必须恰为 `<mime>;base64`，不能有空白字符，payload 必须是非空严格 Base64。
 - authority-only 的 `mm_file://<positive-int64>`。只允许正十进制 int64 authority，不能包含用户信息、端口、路径、query 或 fragment。
 
-对 data URI，GragAPI 会验证解码后单文件大小与 MIME：
+对 data URI，GregAPI 会验证解码后单文件大小与 MIME：
 
 | 输入类型 | 允许的 MIME | 解码后上限 |
 | --- | --- | --- |
@@ -124,7 +124,7 @@ H3-Max 只支持首/尾帧模式，不支持参考素材。
 | `video_url` | `video/mp4` | 50 MiB |
 | `audio_url` | `audio/wav`、`audio/mp3` | 15 MiB |
 
-公网 HTTPS URL 和 `mm_file` 引用不会由 GragAPI 拉取或在本地检查媒体内容，媒体格式等官方约束由上游校验。完整 JSON 请求体最大为 64 MiB；data URI 的 Base64 膨胀和其他字段也计入该限制，因此实际可用的解码后大小会低于单文件上限。
+公网 HTTPS URL 和 `mm_file` 引用不会由 GregAPI 拉取或在本地检查媒体内容，媒体格式等官方约束由上游校验。完整 JSON 请求体最大为 64 MiB；data URI 的 Base64 膨胀和其他字段也计入该限制，因此实际可用的解码后大小会低于单文件上限。
 
 ## 6. 查询任务
 
@@ -158,4 +158,4 @@ curl "$BASE_URL/minimaxi/v2/query/video_generation/$TASK_ID" \
 ## 7. 计费与说明
 
 - 成功结果中的 `task.content.url` 是上游签名 URL，会过期，具体有效期以该 URL 与上游返回为准；请在收到后及时使用，不要把完整签名 URL 写入日志或长期存储。
-- 创建失败、任务失败或取消时的计费结果以 GragAPI 账户和实际任务结算记录为准。
+- 创建失败、任务失败或取消时的计费结果以 GregAPI 账户和实际任务结算记录为准。
