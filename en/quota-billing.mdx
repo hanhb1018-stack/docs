@@ -1,0 +1,68 @@
+---
+title: "Quota billing"
+---
+
+## In short
+
+GregAPI uses "quota points" as its integer accounting unit underneath. USD and CNY are converted at a fixed rate; token-based requests are rounded up, which is also why amounts sometimes "don't divide evenly" and there is a "minimum of 1 point."
+
+## Quota points: the platform's accounting unit
+
+All balances and charges are recorded in integer quota points.
+
+| Unit | Conversion |
+|---|---|
+| 1 USD | 500,000 points |
+| 1 CNY | 500,000 ÷ 7 ≈ 71,428.5714… points (not evenly divisible) |
+| 1 point | 0.000002 USD = 0.000014 CNY |
+
+The integer ledger exists because model calls are frequent with tiny per-call amounts; recording integer points avoids the accumulated error of repeatedly adding floating-point amounts. The `quota` and `used_quota` fields in the balance API are exactly these raw integer values.
+
+## USD vs CNY
+
+Accounting is anchored to USD (upstream model vendors typically quote in USD), and CNY is derived at a fixed rate of **1:7**. The 7:1 ratio is an internal fixed constant and does not float with market exchange rates. The display currency of the balance (default CNY, switchable to USD in your profile) only affects display, not the underlying quota points or actual charges.
+
+Three views of the same balance: 1,000,000 raw quota points = $2.000000 USD (1,000,000 ÷ 500,000) = ¥14.000000 CNY (USD × 7). Displayed amounts are rounded to 6 decimal places; log-export CSV amount columns use the same conversion.
+
+## How a request is charged
+
+Token-based billing has three steps:
+
+```
+points per token = CNY unit price (per million tokens) ÷ 14
+exact points = input tokens × input points/token + output tokens × output points/token
+actual charge = ceil(exact points)
+```
+
+Cache-hit / cache-write / reasoning token sub-items are first converted and folded into input/output, then summed — the combined result is rounded up **only once**. Per-call add-ons (such as Claude Web Search) are the exception: rounded separately and then added.
+
+### Example: verify with a calculator
+
+Input ¥3.5 per million tokens, output ¥17.5 per million tokens, 1,234 input tokens and 567 output tokens:
+
+points per token 0.25 / 1.25; exact points 1,234×0.25 + 567×1.25 = 1,017.25 points → `ceil` = 1,018 points = ¥0.014252 (exactly it should be ¥0.0142415, over by 0.75 points ≈ ¥0.0000105).
+
+### Per-request / per-image models
+
+Image, video, and other per-request / per-image models do not use the token formula; they use **rounding**: points per call = round(unit price ÷ 0.000014), then multiply by the number of images for per-image pricing.
+
+Example: ¥0.8/call → 57,142.857 → 57,143 points ≈ ¥0.800002 (slightly more); ¥0.6/call → 42,857.14 → 42,857 points ≈ ¥0.599998 (slightly less). The deviation is under 1 point; the same unit price always deducts the same number of points.
+
+## Why round up
+
+The ledger is integer-based, and token billing rounds up to ensure a positive charge under 1 point isn't recorded as 0 (0.3 points rounded down would become 0 — free). This is also the origin of the "minimum 1 point": token-billed models with a nonzero input price always charge at least 1 point (¥0.000014) once valid tokens are produced. Each round-up adds at most less than 1 point; even if a million token requests all hit the maximum deviation, the total would not exceed ¥14.
+
+## Why "not evenly divisible" happens
+
+- **Source 1**: CNY-to-points divides by 7; 1 CNY = 71,428.5714… points repeats forever, so whole CNY amounts almost never divide evenly. Example: ¥0.01 → 714.2857… points → rounded up to 715 points → back-calculated ¥0.01001 (off by ¥0.00001). USD amounts generally divide evenly ($0.01 = 5,000 points; $1 = 500,000 points exactly).
+- **Source 2**: unit prices are quoted per million tokens, which spreads out to fractional per-token points (e.g., ¥2 per million tokens → 2÷14 = 0.142857… points).
+
+Zero-error reconciliation: reconcile against quota points directly (the raw quota column in log exports); when reconciling by amount, allow a rounding difference within ¥0.0001 per entry.
+
+## FAQ
+
+1. **Is the charge always the same for the same token usage?** Yes — deterministic billing, no randomness.
+2. **Can't reconcile the 6 decimal places?** Amount columns are exact conversions of quota points; differences come from rounding, under 1 point per entry.
+3. **Does the 7:1 ratio follow exchange rates?** No, it doesn't auto-float; changes are announced in a pricing notice and are not applied retroactively.
+4. **Will round-up overcharge a lot?** Each round-up adds less than 1 point (¥0.000014); even 100,000 calls a day all hitting the deviation is under ¥1.4.
+5. **Does switching CNY/USD affect billing?** No — it only changes the display.

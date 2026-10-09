@@ -1,0 +1,75 @@
+---
+title: "Errors"
+---
+
+GregAPI error responses follow a unified format for programmatic handling and troubleshooting.
+
+## Response format
+
+OpenAI-compatible interfaces (`/v1/*`) return a standard structure on error:
+
+```json
+{
+  "error": {
+    "message": "The model `gpt-9999` does not exist",
+    "type": "invalid_request_error",
+    "code": "model_not_found"
+  }
+}
+```
+
+Query authorization interfaces (`/api/query/v1/*`) use a unified envelope:
+
+```json
+{
+  "success": false,
+  "message": "The current token is not authorized for this permission point",
+  "data": null
+}
+```
+
+## Common HTTP status codes
+
+| Status | Meaning | Common cause |
+|---|---|---|
+| `400` | Bad request | Missing, malformed, or invalid parameters |
+| `401` | Unauthenticated | Token missing, invalid, or expired |
+| `403` | Forbidden | Token not authorized for the permission or user |
+| `404` | Not found | Wrong endpoint or resource path |
+| `429` | Rate limited | Exceeded RPM/TPM or IP rate limits |
+| `500` | Server error | Platform internal error |
+| `502/503/504` | Gateway temporarily unavailable | Upstream model vendor or gateway error |
+
+## Common error types (type / code)
+
+- `authentication_error` / `invalid_api_key`: invalid token.
+- `invalid_request_error` / `model_not_found`: model name does not exist or is unavailable.
+- `invalid_request_error` / `context_length_exceeded`: context length exceeded.
+- `rate_limit_error`: rate limit triggered.
+- `insufficient_quota`: insufficient or exhausted quota.
+- `permission_error`: account not enabled for this model or capability.
+
+## Request ID in error responses
+
+Error responses may carry a request ID (see [Request ID](/en/request-id)):
+
+```json
+{
+  "error": {
+    "message": "...",
+    "type": "...",
+    "code": "...",
+    "request_id": "20260320153045abcdefgh"
+  }
+}
+```
+
+Include this ID when submitting tickets to help support locate the call record.
+
+## Troubleshooting tips
+
+1. First confirm the token is valid, unexpired, and has the required permissions.
+2. Record the `X-Oneapi-Request-Id` response header for reconciliation and ticket tracking.
+3. For `401` / `403`, check your auth method and permission points first (see [Authentication](/en/authentication)).
+4. For `429`, reduce concurrency, retry with backoff, or contact support to raise quota.
+5. `500` / `502` / `503` are usually transient; retry later. Submit a ticket if they persist.

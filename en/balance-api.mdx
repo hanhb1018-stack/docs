@@ -1,0 +1,63 @@
+---
+title: "Balance API"
+---
+
+Query your remaining and cumulative used quota via `GET /api/user/balance`, for display in your own system.
+
+## Authentication
+
+Use a **profile access token** (not an `sk-xxx` model key):
+
+```bash
+curl -H "Authorization: Bearer <profile access token>" \
+  https://api.gregapi.com/api/user/balance
+```
+
+## Response example
+
+With amount display enabled:
+
+```json
+{
+  "data": {
+    "quota": 1000000,
+    "used_quota": 500000,
+    "balance_quota": 1000000,
+    "quota_unit": "quota",
+    "display": {
+      "enabled": true,
+      "currency": "CNY",
+      "balance": 14.0,
+      "used": 7.0
+    }
+  }
+}
+```
+
+With amount display disabled: `"display": { "enabled": false }`.
+
+## Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `quota` | int | Current remaining quota points |
+| `used_quota` | int | Cumulative used quota points |
+| `balance_quota` | int | Same as `quota` |
+| `quota_unit` | string | Always `"quota"` |
+| `display.enabled` | bool | Whether amount display is enabled |
+| `display.currency` | string | Display currency, default `CNY` |
+| `display.balance` / `display.used` | number | 6-decimal amount |
+
+## Differences from other endpoints
+
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `GET /api/user/balance` | profile access token | Recommended — dedicated balance query |
+| `GET /api/user/self` | profile access token | Compatible — full user profile (incl. quota/used_quota) |
+| `GET /v1/dashboard/billing/subscription` | model API key `sk-xxx` | OpenAI-compatible — token-scoped quota, not account balance |
+
+## FAQ
+
+- **sk-xxx returns auth failure**: expected; this endpoint uses a profile access token.
+- **Display currency**: adjusted only under "Profile — balance display currency"; does not affect actual charges.
+- **display disabled**: don't assume site-level amount conversion config in this case.

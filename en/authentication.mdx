@@ -1,0 +1,45 @@
+---
+title: "Authentication"
+---
+
+GregAPI commonly uses three token types, each with distinct purposes and security boundaries.
+
+| Token type | Primary use | Common paths |
+|---|---|---|
+| Model token | Call model and provider-compatible interfaces | `/v1/*`, `/minimaxi/*`, `/kling/*`, `/vidu/*` |
+| Profile access token | Query account profile, balance, and other console data | `/api/user/*` |
+| Query authorization token | Read-only query of balance, logs, tasks, and operational data | `/api/query/v1/*` |
+
+## Model token
+
+Passed via the `Authorization` header. Keep it only in your server-side or trusted runtime environment; never put it in browser front-ends, mobile app bundles, or public repositories.
+
+```bash
+curl "https://api.gregapi.com/v1/models" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Profile access token
+
+Used to query personal console data such as account balance. Example endpoint: `/api/user/balance`. See [Balance API](/en/balance-api) for more fields.
+
+```bash
+curl "https://api.gregapi.com/api/user/balance" \
+  -H "Authorization: Bearer $PROFILE_TOKEN"
+```
+
+## Query authorization token
+
+Exposes read-only data-query capability to external systems. Keys start with `qak-`. The readable scope falls into three levels: current user / specified users / all users. See [Query authorization](/en/query-authorization).
+
+```bash
+curl "https://api.gregapi.com/api/query/v1/logs?time_preset=24h" \
+  -H "Authorization: Bearer $QUERY_TOKEN"
+```
+
+## Best practices
+
+- Create separate tokens for different business systems for easier permission control and fault isolation.
+- Store tokens in server-side environment variables or a secret manager.
+- Record request IDs in production for troubleshooting (see [Request ID](/en/request-id)).
+- Disable or rotate a token immediately after it is leaked.

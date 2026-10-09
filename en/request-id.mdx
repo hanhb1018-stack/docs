@@ -1,0 +1,61 @@
+---
+title: "Request ID"
+---
+
+Every API request is automatically assigned a platform request ID for tracking, troubleshooting, and ticket submission, applicable to all endpoints.
+
+## Response headers
+
+- `X-Oneapi-Request-Id`: platform request ID
+- `request-id`: alias, same value
+
+## Custom request ID
+
+The request may pass `X-Oneapi-Request-Id` (preferred) or `request-id` (alias) in the header; leading/trailing whitespace is trimmed, and empty values or values over 128 characters cause the platform to regenerate the ID.
+
+## Request ID in error responses
+
+Error responses carry `error.request_id`, format like `20260320153045abcdefgh`.
+
+## How to get the request ID
+
+```bash
+curl -i "https://api.gregapi.com/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'
+```
+
+Python:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gregapi.com/v1",
+    api_key="YOUR_API_KEY",
+)
+resp = client.chat.completions.with_raw_response.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "hi"}],
+)
+print(resp.headers.get("X-Oneapi-Request-Id"))
+```
+
+Node.js:
+
+```js
+const OpenAI = require("openai");
+const client = new OpenAI({
+  baseURL: "https://api.gregapi.com/v1",
+  apiKey: "YOUR_API_KEY",
+});
+const resp = await client.chat.completions
+  .create({ model: "gpt-4o-mini", messages: [{ role: "user", content: "hi" }] })
+  .asResponse();
+console.log(resp.headers.get("X-Oneapi-Request-Id"));
+```
+
+## Usage
+
+Include the request ID when submitting tickets so support can quickly locate the corresponding call record.

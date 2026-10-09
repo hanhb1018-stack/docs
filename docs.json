@@ -15,7 +15,7 @@
         "tabs": [
           {
             "tab": "开发指南",
-            "pages": ["index", "introduction", "quickstart"]
+            "pages": ["index", "quickstart", "api-overview", "authentication", "console", "account-billing", "quota-billing", "billing-reconciliation", "balance-api", "query-authorization", "request-id", "errors", "support", "security"]
           },
           {
             "tab": "API 参考",
@@ -93,7 +93,7 @@
         "tabs": [
           {
             "tab": "Guide",
-            "pages": ["en/index", "en/introduction", "en/quickstart"]
+            "pages": ["en/index", "en/quickstart", "en/api-overview", "en/authentication", "en/console", "en/account-billing", "en/quota-billing", "en/billing-reconciliation", "en/balance-api", "en/query-authorization", "en/request-id", "en/errors", "en/support", "en/security"]
           },
           {
             "tab": "API Reference",

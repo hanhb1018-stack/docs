@@ -1,0 +1,39 @@
+---
+title: "API 概览"
+description: "了解 GregAPI 的三类接口与认证排查入口"
+---
+
+GregAPI 对外提供三类常用接口，分别面向不同的调用场景。
+
+## 基础地址
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="你的模型调用 Token"
+```
+
+## 常用能力
+
+- **模型调用 API**：使用模型调用 Token，访问 `/v1/*`、`/minimaxi/*`、`/kling/*`、`/vidu/*`、`/volcark/*` 等模型能力路径，涵盖 OpenAI 兼容接口、MiniMax、可灵、Vidu、火山方舟、Gemini 等协议。
+- **账号与控制台 API**：使用个人资料访问令牌，访问 `/api/user/*` 查询账号余额、个人资料等控制台数据。
+- **查询授权 API**：使用查询授权 Token，访问 `/api/query/v1/*` 只读查询余额、日志、异步任务、用户、客户价格、渠道等运营数据。
+
+## 认证与排查
+
+<CardGroup cols={3}>
+  <Card title="API 认证" icon="lock" href="/authentication">
+    了解三类凭证与认证方式。
+  </Card>
+  <Card title="请求追踪（Request ID）" icon="activity" href="/request-id">
+    使用请求 ID 追踪与排障。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    查看错误码与响应结构。
+  </Card>
+  <Card title="计费对账" icon="coins" href="/billing-reconciliation">
+    理解计费公式与对账字段。
+  </Card>
+  <Card title="查询授权" icon="key" href="/query-authorization">
+    为外部系统签发只读查询 Token。
+  </Card>
+</CardGroup>

@@ -1,0 +1,63 @@
+---
+title: "账号余额查询 API"
+---
+
+通过 `GET /api/user/balance` 查询账号剩余额度与累计已用额度，供自有系统展示。
+
+## 认证方式
+
+使用**个人资料访问令牌**（非 `sk-xxx` 模型调用 Key）：
+
+```bash
+curl -H "Authorization: Bearer <个人资料访问令牌>" \
+  https://api.gregapi.com/api/user/balance
+```
+
+## 响应示例
+
+金额展示启用时：
+
+```json
+{
+  "data": {
+    "quota": 1000000,
+    "used_quota": 500000,
+    "balance_quota": 1000000,
+    "quota_unit": "quota",
+    "display": {
+      "enabled": true,
+      "currency": "CNY",
+      "balance": 14.0,
+      "used": 7.0
+    }
+  }
+}
+```
+
+金额展示禁用时：`"display": { "enabled": false }`。
+
+## 字段说明
+
+| 字段 | 类型 | 说明 |
+|---|---|---|
+| `quota` | int | 当前剩余额度点 |
+| `used_quota` | int | 累计已用额度点 |
+| `balance_quota` | int | 同 `quota` |
+| `quota_unit` | string | 固定 `"quota"` |
+| `display.enabled` | bool | 金额展示是否启用 |
+| `display.currency` | string | 展示币种，默认 `CNY` |
+| `display.balance` / `display.used` | number | 6 位小数金额 |
+
+## 与其他接口的区别
+
+| 接口 | 认证 | 用途 |
+|---|---|---|
+| `GET /api/user/balance` | 个人资料访问令牌 | 推荐——专用余额查询 |
+| `GET /api/user/self` | 个人资料访问令牌 | 兼容——完整用户资料（含 quota/used_quota） |
+| `GET /v1/dashboard/billing/subscription` | 模型 API Key `sk-xxx` | OpenAI 兼容——令牌视角额度，非账号余额 |
+
+## 常见问题
+
+- **sk-xxx 调用返回认证失败**：属预期行为，本接口使用个人资料访问令牌。
+- **展示币种**：只在「个人资料—额度展示币种」调整，不影响实际扣费。
+- **display 禁用**：此时不要假设站点金额换算配置。

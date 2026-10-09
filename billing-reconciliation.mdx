@@ -1,0 +1,57 @@
+---
+title: "计费对账"
+---
+
+本文说明日志导出 CSV 的字段含义，并给出各模型系列的计费核算公式与示例。
+
+## 导出字段说明
+
+日志导出 CSV 主要金额/Token 列：提示Token、输入Token（非缓存普通输入）、缓存命中Token、缓存写入Token（5分钟）、缓存写入1hToken（1小时）、输出Token（含推理）、推理Token、输入/输出/缓存命中/缓存写入/缓存写入1h/推理单价（CNY/百万Token）、搜索次数与搜索单价（CNY/次，仅 Claude Web Search）、图片输入Token与图片输入单价、缓存图片Token与缓存图片单价。
+
+### 校验关系
+
+- 普通文本：`提示Token = 输入Token + 缓存命中Token + 缓存写入Token + 缓存写入1hToken`
+- 含图片输入：`提示Token = 输入Token + 图片输入Token + 缓存命中Token + 缓存图片Token + 缓存写入Token + 缓存写入1hToken`
+
+提示Token 仅用于校验上游输入总量，财务核算用各分项 Token × 对应单价。公式金额与实际计费差异 < ¥0.0001，源于额度单位向上取整（`ceil`）。
+
+## Claude 系列
+
+```
+金额 = 输入Token/1M×输入单价 + 缓存命中/1M×缓存命中单价 + 缓存写入/1M×缓存写入单价
+     + 缓存写入1h/1M×缓存写入1h单价 + 输出Token/1M×输出单价 + 搜索次数×搜索单价
+```
+
+上游 usage 映射：`input_tokens`→输入、`output_tokens`→输出、`cache_read_input_tokens`→缓存命中、`cache_creation_input_tokens`→写缓存总量（校验）、`cache_creation.ephemeral_5m_input_tokens`→缓存写入、`cache_creation.ephemeral_1h_input_tokens`→缓存写入1h、`server_tool_use.web_search_requests`→搜索次数（无分桶时按 5 分钟写缓存处理；OpenAI 兼容返回时缓存命中映射到 `usage.prompt_tokens_details.cached_tokens`）。
+
+## GPT-5 系列
+
+```
+金额 = 输入Token/1M×输入单价 + 缓存命中/1M×缓存命中单价
+     + (输出-推理)/1M×输出单价 + 推理/1M×推理单价   (推理单价=输出单价时可简化)
+```
+
+两套 usage 对应：Chat Completions 的 `prompt_tokens / completion_tokens / prompt_tokens_details.cached_tokens / completion_tokens_details.reasoning_tokens` 对应 Responses 的 `input_tokens / output_tokens / input_tokens_details.cached_tokens / output_tokens_details.reasoning_tokens`。`cached_tokens` 是输入总量子项，输入Token = 提示Token − 缓存命中；推理Token 已含在输出Token 内。
+
+## GPT-Image 系列
+
+```
+金额 = 输入/1M×输入单价 + 图片输入/1M×图片输入单价 + 缓存命中/1M×缓存命中单价
+     + 缓存图片/1M×缓存图片单价 + 输出/1M×输出单价
+```
+
+图片计费列需单独勾选导出：`input_image_tokens / input_image_price / cached_image_tokens / cached_image_price`。`input_tokens_details.{text_tokens,image_tokens,cached_tokens}`；`cached_tokens` 为文本+图片混合，按 `cached×image/(text+image)` 拆分。
+
+## Gemini 系列
+
+纯文本/推理同 GPT-5 公式，另加缓存写入项。Gemini no-image 失败对账：错误响应携带 `usage`（`error.code=no_image_generated`，`type=one_hub_error`），`usage.input_tokens`→提示Token、`input_tokens_details.image_tokens`→图片输入Token、`output_tokens=0`；仅已结算的失败返回 usage。
+
+## DeepSeek 系列
+
+```
+金额 = 输入/1M×输入单价 + 缓存命中/1M×缓存命中单价 + 输出/1M×输出单价
+```
+
+## 通用核算模板
+
+任意模型：合并上述全部分项，空字段视作 0 计算。

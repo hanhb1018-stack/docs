@@ -1,0 +1,66 @@
+---
+title: "查询授权"
+---
+
+为外部系统签发只读查询 Token，安全读取余额、日志、异步任务与运营数据。查询授权 Token 与模型调用 Token、个人资料访问令牌三类凭证相互独立。
+
+## 创建 Token
+
+三类凭证对比：
+
+| 令牌类型 | 用途 | 常见路径 |
+|---|---|---|
+| 模型调用 Token | 调模型 | `/v1/*`、`/kling/*`、`/vidu/*` |
+| 个人资料访问令牌 | 查本人资料与余额 | `/api/user/*` |
+| 查询授权 Token | 只读查账号/日志/任务/运营 | `/api/query/v1/*` |
+
+## 可读用户范围（scope_type）
+
+- `user`：当前用户（仅本人）
+- `admin_selected`：指定用户（`allowed_user_ids`）
+- `admin_all`：全部用户
+
+当前用户 Token 忽略 `user_id` 恒读本人；签发者被禁用或管理员失去角色后 Token 失效；`channel` / `channel_error` 仅全部用户可授权。
+
+## 权限点
+
+| 权限 ID | 当前用户 | 指定用户 | 全部用户 |
+|---|---|---|---|
+| `account_balance` | ✓ | ✓ | ✓ |
+| `balance_alert` | ✓ | - | - |
+| `model_token` | ✓ | - | ✓ |
+| `log` | ✓ | ✓ | ✓ |
+| `task` | ✓ | ✓ | ✓ |
+| `user` | - | ✓ | ✓ |
+| `customer_pricing` | - | ✓ | ✓ |
+| `channel` | - | - | ✓ |
+| `channel_error` | - | - | ✓ |
+
+当前版本只有资源级「读」权限。
+
+## 调用约定
+
+- 认证：经 `Authorization` header 携带查询授权 Token。
+- 统一响应 envelope：成功 `{"success":true,"message":"","data":...}`，失败 `{"success":false,...}`；鉴权失败 HTTP 401/403，业务失败 HTTP 200 但 `success=false`。
+- 分页：`page`（默认 1）、`size`（默认 30，最大 100）、`order`。
+- 时间参数：不传默认最近 24h；`time_preset=today|1h|24h|7d`；`start_time+end_time` 成对；`start_time` 支持 `YYYY-MM-DD`、`YYYY-MM-DD HH:mm:ss`、`YYYY-MM-DDTHH:mm:ss`、RFC3339、Unix 秒；四种传法互斥；日志/任务最大跨度 31 天、渠道错误 30 天，超限报错。
+
+## 查询接口总览
+
+全部位于 `/api/query/v1/` 下：`balance`、`balance_alert`、`model_tokens`、`logs`、`logs/{id}`、`logs/export_jobs`(POST)、`tasks`、`tasks/{id}`、`tasks/export_jobs`(POST)、`users`、`customer_pricing`、`channels`、`channel_errors`、`channel_errors/{id}`、`channel_errors/export_jobs`(POST)、`export_jobs/{id}`、`export_jobs/{id}/download`、`export_jobs/{id}/cancel`(POST)。
+
+## 关键接口字段
+
+- `balance`：`user_id`（指定/全部必填）、`currency=CNY`（可选，新增金额列）；data 含 `today_used_quota`、`display.enabled` 固定 false。
+- `model_tokens`：返回 `key_mask`（掩码，不返回明文）、`remain_quota/used_quota/monthly_quota/temporary_quota`、`rate_limit.rpm/tpm`、`ip_whitelist`、`model_permissions`、`balance_alert`。
+- `logs` / `logs/{id}`：完整字段含 `billing_sku / prompt_tokens / completion_tokens / request_id / platform_request_id / upstream_request_id / platform_price / customer_price / billing / upstream_usage / remain_quota / content(脱敏) / source_ip` 等。
+- `tasks` / `tasks/{id}`：`platform_task_id`、`task_id/external_task_id`、`fail_reason`(脱敏)、`result_urls`。
+- `customer_pricing`：`user_id`+`keyword` 定位唯一用户，返回 `global_price/customer_price/groups/skus`。
+
+## 导出任务
+
+三个 POST 创建端点；`data` 含 `id/resource/status/file_name/row_count/error_msg/expires_at` 等；单任务最多 10,000 行、CSV 最多 16 MiB；下载时重新校验权限，成功直接返回 CSV 流。
+
+## 常见错误
+
+Token 无效 / 查询 API Token 不存在 / Token 已禁用 / Token 已过期 / 当前来源 IP 不允许访问 / 当前 Token 未授权该权限点 / 当前 Token 不允许访问该用户数据 / `user_id` 不能为空 / 时间范围参数不能同时使用两种传法 / 查询时间跨度超过允许范围 / 未找到匹配的用户 / 关键词匹配到多个用户。

@@ -1,0 +1,45 @@
+---
+title: "API 认证"
+---
+
+GregAPI 常见令牌分为三类，用途与安全边界各不相同。
+
+| 令牌类型 | 主要用途 | 常见路径 |
+|---|---|---|
+| 模型调用 Token | 调用模型与供应商兼容接口 | `/v1/*`、`/minimaxi/*`、`/kling/*`、`/vidu/*` |
+| 个人资料访问令牌 | 查询账号资料、余额等控制台数据 | `/api/user/*` |
+| 查询授权 Token | 只读查询余额、日志、任务和运营数据 | `/api/query/v1/*` |
+
+## 模型调用 Token
+
+通过 `Authorization` header 传递；应只保存在服务端或可信运行环境，不要放进浏览器前端、移动端包体或公开仓库。
+
+```bash
+curl "https://api.gregapi.com/v1/models" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## 个人资料访问令牌
+
+用于查询账号余额等个人控制台数据，示例端点 `/api/user/balance`，更多字段见 [账号余额查询 API](/balance-api)。
+
+```bash
+curl "https://api.gregapi.com/api/user/balance" \
+  -H "Authorization: Bearer $PROFILE_TOKEN"
+```
+
+## 查询授权 Token
+
+把只读数据查询能力开放给外部系统，密钥以 `qak-` 开头；可读范围分「当前用户 / 指定用户 / 全部用户」三档，详见 [查询授权](/query-authorization)。
+
+```bash
+curl "https://api.gregapi.com/api/query/v1/logs?time_preset=24h" \
+  -H "Authorization: Bearer $QUERY_TOKEN"
+```
+
+## 建议做法
+
+- 为不同业务系统创建不同 Token，便于权限控制与故障隔离。
+- 保存在服务端环境变量或密钥管理系统中。
+- 生产环境记录请求 ID 便于排查（见 [请求追踪](/request-id)）。
+- Token 泄露后立即禁用或重置。

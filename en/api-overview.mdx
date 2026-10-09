@@ -1,0 +1,39 @@
+---
+title: "API overview"
+description: "Learn about GregAPI's three API categories and authentication & troubleshooting"
+---
+
+GregAPI exposes three common categories of interfaces, each targeting different calling scenarios.
+
+## Base URL
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="your model token"
+```
+
+## Common capabilities
+
+- **Model API**: use a model token to access model paths such as `/v1/*`, `/minimaxi/*`, `/kling/*`, `/vidu/*`, and `/volcark/*`, covering OpenAI-compatible, MiniMax, Kling, Vidu, Volcano Ark, and Gemini protocols.
+- **Account & console API**: use a profile access token to access `/api/user/*` and query account balance, profile, and other console data.
+- **Query authorization API**: use a query authorization token to access `/api/query/v1/*` for read-only queries of balance, logs, async tasks, users, customer pricing, channels, and other operational data.
+
+## Authentication & troubleshooting
+
+<CardGroup cols={3}>
+  <Card title="Authentication" icon="lock" href="/en/authentication">
+    Understand the three credential types and authentication methods.
+  </Card>
+  <Card title="Request ID" icon="activity" href="/en/request-id">
+    Trace and troubleshoot requests with request IDs.
+  </Card>
+  <Card title="Errors" icon="bug" href="/en/errors">
+    Look up error codes and response structure.
+  </Card>
+  <Card title="Billing reconciliation" icon="coins" href="/en/billing-reconciliation">
+    Understand billing formulas and reconciliation fields.
+  </Card>
+  <Card title="Query authorization" icon="key" href="/en/query-authorization">
+    Issue read-only query tokens for external systems.
+  </Card>
+</CardGroup>

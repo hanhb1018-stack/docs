@@ -1,0 +1,57 @@
+---
+title: "Billing reconciliation"
+---
+
+This page explains the log-export CSV fields and provides billing formulas and examples for each model family.
+
+## Export fields
+
+Main amount/token columns in the log-export CSV: prompt tokens, input tokens (non-cache normal input), cache-hit tokens, cache-write tokens (5 min), cache-write-1h tokens (1 hour), output tokens (including reasoning), reasoning tokens, input/output/cache-hit/cache-write/cache-write-1h/reasoning unit prices (CNY per million tokens), search count and search unit price (CNY per call, Claude Web Search only), image input tokens and image input price, cached image tokens and cached image price.
+
+### Validation relations
+
+- Plain text: `prompt tokens = input tokens + cache-hit tokens + cache-write tokens + cache-write-1h tokens`
+- With image input: `prompt tokens = input tokens + image input tokens + cache-hit tokens + cached image tokens + cache-write tokens + cache-write-1h tokens`
+
+Prompt tokens are only used to validate upstream input totals; financial accounting uses each sub-item's tokens × its unit price. The computed amount differs from actual billing by < ¥0.0001, due to quota-point rounding up (`ceil`).
+
+## Claude family
+
+```
+amount = input/1M × input price + cache-hit/1M × cache-hit price + cache-write/1M × cache-write price
+       + cache-write-1h/1M × cache-write-1h price + output/1M × output price + search count × search price
+```
+
+Upstream usage mapping: `input_tokens`→input, `output_tokens`→output, `cache_read_input_tokens`→cache-hit, `cache_creation_input_tokens`→total cache-write (validation), `cache_creation.ephemeral_5m_input_tokens`→cache-write, `cache_creation.ephemeral_1h_input_tokens`→cache-write-1h, `server_tool_use.web_search_requests`→search count (when no bucket exists, treated as 5-minute cache-write; for OpenAI-compatible responses, cache-hit maps to `usage.prompt_tokens_details.cached_tokens`).
+
+## GPT-5 family
+
+```
+amount = input/1M × input price + cache-hit/1M × cache-hit price
+       + (output - reasoning)/1M × output price + reasoning/1M × reasoning price   (simplifiable when reasoning price = output price)
+```
+
+Two usage sets correspond: Chat Completions `prompt_tokens / completion_tokens / prompt_tokens_details.cached_tokens / completion_tokens_details.reasoning_tokens` correspond to Responses `input_tokens / output_tokens / input_tokens_details.cached_tokens / output_tokens_details.reasoning_tokens`. `cached_tokens` is a sub-item of the input total; input tokens = prompt tokens − cache-hit; reasoning tokens are already included in output tokens.
+
+## GPT-Image family
+
+```
+amount = input/1M × input price + image input/1M × image input price + cache-hit/1M × cache-hit price
+       + cached image/1M × cached image price + output/1M × output price
+```
+
+Image billing columns must be selected separately for export: `input_image_tokens / input_image_price / cached_image_tokens / cached_image_price`. `input_tokens_details.{text_tokens,image_tokens,cached_tokens}`; `cached_tokens` mixes text and images, split by `cached × image/(text+image)`.
+
+## Gemini family
+
+Plain text / reasoning uses the same formula as GPT-5, plus a cache-write item. Gemini no-image failure reconciliation: error responses carry `usage` (`error.code=no_image_generated`, `type=one_hub_error`), `usage.input_tokens`→prompt tokens, `input_tokens_details.image_tokens`→image input tokens, `output_tokens=0`; only settled failures return usage.
+
+## DeepSeek family
+
+```
+amount = input/1M × input price + cache-hit/1M × cache-hit price + output/1M × output price
+```
+
+## General template
+
+For any model, merge all the above sub-items, treating empty fields as 0.

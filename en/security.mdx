@@ -1,0 +1,36 @@
+---
+title: "Security"
+---
+
+GregAPI protects platform and data security through credential isolation, least privilege, rate limiting, and audit logging.
+
+## Credential security
+
+- Tokens should live only in server-side environment variables or a secret manager; never commit them to public repositories or embed them in front-ends or mobile app bundles.
+- Create separate tokens for different business systems for easier permission control and fault isolation.
+- When a token is leaked or suspected leaked, immediately disable or rotate it in the console.
+- The three credential types (model token, profile access token, query authorization token) have different purposes and security boundaries — never mix them (see [Authentication](/en/authentication)).
+
+## Access control
+
+- The platform uses a three-level role model (owner / administrator / member) and the principle of least privilege.
+- Query authorization tokens can limit the readable scope to current user / specified users / all users, and can bind only read-only permission points (see [Query authorization](/en/query-authorization)).
+- IP whitelists restrict token calls to trusted sources.
+
+## Rate limiting & protection
+
+- Model calls are rate-limited by RPM (requests per minute) / TPM (tokens per minute) to prevent abuse and misconfiguration.
+- Hitting the limit returns `429`; retry with a backoff strategy.
+
+## Data & audit
+
+- Call logs and key operations are traceable for auditing and troubleshooting.
+- Log exports contain only your account's (or authorized scope's) data; sensitive fields are desensitized per permission.
+- Desensitize any sensitive information in logs you share with support.
+
+## Compliance recommendations
+
+- Assess data-cross-border and model-capability compliance against the laws and regulations of your business region.
+- Review the "pre-launch checks" in the [Quickstart](/en/quickstart) before going to production.
+
+For enterprise-grade security capabilities (SSO, dedicated audit, contract terms, etc.), contact the support team.

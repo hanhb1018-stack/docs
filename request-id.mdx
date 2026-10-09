@@ -1,0 +1,61 @@
+---
+title: "请求追踪（Request ID）"
+---
+
+每次 API 请求自动分配平台请求 ID，用于追踪、排障与提交工单，适用于所有接口。
+
+## 响应头
+
+- `X-Oneapi-Request-Id`：平台请求 ID
+- `request-id`：别名，值相同
+
+## 自定义请求 ID
+
+请求头可传 `X-Oneapi-Request-Id`（优先）或 `request-id`（别名）；去除首尾空白，空值或超 128 字符时平台重新生成。
+
+## 错误响应中的请求 ID
+
+错误响应 `error.request_id` 字段，格式如 `20260320153045abcdefgh`。
+
+## 如何获取请求 ID
+
+```bash
+curl -i "https://api.gregapi.com/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'
+```
+
+Python：
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.gregapi.com/v1",
+    api_key="YOUR_API_KEY",
+)
+resp = client.chat.completions.with_raw_response.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "hi"}],
+)
+print(resp.headers.get("X-Oneapi-Request-Id"))
+```
+
+Node.js：
+
+```js
+const OpenAI = require("openai");
+const client = new OpenAI({
+  baseURL: "https://api.gregapi.com/v1",
+  apiKey: "YOUR_API_KEY",
+});
+const resp = await client.chat.completions
+  .create({ model: "gpt-4o-mini", messages: [{ role: "user", content: "hi" }] })
+  .asResponse();
+console.log(resp.headers.get("X-Oneapi-Request-Id"));
+```
+
+## 使用场景
+
+提交工单时附上请求 ID，便于支持团队快速定位对应调用记录。

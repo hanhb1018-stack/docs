@@ -1,0 +1,75 @@
+---
+title: "错误码与响应说明"
+---
+
+GregAPI 的错误响应遵循统一格式，便于程序化处理与排查。
+
+## 响应格式
+
+OpenAI 兼容接口（`/v1/*`）在出错时返回标准结构：
+
+```json
+{
+  "error": {
+    "message": "The model `gpt-9999` does not exist",
+    "type": "invalid_request_error",
+    "code": "model_not_found"
+  }
+}
+```
+
+查询授权接口（`/api/query/v1/*`）使用统一 envelope：
+
+```json
+{
+  "success": false,
+  "message": "当前 Token 未授权该权限点",
+  "data": null
+}
+```
+
+## 常见 HTTP 状态码
+
+| 状态码 | 含义 | 常见原因 |
+|---|---|---|
+| `400` | 请求参数错误 | 参数缺失、格式或取值非法 |
+| `401` | 未认证 | Token 缺失、无效或已过期 |
+| `403` | 无权限 | Token 未授权对应权限或用户 |
+| `404` | 资源不存在 | 端点或资源路径错误 |
+| `429` | 触发限流 | 超过 RPM/TPM 或 IP 限流 |
+| `500` | 服务端错误 | 平台内部异常 |
+| `502/503/504` | 网关暂时不可用 | 上游模型厂商或网关异常 |
+
+## 常见错误类型（type / code）
+
+- `authentication_error` / `invalid_api_key`：Token 无效。
+- `invalid_request_error` / `model_not_found`：模型名不存在或不可用。
+- `invalid_request_error` / `context_length_exceeded`：上下文长度超限。
+- `rate_limit_error`：触发速率限制。
+- `insufficient_quota`：额度不足或已用尽。
+- `permission_error`：账号未开通该模型或能力。
+
+## 错误响应中的请求 ID
+
+错误响应可能附带请求 ID（详见 [请求追踪](/request-id)）：
+
+```json
+{
+  "error": {
+    "message": "...",
+    "type": "...",
+    "code": "...",
+    "request_id": "20260320153045abcdefgh"
+  }
+}
+```
+
+提交工单时附上该 ID，可帮助支持团队快速定位调用记录。
+
+## 排查建议
+
+1. 先确认 Token 正确、未过期且具备对应权限。
+2. 记录响应头 `X-Oneapi-Request-Id`，便于对账与工单追踪。
+3. `401` / `403` 优先检查认证方式与权限点（见 [API 认证](/authentication)）。
+4. `429` 降低并发、退避重试或联系支持提升配额。
+5. `500` / `502` / `503` 多为瞬时故障，稍后重试；持续出现请提交工单。
