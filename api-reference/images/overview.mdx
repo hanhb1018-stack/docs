@@ -2,11 +2,17 @@
 title: "GPT生图"
 ---
 
-通过 OpenAI 兼容接口使用 gpt-image-2 token 计费通道进行图像生成与编辑。
+通过 OpenAI 兼容接口调用 GPT 图像生成模型，支持文生图与图像编辑。本文档同时覆盖 `gpt-image-2` 与 `gpt-image-2.5` 两个系列，二者共用同一套生图、改图及异步接口，仅在模型名、质量档位与分辨率表现上存在差异。
 
-## GPT Image 2.5
+## 模型总览
 
-`gpt-image-2.5-sunburst` 和 `gpt-image-2.5-flare` 复用本文的生图、编辑及平台异步接口。使用前需要在 OpenAI 官方或兼容渠道开通对应模型；将示例中的 `model` 替换为准确模型名即可。两款模型支持 `low`、`medium`、`high`、`xhigh`、`max`、`auto`。单次出图数量按各模型的渠道能力独立配置，未配置时最多 1 张。返回 URL 需要平台图片存储配置。默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。2.5 不使用 `gpt-image-2-low-*` 按张 SKU。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。有上游 `usage` 时按该用量结算；缺失时按成功返回图片数量、尺寸和 2.5 质量系数估算。`auto` 的用量取决于上游选择，缺失 usage 的结果只代表平台估算。实际模型供给和参数支持需以渠道验收为准。
+| 模型 | 质量档位 | 分辨率 | 定位 |
+|---|---|---|---|
+| `gpt-image-2` | `low` / `medium` / `high` | 任意合规尺寸（`widthxheight`） | 通用默认模型，高质量生成与编辑、文本渲染、透明背景（预览） |
+| `gpt-image-2.5-sunburst` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | 高精度编辑，参考图保真与版式控制更强 |
+| `gpt-image-2.5-flare` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | 低延迟、高吞吐，适合大批量快速出图 |
+
+> `gpt-image-2` 另有 `gpt-image-2-low` / `gpt-image-2-medium` / `gpt-image-2-high` 按张 SKU 通道；`gpt-image-2.5` 不使用按张 SKU。使用前需在 OpenAI 官方或兼容渠道开通对应模型，将示例中的 `model` 替换为准确模型名。实际模型供给和参数支持需以渠道验收为准。
 
 ## 快速开始
 
@@ -41,19 +47,23 @@ result = client.images.generate(
 print(result.data[0].b64_json)
 ```
 
-## 文生图 `/v1/images/generations`
+## gpt-image-2
+
+### 支持的质量档位
+
+`low` / `medium` / `high`。`gpt-image-2` 不设 `input_fidelity` 参数，输出默认即为高保真。
 
 ### 参数表
 
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `prompt` | string | 是 | 图像描述文本 |
-| `model` | string | 是 | 固定 `gpt-image-2` |
+| `model` | string | 是 | `gpt-image-2` |
 | `n` | integer | 否 | 生成数量，默认 1；部分兼容渠道仅支持 `n=1` |
 | `size` | string | 否 | `widthxheight` 或 `auto`，默认 `1024x1024` |
 | `quality` | string | 否 | `low` / `medium` / `high` / `auto`；平台默认 `low` |
-| `background` | string | 否 | `transparent` / `opaque` / `auto` |
-| `output_format` | string | 否 | `png` / `jpeg`；`webp` 为官方字段但不保证所有渠道可用 |
+| `background` | string | 否 | `transparent` / `opaque` / `auto`（透明背景为预览能力） |
+| `output_format` | string | 否 | `png`（默认）/ `jpeg` / `webp` |
 | `output_compression` | integer | 否 | 0-100，仅 JPEG / WebP 生效 |
 | `response_format` | string | 否 | `url` / `b64_json`，默认 `b64_json` |
 | `moderation` | string | 否 | `low` / `auto` |
@@ -63,7 +73,7 @@ print(result.data[0].b64_json)
 
 ### 分辨率规则
 
-token 计费通道按 OpenAI 兼容能力处理尺寸。`size` 参数格式为 `widthxheight` 或 `auto`，常见约束如下：
+`gpt-image-2` 的 `size` 参数格式为 `widthxheight` 或 `auto`，任意尺寸只要同时满足以下约束即可：
 
 | 约束 | 规则 |
 |---|---|
@@ -73,6 +83,8 @@ token 计费通道按 OpenAI 兼容能力处理尺寸。`size` 参数格式为 `
 | 对齐要求 | 宽和高都必须是 16 的倍数 |
 | 宽高比限制 | 长边 : 短边不超过 3:1 |
 
+超过 `2560x1440`（约 2K）的尺寸视为实验性，结果波动可能更大。
+
 常用值：
 
 | `size` | 用途 |
@@ -81,11 +93,66 @@ token 计费通道按 OpenAI 兼容能力处理尺寸。`size` 参数格式为 `
 | `1024x1024` | 通用方图 |
 | `1536x1024` | 横版 3:2 |
 | `1024x1536` | 竖版 2:3 |
-| `2048x2048` | 2K 方图 |
-| `2048x1152` | 2K 横版 16:9 |
-| `1152x2048` | 2K 竖版 9:16 |
+| `2560x1440` | 2K 横版 16:9（可靠性上界参考） |
+| `3840x2160` | 4K（实验性上界，按 `<3840` 规则取 `3824x2144` 更稳妥） |
 
 具体可用尺寸仍以账号实际路由到的通道能力为准。
+
+### 透明背景（预览）
+
+`gpt-image-2` 支持透明背景生成：
+
+- 设 `background="transparent"`。
+- `output_format` 用 `png`（默认）或 `webp`；`jpeg` 不支持透明通道。
+- PNG 输出省略 `output_compression`；WebP 可选压缩。
+
+## gpt-image-2.5
+
+### 模型名
+
+`gpt-image-2.5-sunburst`（高精度编辑）与 `gpt-image-2.5-flare`（低延迟快速）。
+
+### 支持的质量档位
+
+`low` / `medium` / `high` / `xhigh` / `max` / `auto`。其中 `xhigh` / `max` 为更高保真档位，`auto` 由上游选择，最终用量取决于上游实际选择。
+
+### 参数表
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `prompt` | string | 是 | 图像描述文本 |
+| `model` | string | 是 | `gpt-image-2.5-sunburst` 或 `gpt-image-2.5-flare` |
+| `n` | integer | 否 | 生成数量；按各模型渠道能力独立配置，未配置时最多 1 张 |
+| `quality` | string | 否 | `low` / `medium` / `high` / `xhigh` / `max` / `auto` |
+| `size` | string | 否 | 分辨率档位 `1K` / `2K` / `4K`（区别于 gpt-image-2 的 `widthxheight`） |
+| `aspect_ratio` | string | 否 | 显式宽高比，用于灵活构图 |
+| `output_format` | string | 否 | `png` / `jpeg` / `webp` |
+| `response_format` | string | 否 | `url` / `b64_json` |
+| `moderation` | string | 否 | `low` / `auto` |
+| `user` | string | 否 | 终端用户标识 |
+
+### 说明
+
+- 2.5 系列使用分辨率档位（`1K` / `2K` / `4K`）配合 `aspect_ratio`，而非 `gpt-image-2` 的精确像素尺寸。
+- 返回 URL 需要平台对象存储配置。
+- 默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。2.5 不使用 `gpt-image-2-low-*` 按张 SKU。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。
+
+## 文生图 `/v1/images/generations`
+
+两种系列共用该端点，`model` 字段决定走哪个模型。请求体示例：
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2.5-sunburst",
+  "prompt": "A clean studio product photo of a matte white ceramic mug",
+  "quality": "high",
+  "size": "2K",
+  "response_format": "url"
+}'
+```
 
 ## 响应体
 
@@ -202,7 +269,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits" \
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
 | `prompt` | string | 是 | 编辑指令 |
-| `model` | string | 是 | 固定 `gpt-image-2` |
+| `model` | string | 是 | `gpt-image-2` / `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` |
 | `images` | array | 否 | 输入图像列表，最多 14 张 |
 | `images[].image_url` | string | 否 | 图像的公开可访问 URL |
 | `images[].file_id` | string | 否 | 通过 Files API 上传后获得的文件 ID |
@@ -210,7 +277,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits" \
 | `size` | string | 否 | 输出尺寸，默认 `1024x1024` |
 | `quality` | string | 否 | `low` / `medium` / `high` / `auto`，默认 `low` |
 | `background` | string | 否 | `transparent` / `opaque` / `auto` |
-| `input_fidelity` | string | 否 | `high` / `low` |
+| `input_fidelity` | string | 否 | `high` / `low`（`gpt-image-2` 忽略） |
 | `output_format` | string | 否 | `png` / `jpeg` |
 | `output_compression` | integer | 否 | 0-100 |
 | `moderation` | string | 否 | `low` / `auto` |
@@ -277,7 +344,7 @@ token 计费通道按平台记录或上游返回的 token 用量结算：
 | image input | 改图或多模态图片输入 token |
 | image output | 图片输出 token |
 
-单张预估只用于成本预估，实际账单以消费日志和控制台「模型价格」页面为准。
+有上游 `usage` 时按该用量结算；缺失时按成功返回图片数量、尺寸和 2.5 质量系数估算。`auto` 的用量取决于上游选择，缺失 usage 的结果只代表平台估算。单张预估只用于成本预估，实际账单以消费日志和控制台「模型价格」页面为准。
 
 按张计费和 token 计费的折扣、单价、账单字段不同。对账时以消费日志中的实际金额为准，不要把展示用 token bucket 当成额外账单行。
 

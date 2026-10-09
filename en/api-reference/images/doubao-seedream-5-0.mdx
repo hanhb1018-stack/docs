@@ -2,7 +2,7 @@
 title: "doubao-seedream-5.0"
 ---
 
-Call the Doubao Seedream 5.0 Pro image generation model through the OpenAI-compatible interface, supporting text-to-image and image-to-image.
+Call the Doubao Seedream 5.0 series image models through the OpenAI-compatible interface, covering `doubao-seedream-5.0`, `doubao-seedream-5.0-lite`, and `doubao-seedream-5.0-pro`, with text-to-image and image-to-image support.
 
 All requests are forwarded to Volcengine Ark through GregAPI. You do not need to sign requests yourself; just carry the GregAPI API Key in the header.
 
@@ -18,13 +18,19 @@ Authorization: Bearer <TOKEN>
 Content-Type: application/json
 ```
 
-## Model info
+## Model overview
 
-- **Model name**: `doubao-seedream-5.0-pro`
-- **Version mapping**: `doubao-seedream-5-0-pro-260628`
-- **Capabilities**: text-to-image and image-to-image; supports `response_format="url"` or `"b64_json"`
-- **Resolution**: `1K`, `1.5K`, `2K`, or an exact size (e.g. `2048x2048`); do not reuse Seedream 4.0's `4K` tier
-- **Parameter limits**: omit `n` for ordinary single-image requests; `n>1`, `stream=true`, `tools`, `sequential_image_generation`, and `sequential_image_generation_options` are not supported
+| Model | Model ID (version mapping) | Resolution | Output format | Key capabilities |
+|---|---|---|---|---|
+| `doubao-seedream-5.0` | `doubao-seedream-5-0-260128` | `2K` / `3K` / `4K` | png / jpeg | Group generation, multi-image group generation, streaming, online search |
+| `doubao-seedream-5.0-lite` | `doubao-seedream-5-0-lite-260128` | `2K` / `3K` / `4K` | png / jpeg | Lightweight, cost-effective; group generation, streaming, online search |
+| `doubao-seedream-5.0-pro` | `doubao-seedream-5-0-pro-260628` | `1K` / `1.5K` / `2K` | png / jpeg | Interactive editing, layer decomposition |
+
+### Per-model notes
+
+- `doubao-seedream-5.0`: the base Seedream 5.0 with online search for broader knowledge, reference consistency, and professional scene quality; supports text-to-image, image-to-image, text-to-group, multi-image-to-group, and streaming.
+- `doubao-seedream-5.0-lite`: the lightweight Seedream 5.0 with better speed and cost; capabilities match the base (group generation, streaming, online search).
+- `doubao-seedream-5.0-pro`: built for high-precision creation; supports interactive editing (coordinate / bounding box / arrow localization) and layer decomposition (1 base image + up to 16 layers); does not support text-to-group, streaming, or online search.
 
 ## Endpoint
 
@@ -48,21 +54,24 @@ On the console side, bind the `doubao-seedream-*` model name to a Doubao / VolcA
 ### Base parameters (OpenAI-compatible)
 
 | Parameter | Type | Required | Description |
-| --- | --- | --- | --- |
-| `model` | string | ✅ | Fixed `doubao-seedream-5.0-pro` |
+|---|---|---|---|
+| `model` | string | ✅ | `doubao-seedream-5.0` / `doubao-seedream-5.0-lite` / `doubao-seedream-5.0-pro` |
 | `prompt` | string | ✅ | Image description; recommended no more than 300 Chinese characters or 600 English words |
-| `size` | string | ❌ | `1K` / `1.5K` / `2K`, or an exact size such as `2048x2048` |
-| `n` | integer | ❌ | Omit for single-image requests; `n>1` is not supported |
+| `size` | string | ❌ | Resolution tier or exact size. Tier depends on the model: `2K` / `3K` / `4K` for `5.0` / `5.0-lite`, `1K` / `1.5K` / `2K` for `5.0-pro`; also accepts pixel sizes like `2048x2048` |
+| `n` | integer | ❌ | Omit for single-image requests; ordinary single-image generation does not support `n>1` |
 | `response_format` | string | ❌ | `url` (default) or `b64_json` |
 | `quality` | string | ❌ | Image quality, e.g. `high` / `standard` |
 | `style` | string | ❌ | Image style, e.g. `vivid` / `natural` |
 
+Group-generation and streaming parameters such as `stream=true`, `tools`, `sequential_image_generation`, and `sequential_image_generation_options` only apply to models that support them (`5.0` and `5.0-lite`); `5.0-pro` does not support these.
+
 ### Volcengine Ark-specific parameters
 
 | Parameter | Type | Description |
-| --- | --- | --- |
+|---|---|---|
 | `image` | string / string[] | Reference image URL or complete Data URI; bare Base64 is not accepted. A single image may be a string or a single-element array |
 | `watermark` | boolean | Whether to add a watermark; default `true` |
+| `output_format` | string | Output format: `png` / `jpeg` |
 
 ### Base64 reference image format
 
@@ -119,10 +128,12 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -d '{
   "model": "doubao-seedream-5.0-pro",
   "prompt": "A cute panda eating bamboo in a bamboo forest, with dappled sunlight through the leaves",
-  "size": "2048x2048",
+  "size": "2K",
   "response_format": "url"
 }'
 ```
+
+For image-to-image with a reference image, or to use `doubao-seedream-5.0` / `doubao-seedream-5.0-lite`, simply replace `model` (and optionally the `size` tier).
 
 ### Image-to-image (Base64 Data URI)
 
@@ -138,7 +149,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
   "image": [
     "data:image/jpeg;base64,<full JPEG image Base64>"
   ],
-  "size": "2048x2048",
+  "size": "2K",
   "response_format": "b64_json"
 }'
 ```
@@ -147,9 +158,10 @@ On success, read and decode the image from `data[0].b64_json`. For a single imag
 
 ## FAQ
 
-### How to use Seedream 5.0 Pro?
+### How to choose a model?
 
-Use it for text-to-image and image-to-image; use the dedicated examples above, and do not apply the group-generation or streaming parameters (`sequential_image_generation`, `stream`, etc.).
+- For high-precision editing, precise localization, and layer decomposition: use `doubao-seedream-5.0-pro`.
+- For group generation, streaming, online search, or broader knowledge and consistency: use `doubao-seedream-5.0` or `doubao-seedream-5.0-lite` (lite is more cost-effective).
 
 ### How long is the image URL valid?
 

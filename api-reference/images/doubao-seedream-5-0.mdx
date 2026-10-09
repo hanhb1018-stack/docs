@@ -2,7 +2,7 @@
 title: "doubao-seedream-5.0"
 ---
 
-通过 OpenAI 兼容接口调用 Doubao Seedream 5.0 Pro 图片生成模型，支持文生图、图生图。
+通过 OpenAI 兼容接口调用 Doubao Seedream 5.0 系列图像生成模型，覆盖 `doubao-seedream-5.0`、`doubao-seedream-5.0-lite`、`doubao-seedream-5.0-pro` 三个模型，支持文生图、图生图。
 
 所有请求都经由 GregAPI 转发到火山方舟，不需要自行签名，只需在 Header 中携带 GregAPI API Key。
 
@@ -18,13 +18,19 @@ Authorization: Bearer <TOKEN>
 Content-Type: application/json
 ```
 
-## 模型信息
+## 模型总览
 
-- **模型名称**：`doubao-seedream-5.0-pro`
-- **版本映射**：`doubao-seedream-5-0-pro-260628`
-- **能力**：文生图、图生图；支持 `response_format="url"` 或 `"b64_json"`
-- **分辨率**：`1K`、`1.5K`、`2K`，或精确尺寸（如 `2048x2048`）；不要套用 Seedream 4.0 的 `4K` 档位
-- **参数限制**：普通单图请求省略 `n`；不支持 `n>1`、`stream=true`、`tools`、`sequential_image_generation` 和 `sequential_image_generation_options`
+| 模型 | 模型 ID（版本映射） | 分辨率 | 输出格式 | 特色能力 |
+|---|---|---|---|---|
+| `doubao-seedream-5.0` | `doubao-seedream-5-0-260128` | `2K` / `3K` / `4K` | png / jpeg | 文生组图、多图生组图、流式输出、联网搜索 |
+| `doubao-seedream-5.0-lite` | `doubao-seedream-5-0-lite-260128` | `2K` / `3K` / `4K` | png / jpeg | 轻量高性价比；组图、流式输出、联网搜索 |
+| `doubao-seedream-5.0-pro` | `doubao-seedream-5-0-pro-260628` | `1K` / `1.5K` / `2K` | png / jpeg | 交互编辑、图层拆分 |
+
+### 各模型说明
+
+- `doubao-seedream-5.0`：Seedream 5.0 基础版，支持联网检索，增强知识广度、参考一致性与专业场景生成质量；支持文生图、图生图、文生组图、多图生组图、流式输出。
+- `doubao-seedream-5.0-lite`：Seedream 5.0 轻量版，速度与成本更优，能力与基础版一致（组图、流式、联网搜索）。
+- `doubao-seedream-5.0-pro`：面向高精度创作，支持交互编辑（坐标/框选/箭头精准定位）与图层拆分（1 张底图 + 最多 16 个图层）；暂不支持文生组图、流式输出与联网搜索。
 
 ## 接口说明
 
@@ -49,13 +55,15 @@ Content-Type: application/json
 
 | 参数 | 类型 | 必填 | 说明 |
 |---|---|---|---|
-| `model` | string | ✅ | 固定 `doubao-seedream-5.0-pro` |
+| `model` | string | ✅ | `doubao-seedream-5.0` / `doubao-seedream-5.0-lite` / `doubao-seedream-5.0-pro` |
 | `prompt` | string | ✅ | 图片描述文本，建议不超过 300 汉字或 600 英文单词 |
-| `size` | string | ❌ | `1K` / `1.5K` / `2K`，或精确尺寸如 `2048x2048` |
-| `n` | integer | ❌ | 单图请求省略此字段；不支持 `n>1` |
+| `size` | string | ❌ | 分辨率档位或精确尺寸，档位因模型而异：`5.0`/`5.0-lite` 为 `2K`/`3K`/`4K`，`5.0-pro` 为 `1K`/`1.5K`/`2K`；也可传像素尺寸如 `2048x2048` |
+| `n` | integer | ❌ | 单图请求省略此字段；普通单图生成不支持 `n>1` |
 | `response_format` | string | ❌ | `url`（默认）或 `b64_json` |
 | `quality` | string | ❌ | 图片质量，例如 `high` / `standard` |
 | `style` | string | ❌ | 图片风格，例如 `vivid` / `natural` |
+
+`stream=true`、`tools`、`sequential_image_generation` 和 `sequential_image_generation_options` 等组图/流式参数仅对 `5.0` 与 `5.0-lite` 等支持组图、流式的模型生效；`5.0-pro` 不支持这些参数。
 
 ### 火山方舟专用参数
 
@@ -63,6 +71,7 @@ Content-Type: application/json
 |---|---|---|
 | `image` | string / string[] | 参考图片 URL 或完整 Data URI，不接受裸 Base64；单张可传字符串或单元素数组 |
 | `watermark` | boolean | 是否添加水印，默认 `true` |
+| `output_format` | string | 输出格式，`png` / `jpeg` |
 
 ### Base64 参考图格式
 
@@ -119,10 +128,12 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
   -d '{
   "model": "doubao-seedream-5.0-pro",
   "prompt": "一只可爱的熊猫在竹林里吃竹子，阳光透过树叶洒下斑驳的光影",
-  "size": "2048x2048",
+  "size": "2K",
   "response_format": "url"
 }'
 ```
+
+如图生图需传入参考图，或使用 `doubao-seedream-5.0` / `doubao-seedream-5.0-lite`，只需替换 `model`（与可选 `size` 档位）。
 
 ### 图生图（Base64 Data URI）
 
@@ -138,7 +149,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
   "image": [
     "data:image/jpeg;base64,<完整JPEG图片Base64>"
   ],
-  "size": "2048x2048",
+  "size": "2K",
   "response_format": "b64_json"
 }'
 ```
@@ -147,9 +158,10 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
 
 ## 常见问题
 
-### 如何使用 Seedream 5.0 Pro？
+### 如何选择模型？
 
-用于文生图和图生图；使用上面的专用示例，不要套用组图或流式参数（`sequential_image_generation`、`stream` 等）。
+- 需要高精度编辑、精准定位、图层拆分：用 `doubao-seedream-5.0-pro`。
+- 需要组图、流式输出、联网搜索，或追求更强知识广度与一致性：用 `doubao-seedream-5.0` 或 `doubao-seedream-5.0-lite`（lite 成本更低）。
 
 ### 图片 URL 有效期多久？
 

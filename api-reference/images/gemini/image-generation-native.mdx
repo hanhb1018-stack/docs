@@ -1,0 +1,167 @@
+---
+title: "图像生成（原生 API）"
+---
+
+使用 Gemini 原生协议（`generateContent`）调用图像生成模型，提供完整参数控制，适用于高级场景。
+
+## 接口地址
+
+**方法**：`POST`
+
+**Base URL**：`https://api.gregapi.com/v1beta/models/{model}:generateContent`
+
+### 认证方式
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 支持的模型
+
+| 模型 | 最大分辨率 |
+|---|---|
+| `gemini-2.5-flash-image` | 1K（仅 1K） |
+| `gemini-3-pro-image-preview` | 1K / 2K / 4K |
+| `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+
+## 请求结构
+
+请求体为 `generateContent` 协议标准格式：
+
+```json
+{
+  "contents": [
+    {
+      "parts": [
+        { "text": "文本提示词" },
+        {
+          "inline_data": {
+            "mime_type": "image/jpeg",
+            "data": "<BASE64_IMAGE_DATA>"
+          }
+        }
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["image", "text"],
+    "imageConfig": {
+      "aspectRatio": "1:1",
+      "imageSize": "2K"
+    }
+  }
+}
+```
+
+### contents 数组（必填）
+
+每个 content 对象包含 `parts` 数组，部分类型：
+
+| 部分类型 | 说明 |
+|---|---|
+| `text` | 文本提示词 |
+| `inline_data` | Base64 编码的参考图（用于图像编辑） |
+
+### generationConfig 对象
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `responseModalities` | string[] | 是 | - | 响应模态，图像生成需包含 `"image"` |
+
+### generationConfig.imageConfig 对象
+
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `aspectRatio` | string | 否 | `1:1` | 宽高比 |
+| `imageSize` | string | 否 | `1K` | 分辨率档位，`512` / `1K` / `2K` / `4K` |
+
+## 宽高比枚举
+
+```
+1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
+```
+
+`gemini-3.1-flash-image` 额外支持 `1:4`、`4:1`、`1:8`、`8:1`、`9:21`。
+
+## 参考图编辑
+
+通过 `inline_data` 传入参考图进行编辑，`parts` 数组中可添加多个 `inline_data`，最多支持 15 张参考图。
+
+```json
+{
+  "contents": [
+    {
+      "parts": [
+        {"text": "基于第一张图的构图，参考第二张的色调风格"},
+        {"inline_data": {"mime_type": "image/jpeg", "data": "<BASE64_BASE_IMAGE>"}},
+        {"inline_data": {"mime_type": "image/jpeg", "data": "<BASE64_STYLE_IMAGE>"}}
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["image", "text"],
+    "imageConfig": {"aspectRatio": "1:1", "imageSize": "2K"}
+  }
+}
+```
+
+## 响应结构
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "inlineData": {
+              "mimeType": "image/png",
+              "data": "<BASE64_IMAGE_DATA>"
+            }
+          },
+          {
+            "text": "生成完成的描述文本（可选）"
+          }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 50,
+    "candidatesTokenCount": 100,
+    "totalTokenCount": 150
+  }
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `candidates[].content.parts[].inlineData` | 生成的图片数据 |
+| `usageMetadata.promptTokenCount` | 输入文本 tokens |
+| `usageMetadata.candidatesTokenCount` | 输出 tokens |
+
+## 封控但已计费的错误响应
+
+原生接口保持 Gemini 协议字段名。若图像未生成但上游已返回可计费 prompt usage，错误响应中会保留 `usageMetadata`，不会改成 OpenAI 风格顶层 `usage`。
+
+```json
+{
+  "error": {
+    "code": 500,
+    "message": "no image generated (request id: 20260608235925709515189aBDufjPK)",
+    "status": "one_hub_error"
+  },
+  "usageMetadata": {
+    "promptTokenCount": 353,
+    "candidatesTokenCount": 0,
+    "totalTokenCount": 353,
+    "promptTokensDetails": [
+      { "modality": "TEXT", "tokenCount": 95 },
+      { "modality": "IMAGE", "tokenCount": 258 }
+    ]
+  }
+}
+```
+
+未产出图片时 `candidatesTokenCount` 通常为 `0`；普通未扣费失败不会返回 `usageMetadata`。

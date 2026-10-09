@@ -1,0 +1,92 @@
+---
+title: "Voice Cloning"
+---
+
+Use the MiniMax voice cloning capability to clone a voice and audition it with specified text. It stays consistent with MiniMax's official `/v1/voice_clone` and is forwarded by GregAPI — no self-signing required.
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Endpoint
+
+| Operation | Method | Endpoint |
+|---|---|---|
+| Voice cloning | `POST` | `/minimaxi/v1/voice_clone` |
+
+Media type: `application/json`. Use cases: IP voice cloning, timbre cloning, and other scenarios that need quick voice replication.
+
+## Quickstart: clone a voice in three steps
+
+### 1. Upload the audio to clone and get a `file_id`
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "purpose=voice_clone" \
+  -F "file=@/path/to/audio.mp3"
+```
+
+Pass the returned `file.file_id` to `POST /minimaxi/v1/voice_clone`; `file.filename` is the original filename.
+
+### 2. (Optional) Upload a sample audio to get the `prompt_audio` `file_id`
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "purpose=prompt_audio" \
+  -F "file=@/path/to/short-sample.mp3"
+```
+
+### 3. Call the clone endpoint to finish cloning and get an audition audio
+
+## Request parameters (aligned with MiniMax official `/v1/voice_clone`)
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `file_id` | string / integer | Yes | Audio `file_id` of the voice to clone, obtained from `/minimaxi/v1/files/upload` |
+| `voice_id` | string | Yes | Target `voice_id` of the cloned voice; must meet the official naming rules |
+| `clone_prompt.prompt_audio` | string | No | `file_id` of a sample audio (uploaded with `purpose=prompt_audio`) |
+| `clone_prompt.prompt_text` | string | No | Text corresponding to the sample audio |
+| `text` | string | No | Audition text (official limit ≤ 1000 characters) |
+| `model` | string | Conditional | Required when `text` is provided; the TTS model for audition, e.g. `speech-2.8-hd`, `speech-2.8-turbo` |
+| `language_boost` | string | No | Minor-language / dialect boost, e.g. `Chinese`, `English`, `auto` |
+| `need_noise_reduction` | boolean | No | Enable noise reduction |
+| `need_volume_normalization` | boolean | No | Enable volume normalization |
+| `aigc_watermark` | boolean | No | Append an AIGC watermark rhythm at the end of the audition audio |
+
+## Return fields
+
+| Field | Description |
+|---|---|
+| `input_sensitive` | Optional; returned when the input audio hits risk control, with `type` etc. |
+| `demo_audio` | Returned when `text` and `model` are provided; the audition audio link |
+| `base_resp.status_code` | Status code, 0 for success |
+| `base_resp.status_msg` | Status description |
+
+## Example: with audition audio
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/voice_clone" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_id": 1234567890,
+    "voice_id": "MiniMax001",
+    "text": "Artificial intelligence has been developing rapidly in recent years...",
+    "model": "speech-2.8-hd",
+    "need_noise_reduction": true,
+    "need_volume_normalization": true
+  }'
+```
+
+## Billing
+
+- Billed by actual cloning and audition usage; see the MiniMax speech entries under "Model Pricing" in the console for exact prices.
+- Actual amounts follow the upstream consumption logs.

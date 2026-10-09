@@ -2,4 +2,42 @@
 title: "API Reference Overview"
 ---
 
-Here you can find all available API endpoints.
+GregAPI provides unified multi-capability generation APIs. A single gateway and one API Token give you access to text, image, video, and speech generation. The following documentation is organized by capability type to help you find the endpoints you need.
+
+## Capability categories
+
+| Category | Description |
+|---|---|
+| Large Language Models (LLM) | Text generation and chat completion, with multiple interface styles (classic chat, responses, and native generation) |
+| Image Models | Text-to-image, image editing, multi-reference and group generation, and async image tasks |
+| Video Models | Text-to-video, image-to-video, first/last-frame and reference-material generation |
+| Speech Models | Speech synthesis and voice customization (quick voice cloning) |
+
+## Common conventions
+
+### Base URL
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+```
+
+### Authentication
+
+All requests carry the platform API Token in the request header:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+Get your Token from the console and bind it to the relevant capability channels.
+
+### Request styles
+
+- Synchronous: a single request returns the result directly.
+- Asynchronous: create a task first, then poll the query endpoint for results; commonly used for video, image, and speech synthesis workloads.
+
+## Notes
+
+- Each group page further documents the endpoint, request parameters, response format, and billing rules for its interface.
+- Where an interface is further divided by model, refer to the specific pages within each group.

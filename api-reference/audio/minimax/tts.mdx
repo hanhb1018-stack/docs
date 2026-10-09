@@ -1,0 +1,120 @@
+---
+title: "语音合成"
+---
+
+使用 MiniMax 语音合成（TTS）能力，支持同步与异步两种调用方式。所有请求由 GregAPI 转发到 MiniMax，无需自行签名，只需在 Header 中携带 GregAPI API Key。
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+统一使用：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 接口列表
+
+| 操作 | 方法 | 端点 |
+|---|---|---|
+| 同步合成 | `POST` | `/minimaxi/v1/t2a_v2` |
+| 异步合成 | `POST` | `/minimaxi/v1/t2a_async_v2` |
+| 异步查询 | `GET` | `/minimaxi/v1/query/t2a_async_query_v2` |
+
+## 支持的模型
+
+| 模型 | 说明 |
+|---|---|
+| `speech-2.8-hd` | 推荐默认，高保真音频 |
+| `speech-2.8-turbo` | 低延迟快速合成 |
+| `speech-2.6-hd` | 上一代高保真模型 |
+
+## 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `model` | string | 是 | 模型名，如 `speech-2.8-hd` |
+| `text` | string | 是 | 待合成文本 |
+| `voice_id` | string | 是 | 音色 ID，或平台内置别名 |
+| `output_format` | string | 否 | `hex`（默认）或 `url`；仅非流式生效，`url` 有效期以官方返回为准 |
+| `emotion` | string | 否 | 情感，见下方枚举 |
+| `sound_effects` | string | 否 | 音效，见下方枚举 |
+
+### 情感枚举（emotion）
+
+`happy`、`sad`、`angry`、`fearful`、`disgusted`、`surprised`、`calm`、`fluent`、`whisper`
+
+该能力受模型与音色组合限制，并非所有 `voice_id` 都支持。
+
+### 音效枚举（sound_effects）
+
+`spacious_echo`、`auditorium_echo`、`lofi_telephone`、`robotic`
+
+## 音色别名
+
+为与 OpenAI 风格保持一致，平台为常见音色提供别名到 MiniMax 实际音色的映射：
+
+| 别名 | MiniMax 音色 |
+|---|---|
+| `alloy` | `female-chengshu`（女声-成熟） |
+| `echo` | `male-qn-qingse`（男声-青年-清色） |
+| `fable` | `male-qn-jingying`（男声-青年-精英） |
+| `onyx` | `presenter_male` |
+| `nova` | `presenter_female` |
+| `shimmer` | `audiobook_female_1` |
+
+在 `voice_id` 中填写上述别名时，平台会自动转换为 MiniMax 实际音色；当该音色存在默认情感时，会在未显式指定 `emotion` 时自动补全。
+
+## 返回格式（audio_mode）
+
+通过渠道自定义参数可设置音频返回模式：
+
+- `audio_mode = json`（默认）：响应体以 JSON 返回，`data.audio` 为 hex 或 URL（由 `output_format` 决定）。
+- `audio_mode = hex`：当 `output_format=hex` 时返回裸音频流；当 `output_format=url` 时仍返回 JSON。
+
+## 同步合成示例
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_v2" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "speech-2.8-hd",
+    "text": "欢迎使用 GregAPI",
+    "output_format": "hex"
+  }' \
+  --output minimax-tts.mp3
+```
+
+`output_format=hex` 时，响应体为裸音频十六进制流，可直接落盘为 `.mp3`。
+
+`output_format=url` 时，响应体以 JSON 返回，从 `data.audio` 读取音频 URL。
+
+## 异步合成示例
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "speech-2.8-hd",
+    "text": "hello"
+  }'
+```
+
+查询结果：
+
+```bash
+curl "https://api.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+异步合成在返回 JSON 载荷中会原样保留你的 `voice_id` 与参数；若使用了别名，平台会在上游请求前完成一次转换与情感补全。
+
+## 计费说明
+
+- 按成功合成的音频计费，具体价格以控制台「模型价格」页面的 MiniMax 语音条目为准。
+- 以上游消费日志的实际结算金额为准。

@@ -34,7 +34,16 @@
                 "group": "图像模型",
                 "pages": [
                   "api-reference/images/overview",
-                  "api-reference/images/doubao-seedream-5-0"
+                  "api-reference/images/doubao-seedream-5-0",
+                  {
+                    "group": "Gemini生图",
+                    "pages": [
+                      "api-reference/images/gemini/image-generation",
+                      "api-reference/images/gemini/image-generation-openai",
+                      "api-reference/images/gemini/image-generation-async",
+                      "api-reference/images/gemini/image-generation-native"
+                    ]
+                  }
                 ]
               },
               {
@@ -61,7 +70,15 @@
               },
               {
                 "group": "语音模型",
-                "pages": ["api-reference/audio/overview"]
+                "pages": [
+                  {
+                    "group": "MiniMax语音",
+                    "pages": [
+                      "api-reference/audio/minimax/tts",
+                      "api-reference/audio/minimax/voice-cloning"
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -95,7 +112,16 @@
                 "group": "Image Models",
                 "pages": [
                   "en/api-reference/images/overview",
-                  "en/api-reference/images/doubao-seedream-5-0"
+                  "en/api-reference/images/doubao-seedream-5-0",
+                  {
+                    "group": "Gemini Image Generation",
+                    "pages": [
+                      "en/api-reference/images/gemini/image-generation",
+                      "en/api-reference/images/gemini/image-generation-openai",
+                      "en/api-reference/images/gemini/image-generation-async",
+                      "en/api-reference/images/gemini/image-generation-native"
+                    ]
+                  }
                 ]
               },
               {
@@ -122,7 +148,15 @@
               },
               {
                 "group": "Speech Models",
-                "pages": ["en/api-reference/audio/overview"]
+                "pages": [
+                  {
+                    "group": "MiniMax Speech",
+                    "pages": [
+                      "en/api-reference/audio/minimax/tts",
+                      "en/api-reference/audio/minimax/voice-cloning"
+                    ]
+                  }
+                ]
               }
             ]
           },

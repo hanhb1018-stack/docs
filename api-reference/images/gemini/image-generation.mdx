@@ -1,0 +1,78 @@
+---
+title: "图像生成"
+---
+
+通过 GregAPI 调用 Google Gemini 图像生成模型，支持 OpenAI 兼容、异步任务、原生 `generateContent` 三种调用方式。所有请求由 GregAPI 统一转发，无需自行签名，只需在 Header 中携带 GregAPI API Key。
+
+```bash
+export BASE_URL="https://api.gregapi.com/v1"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+统一使用：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 支持的模型
+
+| 模型 | 最大分辨率 | 状态 | 说明 |
+|---|---|---|---|
+| `gemini-2.5-flash-image` | 1K | GA | 快速低延迟，适合原型验证；单次输入最多 3 张参考图 |
+| `gemini-3-pro-image-preview` | 4K | Public Preview | 高质量，支持复杂提示词与参考图编辑，支持 thinking / grounding；单次输入最多 14 张参考图 |
+| `gemini-3.1-flash-image` | 4K | GA | 速度、成本与质量均衡，支持 512/1K/2K/4K 及更多宽高比；单次输入最多 14 张参考图 |
+
+## 分辨率档位
+
+`size` 或 `imageConfig.imageSize` 使用以下档位：
+
+| 档位 | 说明 |
+|---|---|
+| `512` | 低分辨率，仅 `gemini-3.1-flash-image` 支持 |
+| `1K` | 约 1K 级像素，预览、移动端、小图 |
+| `2K` | 约 2K 级像素，高清插画、桌面壁纸 |
+| `4K` | 约 4K 级像素，超高清、精修图、大屏展示 |
+
+各模型支持档位：
+
+- `gemini-2.5-flash-image`：仅 `1K`，指定更高档位自动降级到 `1K`
+- `gemini-3-pro-image-preview`：`1K` / `2K` / `4K`
+- `gemini-3.1-flash-image`：`512` / `1K` / `2K` / `4K`
+
+## 宽高比
+
+三个模型共同支持以下宽高比：
+
+```
+1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
+```
+
+`gemini-3.1-flash-image` 额外支持：
+
+```
+1:4  4:1  1:8  8:1  9:21
+```
+
+## 调用方式对比
+
+| 特性 | OpenAI 兼容接口 | 异步接口 | 原生 API |
+|---|---|---|---|
+| 端点 | `/v1/images/generations`、`/v1/images/edits` | `/v1/images/*/async` | `/v1beta/models/{model}:generateContent` |
+| 文生图 | ✅ | ✅ | ✅ |
+| 参考图编辑 | ✅ | ✅ | ✅ |
+| 输出 | `b64_json` 或 `url` | 固定 `url`（24 小时临时签名 URL） | base64 |
+| 多参考图 | 最多 14 张 | 同同步接口 | 最多 15 张 |
+| 自动分辨率推断 | 支持（仅 `gemini-3-pro-image-preview`） | 适用 | 不支持 |
+| 学习成本 | 低（兼容 OpenAI SDK） | 中（需轮询） | 中 |
+
+## 计费说明
+
+- 文本输入：按提示词 tokens 计费。
+- 图像输出：优先使用上游 `usageMetadata` 返回的 image tokens 结算；上游未返回时按档位折算：
+  - `gemini-2.5-flash-image` / `gemini-3-pro-image-preview`：1K / 2K 每张按 1120 tokens，4K 每张按 2000 tokens。
+  - `gemini-3.1-flash-image`：512 每张 747 tokens、1K 每张 1120 tokens、2K 每张 1680 tokens、4K 每张 2520 tokens。
+- 未产出图片但已结算的 no-image 响应会返回用量：OpenAI 风格接口返回顶层 `usage`，原生接口返回 `usageMetadata`，异步任务查询返回顶层 `usage`。
+
+具体价格请在后台「模型价格管理」中查看对应条目，以上游消费日志为准。

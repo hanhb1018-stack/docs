@@ -1,0 +1,92 @@
+---
+title: "音色快速复刻"
+---
+
+使用 MiniMax 音色快速复刻（Voice Cloning）能力，克隆某一音色并以指定文本试听。与 MiniMax 官方 `/v1/voice_clone` 接口保持一致，由 GregAPI 转发，无需自行签名。
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## 接口
+
+| 操作 | 方法 | 端点 |
+|---|---|---|
+| 音色快速复刻 | `POST` | `/minimaxi/v1/voice_clone` |
+
+媒介类型：`application/json`。适用场景：IP 复刻、音色克隆等需要快速复刻某一音色的场景。
+
+## 快速开始：三步完成音色复刻
+
+### 1. 上传待复刻音频，获取 `file_id`
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "purpose=voice_clone" \
+  -F "file=@/path/to/audio.mp3"
+```
+
+响应体中的 `file.file_id` 后续传给 `POST /minimaxi/v1/voice_clone`，`file.filename` 为原始文件名。
+
+### 2.（可选）上传示例音频，获取 `prompt_audio` 的 `file_id`
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "purpose=prompt_audio" \
+  -F "file=@/path/to/short-sample.mp3"
+```
+
+### 3. 调用复刻接口，完成克隆并获取试听音频
+
+## 请求参数（对齐 MiniMax 官方 `/v1/voice_clone`）
+
+| 参数 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `file_id` | string / integer | 是 | 需要复刻音色的音频文件 `file_id`，通过 `/minimaxi/v1/files/upload` 获取 |
+| `voice_id` | string | 是 | 目标克隆音色的 `voice_id`，需满足官方命名规范 |
+| `clone_prompt.prompt_audio` | string | 否 | 示例音频的 `file_id`（通过 `purpose=prompt_audio` 上传获得） |
+| `clone_prompt.prompt_text` | string | 否 | 示例音频对应文本 |
+| `text` | string | 否 | 复刻试听文本（官方限制 ≤ 1000 字符） |
+| `model` | string | 条件必填 | 传入 `text` 时必填，试听所用语音模型，如 `speech-2.8-hd`、`speech-2.8-turbo` |
+| `language_boost` | string | 否 | 小语种/方言增强，如 `Chinese`、`English`、`auto` 等 |
+| `need_noise_reduction` | boolean | 否 | 是否开启降噪 |
+| `need_volume_normalization` | boolean | 否 | 是否开启音量归一化 |
+| `aigc_watermark` | boolean | 否 | 是否在试听音频末尾添加 AIGC 水印节奏 |
+
+## 返回字段
+
+| 字段 | 说明 |
+|---|---|
+| `input_sensitive` | 可选，输入音频命中风控时返回，包含 `type` 等信息 |
+| `demo_audio` | 若传入 `text` 与 `model`，返回试听音频链接 |
+| `base_resp.status_code` | 状态码，0 为成功 |
+| `base_resp.status_msg` | 状态描述 |
+
+## 示例：带试听音频返回
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/voice_clone" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_id": 1234567890,
+    "voice_id": "MiniMax001",
+    "text": "近年来，人工智能在国内迎来高速发展期...",
+    "model": "speech-2.8-hd",
+    "need_noise_reduction": true,
+    "need_volume_normalization": true
+  }'
+```
+
+## 计费说明
+
+- 按复刻与试听的实际用量计费，具体价格以控制台「模型价格」页面的 MiniMax 语音条目为准。
+- 以上游消费日志的实际结算金额为准。

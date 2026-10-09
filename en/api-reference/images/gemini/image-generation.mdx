@@ -1,0 +1,78 @@
+---
+title: "Image Generation"
+---
+
+Generate images with Google Gemini image models through GregAPI, supporting OpenAI-compatible, async task, and native `generateContent` calling styles. All requests are forwarded by GregAPI — no self-signing required, just pass the GregAPI API Key in the header.
+
+```bash
+export BASE_URL="https://api.gregapi.com/v1"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+Standard headers:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Supported Models
+
+| Model | Max resolution | Status | Notes |
+|---|---|---|---|
+| `gemini-2.5-flash-image` | 1K | GA | Fast, low latency, ideal for prototyping; up to 3 reference images per request |
+| `gemini-3-pro-image-preview` | 4K | Public Preview | High quality, complex prompt understanding, reference-image editing, thinking / grounding; up to 14 reference images per request |
+| `gemini-3.1-flash-image` | 4K | GA | Balanced speed / cost / quality, supports 512/1K/2K/4K and additional aspect ratios; up to 14 reference images per request |
+
+## Resolution Tiers
+
+The `size` or `imageConfig.imageSize` field accepts the following tiers:
+
+| Tier | Description |
+|---|---|
+| `512` | Low resolution, `gemini-3.1-flash-image` only |
+| `1K` | ~1K-class pixels, preview / mobile / small images |
+| `2K` | ~2K-class pixels, HD illustration / desktop wallpaper |
+| `4K` | ~4K-class pixels, ultra-HD / refined / large display |
+
+Supported tiers per model:
+
+- `gemini-2.5-flash-image`: `1K` only; higher tiers auto-downgrade to `1K`
+- `gemini-3-pro-image-preview`: `1K` / `2K` / `4K`
+- `gemini-3.1-flash-image`: `512` / `1K` / `2K` / `4K`
+
+## Aspect Ratios
+
+All three models support:
+
+```
+1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
+```
+
+`gemini-3.1-flash-image` additionally supports:
+
+```
+1:4  4:1  1:8  8:1  9:21
+```
+
+## Calling Style Comparison
+
+| Feature | OpenAI-compatible | Async | Native API |
+|---|---|---|---|
+| Endpoints | `/v1/images/generations`, `/v1/images/edits` | `/v1/images/*/async` | `/v1beta/models/{model}:generateContent` |
+| Text-to-image | ✅ | ✅ | ✅ |
+| Reference-image editing | ✅ | ✅ | ✅ |
+| Output | `b64_json` or `url` | Fixed `url` (24h signed URL) | base64 |
+| Multiple reference images | Up to 14 | Same as sync | Up to 15 |
+| Auto resolution inference | Supported (`gemini-3-pro-image-preview` only) | Applies | Not supported |
+| Learning curve | Low (OpenAI SDK compatible) | Medium (polling) | Medium |
+
+## Billing
+
+- Text input: billed by prompt tokens.
+- Image output: prioritizes upstream `usageMetadata` image tokens; if unavailable, estimated per tier:
+  - `gemini-2.5-flash-image` / `gemini-3-pro-image-preview`: 1120 tokens per 1K/2K image, 2000 tokens per 4K image.
+  - `gemini-3.1-flash-image`: 747 tokens (512), 1120 tokens (1K), 1680 tokens (2K), 2520 tokens (4K).
+- no-image responses that were already billed return usage: top-level `usage` for OpenAI-style, `usageMetadata` for native API, and top-level `usage` for async task queries.
+
+See the platform's "Model Pricing" page for exact rates, subject to upstream usage logs.

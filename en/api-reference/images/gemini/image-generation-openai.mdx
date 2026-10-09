@@ -1,0 +1,157 @@
+---
+title: "Image Generation (OpenAI)"
+---
+
+Call Gemini image models through OpenAI-compatible endpoints (`/v1/images/generations` and `/v1/images/edits`) for text-to-image and reference-image editing. Compatible with the OpenAI SDK.
+
+## Supported Models
+
+| Model | Max resolution |
+|---|---|
+| `gemini-2.5-flash-image` | 1K only |
+| `gemini-3-pro-image-preview` | 1K / 2K / 4K |
+| `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+
+## Authentication
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Text-to-image `/v1/images/generations`
+
+**Method**: `POST`
+
+**Base URL**: `https://api.gregapi.com/v1/images/generations`
+
+### Request Parameters
+
+| Parameter | Type | Required | Default | Values | Description |
+|---|---|---|---|---|---|
+| `model` | string | Yes | - | Model name | `gemini-2.5-flash-image`, `gemini-3-pro-image-preview`, `gemini-3.1-flash-image` |
+| `prompt` | string | Yes | - | - | Image description text |
+| `n` | integer | No | 1 | 1 only | Number of images |
+| `size` | string | No | auto | `512` / `1K` / `2K` / `4K` or `widthxheight` | Resolution; tier format (recommended) or numeric format (legacy) |
+| `aspect_ratio` | string | No | auto | Aspect ratio | Explicit ratio |
+| `response_format` | string | No | `b64_json` | `b64_json` / `url` | Output format: base64 or URL |
+
+Aspect ratio values:
+
+```
+1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
+```
+
+`gemini-3.1-flash-image` additionally supports `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
+
+### Example
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gemini-3-pro-image-preview",
+  "prompt": "A futuristic cityscape at sunset with flying cars",
+  "size": "2K",
+  "aspect_ratio": "16:9",
+  "response_format": "b64_json"
+}'
+```
+
+### Response (`response_format=b64_json`)
+
+```json
+{
+  "created": 1700000000,
+  "data": [
+    {
+      "b64_json": "<BASE64_IMAGE_DATA>",
+      "revised_prompt": "Revised prompt (if any)"
+    }
+  ]
+}
+```
+
+### Response (`response_format=url`)
+
+```json
+{
+  "created": 1700000000,
+  "data": [
+    {
+      "url": "https://example.com/xxx.png"
+    }
+  ]
+}
+```
+
+### Billed-but-blocked error response
+
+```json
+{
+  "error": {
+    "message": "no image generated (request id: 20260608235925678097275ZgRxuG4y)",
+    "type": "one_hub_error",
+    "code": "no_image_generated"
+  },
+  "usage": {
+    "input_tokens": 353,
+    "output_tokens": 0,
+    "total_tokens": 353,
+    "output_tokens_details": null,
+    "input_tokens_details": {
+      "text_tokens": 95,
+      "image_tokens": 258
+    }
+  }
+}
+```
+
+`usage` is only returned when the failure already incurred billable prompt/input tokens. Ordinary failures (parameter validation, quota, network) do not return `usage`.
+
+## Image editing `/v1/images/edits`
+
+**Method**: `POST` (multipart/form-data)
+
+**Base URL**: `https://api.gregapi.com/v1/images/edits`
+
+### Request Parameters
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `model` | string | Yes | - | Model name |
+| `prompt` | string | Yes | - | Editing instruction |
+| `image` | file | No | - | Base image; mutually exclusive with `image_urls[]` |
+| `image[]` | file[] | No | - | Reference images, up to 14 |
+| `image_urls[]` | string[] | No | - | Image URL list; first is base, rest are references; can mix with `image`/`image[]` |
+| `size` | string | No | auto | Output resolution, `512` / `1K` / `2K` / `4K` or `widthxheight` |
+| `aspect_ratio` | string | No | auto | Explicit aspect ratio |
+| `response_format` | string | No | `b64_json` | `b64_json` or `url` |
+| `mask` | file | No | - | Mask image for local editing |
+
+### Notes
+
+- The first `image_urls[]` serves as the base image, the rest are references; up to 14 total.
+- Only public HTTP/HTTPS image URLs are supported; localhost and private IPs are not.
+- Without `size`, it is inferred from the base image (for `gemini-3-pro-image-preview` only).
+- An explicit `aspect_ratio` takes precedence when provided.
+
+### Example
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gemini-3-pro-image-preview" \
+  -F "prompt=Convert this image to oil-painting style" \
+  -F "response_format=url" \
+  -F "image=@/path/to/base.png"
+```
+
+## Error Codes
+
+| HTTP status | Description | Solution |
+|---|---|---|
+| 400 | Invalid parameter | Check prompt, size format |
+| 413 | Image too large | Compress reference image under 10 MB |
+| 429 | Quota exceeded | Check quota or retry later |

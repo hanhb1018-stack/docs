@@ -1,0 +1,186 @@
+---
+title: "Image Generation (Async)"
+---
+
+Create Gemini image-generation tasks via the async API, then poll with `GET` to obtain image URLs valid for 24 hours. Ideal for time-consuming 2K / 4K high-resolution generation.
+
+## Prerequisite: Object Storage (required)
+
+Async image tasks require configured object storage (S3 or AliOSS) to upload generated images and return 24-hour signed URLs. Without it, the API returns `error.code=storage_not_configured`.
+
+## Endpoints
+
+| Operation | Method | Endpoint |
+|---|---|---|
+| Create text-to-image task | `POST` | `/v1/images/generations/async` |
+| Create edit task | `POST` | `/v1/images/edits/async` |
+| Query text-to-image task | `GET` | `/v1/images/generations/{id}` |
+| Query edit task | `GET` | `/v1/images/edits/{id}` |
+
+**Base URL**: `https://api.gregapi.com`
+
+### Authentication
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+### Task ID format
+
+- Format: `image_<ULID>`, e.g. `image_01KCRVET35FAVZME1CEEED9VBS`
+- `task_id` is an alias, equal to `id`
+
+## Text-to-image: Create task
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gemini-3-pro-image-preview",
+  "prompt": "A futuristic cityscape at sunset with flying cars",
+  "n": 1,
+  "size": "1024x1024",
+  "response_format": "url"
+}'
+```
+
+Create response:
+
+```json
+{
+  "id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "task_id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "object": "image.generation",
+  "created_at": 1700000000,
+  "status": "pending",
+  "progress": 0,
+  "model": "gemini-3-pro-image-preview",
+  "prompt": "A futuristic cityscape at sunset with flying cars"
+}
+```
+
+Poll:
+
+```bash
+curl -X GET "https://api.gregapi.com/v1/images/generations/image_01KCRVET35FAVZME1CEEED9VBS" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+## Text-to-image: Query result
+
+Completed response:
+
+```json
+{
+  "id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "task_id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "object": "image.generation",
+  "created_at": 1700000000,
+  "status": "completed",
+  "progress": 100,
+  "completed_at": 1700000066,
+  "expires_at": 1700086466,
+  "model": "gemini-3-pro-image-preview",
+  "data": [
+    { "url": "https://example.com/signed-url.png" }
+  ]
+}
+```
+
+Failed response:
+
+```json
+{
+  "id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "task_id": "image_01KCRVET35FAVZME1CEEED9VBS",
+  "object": "image.generation",
+  "created_at": 1700000000,
+  "status": "failed",
+  "progress": 0,
+  "error": {
+    "code": "task_failed",
+    "message": "Task failed, please retry later"
+  }
+}
+```
+
+no-image billed failure (with usage):
+
+```json
+{
+  "id": "image_01KTKZBMH71ZBPHKJXJJ3R1076",
+  "task_id": "image_01KTKZBMH71ZBPHKJXJJ3R1076",
+  "object": "image.generation",
+  "created_at": 1780934365,
+  "status": "failed",
+  "progress": 0,
+  "error": {
+    "code": "no_image_generated",
+    "message": "no image generated"
+  },
+  "usage": {
+    "prompt_tokens": 353,
+    "completion_tokens": 0,
+    "input_tokens": 353,
+    "output_tokens": 0,
+    "total_tokens": 353,
+    "input_tokens_details": {
+      "cached_tokens": 0,
+      "text_tokens": 95,
+      "image_tokens": 258,
+      "audio_tokens": 0
+    }
+  }
+}
+```
+
+## Edit: Create task
+
+Request style: multipart/form-data
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gemini-3-pro-image-preview" \
+  -F "prompt=Convert this image to oil-painting style" \
+  -F "response_format=url" \
+  -F "image=@/path/to/image.png"
+```
+
+Or pass URLs:
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gemini-3-pro-image-preview" \
+  -F "prompt=Convert this image to oil-painting style (URL references)" \
+  -F "response_format=url" \
+  -F "image_urls[]=https://example.com/base.png" \
+  -F "image_urls[]=https://example.com/style-ref.png"
+```
+
+Edit async tasks support Gemini image models only. Responses match text-to-image task queries.
+
+## Task Status
+
+| Status | Meaning |
+|---|---|
+| `pending` | Queued |
+| `in_progress` | Running |
+| `completed` | Done, read `data[].url` |
+| `failed` | Failed, read `error.code` / `error.message` |
+
+## Polling Strategy
+
+- `interval`: 3–10 seconds
+- `timeout`: 5–15 minutes (depends on server load and resolution)
+
+## Sync vs Async
+
+| Feature | Sync | Async |
+|---|---|---|
+| Endpoints | `/v1/images/generations`, `/v1/images/edits` | `/v1/images/*/async` |
+| `response_format` | `b64_json` or `url` | Fixed `url` (`b64_json` ignored) |
+| Object storage | Required only when returning URL | Required (S3/AliOSS), 24h signed URL |

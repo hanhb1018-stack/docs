@@ -1,5 +1,359 @@
 ---
-title: "Image Models"
+title: "GPT Image Generation"
 ---
 
-Placeholder content. Image model docs to be added.
+Generate and edit images with OpenAI GPT image models through the OpenAI-compatible interface. This document covers both the `gpt-image-2` and `gpt-image-2.5` series, which share the same generation, editing, and async endpoints but differ in model names, quality tiers, and resolution behavior.
+
+## Model Overview
+
+| Model | Quality tiers | Resolution | Positioning |
+|---|---|---|---|
+| `gpt-image-2` | `low` / `medium` / `high` | Any valid `widthxheight` | Recommended default; high-quality generation and editing, text rendering, transparent backgrounds (preview) |
+| `gpt-image-2.5-sunburst` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | Precision editing, stronger reference preservation and layout control |
+| `gpt-image-2.5-flare` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | Low latency, high throughput for batch generation |
+
+> `gpt-image-2` also ships per-image SKU channels `gpt-image-2-low` / `gpt-image-2-medium` / `gpt-image-2-high`; `gpt-image-2.5` does not use per-image SKUs. Enable the model on the OpenAI official or compatible channel first, then replace `model` in the examples with the exact model name. Actual model availability and parameter support are subject to channel validation.
+
+## Quickstart
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "A futuristic skyline at dusk",
+  "size": "1024x1024",
+  "quality": "medium",
+  "response_format": "b64_json"
+}'
+```
+
+Python SDK:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://api.gregapi.com/v1", api_key="$TOKEN")
+
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A futuristic skyline at dusk",
+    size="1024x1024",
+    quality="medium",
+    response_format="b64_json",
+)
+
+print(result.data[0].b64_json)
+```
+
+## gpt-image-2
+
+### Supported quality tiers
+
+`low` / `medium` / `high`. `gpt-image-2` does not expose `input_fidelity`; output is high fidelity by default.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `prompt` | string | Yes | Image description text |
+| `model` | string | Yes | `gpt-image-2` |
+| `n` | integer | No | Number of images, default 1; some channels only support `n=1` |
+| `size` | string | No | `widthxheight` or `auto`, default `1024x1024` |
+| `quality` | string | No | `low` / `medium` / `high` / `auto`; platform default `low` |
+| `background` | string | No | `transparent` / `opaque` / `auto` (transparency is a preview feature) |
+| `output_format` | string | No | `png` (default) / `jpeg` / `webp` |
+| `output_compression` | integer | No | 0-100, JPEG / WebP only |
+| `response_format` | string | No | `url` / `b64_json`, default `b64_json` |
+| `moderation` | string | No | `low` / `auto` |
+| `user` | string | No | End-user identifier |
+
+`stream` and `partial_images` are official OpenAI fields, but `gpt-image-2` does not support streaming image generation. Passing them yields no usable image stream events.
+
+### Resolution rules
+
+`gpt-image-2` accepts a `size` of `widthxheight` or `auto`. Any resolution is valid as long as all of these constraints hold:
+
+| Constraint | Rule |
+|---|---|
+| Max edge length | Neither edge exceeds 3840 px |
+| Min total pixels | width x height no less than 655,360 |
+| Max total pixels | width x height no more than 8,294,400 |
+| Alignment | Both width and height must be multiples of 16 |
+| Aspect ratio | Long edge : short edge no greater than 3:1 |
+
+Sizes exceeding `2560x1440` (~2K) are experimental and may produce more variable results.
+
+Common values:
+
+| `size` | Use case |
+|---|---|
+| `auto` | Model picks the size from the prompt |
+| `1024x1024` | General-purpose square |
+| `1536x1024` | Landscape 3:2 |
+| `1024x1536` | Portrait 2:3 |
+| `2560x1440` | 2K landscape 16:9 (recommended reliability ceiling) |
+| `3840x2160` | 4K (experimental; round down to `3824x2144` under the `<3840` rule) |
+
+Actual available sizes remain subject to the channel your account routes to.
+
+### Transparent backgrounds (preview)
+
+`gpt-image-2` supports transparent backgrounds:
+
+- Set `background="transparent"`.
+- Use `output_format="png"` (default) or `"webp"`; `jpeg` does not support transparency.
+- Omit `output_compression` for PNG; WebP supports optional compression.
+
+## gpt-image-2.5
+
+### Model names
+
+`gpt-image-2.5-sunburst` (precision editing) and `gpt-image-2.5-flare` (low latency).
+
+### Supported quality tiers
+
+`low` / `medium` / `high` / `xhigh` / `max` / `auto`. `xhigh` / `max` are higher-fidelity tiers, and `auto` defers to the upstream selection — usage depends on what upstream actually chooses.
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `prompt` | string | Yes | Image description text |
+| `model` | string | Yes | `gpt-image-2.5-sunburst` or `gpt-image-2.5-flare` |
+| `n` | integer | No | Number of images; configured per channel, up to 1 unless configured otherwise |
+| `quality` | string | No | `low` / `medium` / `high` / `xhigh` / `max` / `auto` |
+| `size` | string | No | Resolution tier `1K` / `2K` / `4K` (unlike `gpt-image-2`'s `widthxheight`) |
+| `aspect_ratio` | string | No | Explicit aspect ratio for flexible composition |
+| `output_format` | string | No | `png` / `jpeg` / `webp` |
+| `response_format` | string | No | `url` / `b64_json` |
+| `moderation` | string | No | `low` / `auto` |
+| `user` | string | No | End-user identifier |
+
+### Notes
+
+- The 2.5 series uses resolution tiers (`1K` / `2K` / `4K`) with `aspect_ratio`, rather than `gpt-image-2`'s exact pixel sizes.
+- Returning URLs requires platform object storage configuration.
+- Billing is token-based by default: text input $5/M, cached text $1.25/M, image input $8/M, cached image $2/M, image output $30/M (M = million tokens; account pricing prevails). 2.5 does not use the `gpt-image-2-low-*` per-image SKUs. Rate source: [OpenAI pricing](https://developers.openai.com/api/docs/pricing#image-generation).
+
+## Text-to-image `/v1/images/generations`
+
+Both series share this endpoint; the `model` field selects the model. Example request:
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2.5-sunburst",
+  "prompt": "A clean studio product photo of a matte white ceramic mug",
+  "quality": "high",
+  "size": "2K",
+  "response_format": "url"
+}'
+```
+
+## Response
+
+```json
+{
+  "created": 1762789802,
+  "data": [
+    {
+      "b64_json": "iVBORw0KGgoAAAANSUhEUg...",
+      "revised_prompt": "A futuristic skyline at dusk with neon lights"
+    }
+  ],
+  "usage": {
+    "input_tokens": 12,
+    "output_tokens": 4096,
+    "total_tokens": 4108
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `created` | Creation timestamp |
+| `data[].b64_json` | Base64 image, returned with `response_format=b64_json` |
+| `data[].url` | Image URL, returned with `response_format=url` |
+| `data[].revised_prompt` | Model-optimized prompt |
+| `usage` | Token usage; token-billed channels settle by recorded or upstream usage first |
+
+## URL output
+
+Set `response_format=url` to obtain an image URL:
+
+```python
+result = client.images.generate(
+    model="gpt-image-2",
+    prompt="A clean studio product photo of a matte white ceramic mug",
+    size="1024x1024",
+    quality="low",
+    response_format="url",
+)
+
+print(result.data[0].url)
+```
+
+The platform applies a local fallback strategy for URL output:
+
+1. Request the image result.
+
+2. Transfer the image to platform object storage.
+
+3. Return an accessible URL in `data[].url`.
+
+The behavior is deterministic:
+
+- If object storage is configured, `data[].url` is returned.
+
+- If not, `image_url_not_available` is returned.
+
+- It never silently degrades to `b64_json`.
+
+## Image editing `/v1/images/edits`
+
+### JSON request body
+
+Specify the base image via `images[].image_url` or `images[].file_id`:
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "Restyle it",
+  "size": "1024x1024",
+  "quality": "medium",
+  "images": [
+    { "image_url": "https://example.com/base-image.png" }
+  ]
+}'
+```
+
+Multiple-reference example:
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "Use image 1 for the subject silhouette, image 2 for the color palette, image 3 for material; produce a clean e-commerce hero image",
+  "size": "1024x1024",
+  "quality": "high",
+  "images": [
+    { "image_url": "https://example.com/reference-subject.png" },
+    { "image_url": "https://example.com/reference-color.png" },
+    { "image_url": "https://example.com/reference-texture.png" }
+  ]
+}'
+```
+
+### Multipart upload
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "image=@base.png" \
+  -F "mask=@mask.png" \
+  -F "prompt=Add hot air balloons to the sky"
+```
+
+### Edit parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `prompt` | string | Yes | Editing instruction |
+| `model` | string | Yes | `gpt-image-2` / `gpt-image-2.5-sunburst` / `gpt-image-2.5-flare` |
+| `images` | array | No | Input image list, up to 14 |
+| `images[].image_url` | string | No | Publicly accessible image URL |
+| `images[].file_id` | string | No | File ID from the Files API |
+| `mask` | object | No | Mask, same structure as image reference |
+| `size` | string | No | Output size, default `1024x1024` |
+| `quality` | string | No | `low` / `medium` / `high` / `auto`, default `low` |
+| `background` | string | No | `transparent` / `opaque` / `auto` |
+| `input_fidelity` | string | No | `high` / `low` (ignored by `gpt-image-2`) |
+| `output_format` | string | No | `png` / `jpeg` |
+| `output_compression` | integer | No | 0-100 |
+| `moderation` | string | No | `low` / `auto` |
+| `response_format` | string | No | `url` / `b64_json` |
+| `n` | integer | No | Number of images, default 1 |
+| `user` | string | No | End-user identifier |
+
+`images[].image_url` and `images[].file_id` are mutually exclusive. Some compatible channels are internally rewritten to multipart by the platform to guarantee execution, which does not change the externally exposed interface.
+
+## Async image tasks
+
+The platform offers managed async image task endpoints. This is not OpenAI's backend task protocol; the platform first creates an `image_<ULID>` task, a background worker runs the synchronous image request, and the polling endpoint returns the hosted image URL.
+
+### Text-to-image task
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+  "model": "gpt-image-2",
+  "prompt": "A clean studio product photo of a matte white ceramic mug",
+  "size": "1024x1024",
+  "quality": "low",
+  "response_format": "url"
+}'
+```
+
+Query the task:
+
+```bash
+curl -X GET "https://api.gregapi.com/v1/images/generations/{id}" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Edit task
+
+```bash
+curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "model=gpt-image-2" \
+  -F "prompt=Convert this image to a clean e-commerce hero shot" \
+  -F "response_format=url" \
+  -F "image=@/path/to/base.png"
+```
+
+| Status | Description |
+|---|---|
+| `pending` | Queued |
+| `in_progress` | Running in background |
+| `completed` | Done, read `data[].url` |
+| `failed` | Failed, read `error.code` / `error.message` |
+
+Async tasks require publicly accessible object storage. Without it, creating a task returns `storage_not_configured`.
+
+## Billing
+
+Token-billed channels settle by recorded or upstream token usage:
+
+| Type | Pricing basis |
+|---|---|
+| text input | Input text tokens |
+| cached text input | Cache-hit input tokens |
+| image input | Edit or multimodal image input tokens |
+| image output | Image output tokens |
+
+With upstream `usage`, billing follows that usage; otherwise it is estimated from the number of successfully returned images, sizes, and the 2.5 quality coefficient. For `auto`, usage depends on upstream selection; results without usage represent only a platform estimate. Per-image estimates are for cost estimation only — actual bills follow consumption logs and the platform's "Model Pricing" page.
+
+Per-image and token billing differ in discounts, unit prices, and billing fields. Reconcile against actual amounts in consumption logs; do not treat the display token bucket as an extra billing line.
+
+## Error codes
+
+| Error code | Description |
+|---|---|
+| `image_url_not_available` | URL output requested but object storage not configured |
+| `n_not_supported` | Channel does not support `n>1`; split the request |
+| `unsupported_image_input` | Async editing does not support that input form |
+| `content_policy_violation` | Content moderation failed |
+| `suspected_black_image_from_upstream` | Suspected all-black image returned, blocked |

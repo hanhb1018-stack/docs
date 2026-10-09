@@ -1,0 +1,277 @@
+openapi: 3.0.3
+info:
+  title: GregAPI Large Language Models
+  version: 1.0.0
+  description: Large language model (LLM) endpoints behind the GregAPI unified gateway, covering general chat completion, multi-modal responses, and native message/generation protocols.
+servers:
+  - url: https://api.gregapi.com
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+paths:
+  /v1/chat/completions:
+    post:
+      summary: Chat Completions
+      description: Chat completion and tool calling through GregAPI's OpenAI-compatible interface, with streaming, function/tool calling, and JSON mode.
+      x-mint:
+        content: |
+          ## Common usage
+
+          - **Streaming**: set `stream: true` in the body; add `-N` for cURL or use `requests.post(..., stream=True)` in Python.
+          - **Function calling**: declare callable functions via `tools` and `tool_choice`, then parse `tool_calls` in the response.
+          - **JSON mode**: use `response_format: {"type": "json_schema"}` for strict structured output.
+
+          GregAPI automatically aligns field differences across common compatible interfaces, reducing migration cost when switching models.
+
+          ## GregAPI extension fields
+
+          `usage.prompt_tokens_details` exposes upstream cache billing details:
+
+          | Field | Meaning |
+          | --- | --- |
+          | `cached_tokens` | Input tokens that hit the cache |
+          | `cached_write_tokens` | Total cache writes (= 5m + 1h) |
+          | `cached_write_5m_tokens` | Tokens written to the 5-minute cache |
+          | `cached_write_1h_tokens` | Tokens written to the 1-hour cache |
+
+          `prompt_tokens` is the total input tokens (including cache hits and writes). Cache-write fields are `omitempty` and are omitted for models without cache writes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - messages
+              properties:
+                model:
+                  type: string
+                  description: Model name
+                messages:
+                  type: array
+                  description: Conversation messages
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [system, user, assistant, tool]
+                      content:
+                        type: string
+                temperature:
+                  type: number
+                  description: Sampling temperature, default 1
+                stream:
+                  type: boolean
+                  description: Whether to stream output
+                tools:
+                  type: array
+                  description: Callable function definitions
+                tool_choice:
+                  type: string
+                response_format:
+                  type: object
+                  description: Output format, e.g. JSON Schema (json_schema)
+            example:
+              model: gpt-4o-mini
+              messages:
+                - role: system
+                  content: You are GregAPI's product assistant.
+                - role: user
+                  content: Introduce GregAPI in three sentences.
+              temperature: 0.7
+      responses:
+        '200':
+          description: Successful chat completion response
+  /v1/responses:
+    post:
+      summary: Responses
+      description: A unified multi-modal response interface that mixes text, images, and other inputs in a single request and returns structured results, with JSON mode and tool sequences.
+      x-mint:
+        content: |
+          ## Streaming and compatibility
+
+          - Set `stream: true` for server-sent event (SSE) increments; GregAPI includes backward-compatible handling for the Chat Completions stream format.
+          - Tool events appear in the stream as `response.output_item.added`; `usage` carries the aggregated token count at the end.
+
+          ## Tips
+
+          - `input` may be a string or a composite array; use an array to mix text, images, and file references.
+          - `response_format` supports `json_schema`, `text`, and other options.
+          - For tool calling, declare functions in `tools`; results appear in `output` under `tool_calls`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+              properties:
+                model:
+                  type: string
+                  description: Model name
+                input:
+                  type: array
+                  description: Input messages, a string or composite array
+                response_format:
+                  type: object
+                  description: Output format
+                stream:
+                  type: boolean
+                  description: Whether to stream output
+                tools:
+                  type: array
+                  description: Optional tool declarations
+            example:
+              model: gpt-4.1
+              input:
+                - role: user
+                  content:
+                    - type: text
+                      text: Summarize the attachment.
+              response_format:
+                type: json_schema
+      responses:
+        '200':
+          description: Successful structured response
+  /v1/messages:
+    post:
+      summary: Messages API
+      description: Call Claude models using the Anthropic Messages API protocol, directly via the official SDK or cURL.
+      x-mint:
+        content: |
+          ## Headers
+
+          In addition to the authorization header, requests must include the `anthropic-version` header:
+
+          ```http
+          Authorization: Bearer <TOKEN>
+          anthropic-version: 2023-06-01
+          Content-Type: application/json
+          ```
+
+          ## Approaches
+
+          |  | Messages API | Claude Managed Agents |
+          | --- | --- | --- |
+          | **What it is** | Call the model directly and orchestrate conversation and tools yourself | A configurable agent on managed infrastructure |
+          | **Better for** | Custom agent loops with fine-grained control per call | Long-running, asynchronous tasks |
+
+          Gateway behavior follows the GregAPI console; native Anthropic capabilities follow the official documentation.
+      parameters:
+        - name: anthropic-version
+          in: header
+          required: true
+          schema:
+            type: string
+            example: '2023-06-01'
+          description: Anthropic API version
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - model
+                - max_tokens
+                - messages
+              properties:
+                model:
+                  type: string
+                  description: Model name
+                max_tokens:
+                  type: integer
+                  description: Maximum output tokens
+                messages:
+                  type: array
+                  description: Conversation messages
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant]
+                      content:
+                        type: string
+            example:
+              model: claude-opus-4-6
+              max_tokens: 1024
+              messages:
+                - role: user
+                  content: Hello, please introduce yourself in one sentence.
+      responses:
+        '200':
+          description: Successful message response
+  /v1beta/models/{model}:generateContent:
+    post:
+      summary: Gemini Native Format
+      description: Use the Gemini native interface (generateContent) for conversation and multi-modal interaction, supporting text and multi-modal content generation.
+      x-mint:
+        content: |
+          ## Authentication
+
+          The native interface supports `Authorization: Bearer <TOKEN>`, and also `x-goog-api-key: <TOKEN>`.
+
+          ## Multi-modal input
+
+          Multi-modal content is carried in `contents[].parts[]`: text uses `text`, media uses `inline_data` (`mime_type` + Base64 `data`). Images use `mime_type` such as `image/png` or `image/jpeg`.
+
+          ## Reasoning
+
+          - Gemini 3 uses `generationConfig.thinkingConfig.thinkingLevel` (e.g. `high`).
+          - Gemini 2.5 uses `generationConfig.thinkingConfig.thinkingBudget` (e.g. `8192`).
+
+          ## Generation parameters
+
+          | Parameter | Description | Default |
+          | --- | --- | --- |
+          | `temperature` | Randomness, 0-2 | 1.0 |
+          | `max_tokens` | Maximum output tokens | model default |
+          | `top_p` | Nucleus sampling probability | 0.95 |
+          | `stop` | Stop sequence | - |
+
+          For Gemini 3, keep `temperature` at 1.0; a lower value may degrade reasoning.
+      parameters:
+        - name: model
+          in: path
+          required: true
+          schema:
+            type: string
+            example: gemini-2.5-flash
+          description: Model name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contents
+              properties:
+                contents:
+                  type: array
+                  description: Conversation content
+                  items:
+                    type: object
+                    properties:
+                      parts:
+                        type: array
+                        items:
+                          type: object
+                generationConfig:
+                  type: object
+                  description: Generation configuration, e.g. temperature, thinkingConfig
+            example:
+              contents:
+                - parts:
+                    - text: Hello
+      responses:
+        '200':
+          description: Successful generation response

@@ -1,0 +1,167 @@
+---
+title: "Image Generation (Native)"
+---
+
+Call Gemini image models through the native `generateContent` protocol for full parameter control in advanced scenarios.
+
+## Endpoint
+
+**Method**: `POST`
+
+**Base URL**: `https://api.gregapi.com/v1beta/models/{model}:generateContent`
+
+### Authentication
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Supported Models
+
+| Model | Max resolution |
+|---|---|
+| `gemini-2.5-flash-image` | 1K only |
+| `gemini-3-pro-image-preview` | 1K / 2K / 4K |
+| `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+
+## Request Structure
+
+The request body follows the standard `generateContent` protocol:
+
+```json
+{
+  "contents": [
+    {
+      "parts": [
+        { "text": "Text prompt" },
+        {
+          "inline_data": {
+            "mime_type": "image/jpeg",
+            "data": "<BASE64_IMAGE_DATA>"
+          }
+        }
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["image", "text"],
+    "imageConfig": {
+      "aspectRatio": "1:1",
+      "imageSize": "2K"
+    }
+  }
+}
+```
+
+### `contents` array (required)
+
+Each content object contains a `parts` array with the following part types:
+
+| Part type | Description |
+|---|---|
+| `text` | Text prompt |
+| `inline_data` | Base64-encoded reference image (for image editing) |
+
+### `generationConfig` object
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `responseModalities` | string[] | Yes | - | Response modalities; image generation must include `"image"` |
+
+### `generationConfig.imageConfig` object
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `aspectRatio` | string | No | `1:1` | Aspect ratio |
+| `imageSize` | string | No | `1K` | Resolution tier: `512` / `1K` / `2K` / `4K` |
+
+## Aspect Ratio Values
+
+```
+1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
+```
+
+`gemini-3.1-flash-image` additionally supports `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
+
+## Reference Image Editing
+
+Pass reference images via `inline_data` for editing. Multiple `inline_data` entries can be added to the `parts` array, up to 15 reference images.
+
+```json
+{
+  "contents": [
+    {
+      "parts": [
+        {"text": "Use the composition of the first image and the color tone of the second"},
+        {"inline_data": {"mime_type": "image/jpeg", "data": "<BASE64_BASE_IMAGE>"}},
+        {"inline_data": {"mime_type": "image/jpeg", "data": "<BASE64_STYLE_IMAGE>"}}
+      ]
+    }
+  ],
+  "generationConfig": {
+    "responseModalities": ["image", "text"],
+    "imageConfig": {"aspectRatio": "1:1", "imageSize": "2K"}
+  }
+}
+```
+
+## Response Structure
+
+```json
+{
+  "candidates": [
+    {
+      "content": {
+        "parts": [
+          {
+            "inlineData": {
+              "mimeType": "image/png",
+              "data": "<BASE64_IMAGE_DATA>"
+            }
+          },
+          {
+            "text": "Optional generated description text"
+          }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 50,
+    "candidatesTokenCount": 100,
+    "totalTokenCount": 150
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `candidates[].content.parts[].inlineData` | Generated image data |
+| `usageMetadata.promptTokenCount` | Input text tokens |
+| `usageMetadata.candidatesTokenCount` | Output tokens |
+
+## Billed-but-blocked error response
+
+The native API keeps Gemini protocol field names. If no image was generated but the upstream already returned billable prompt usage, the error response retains `usageMetadata` instead of an OpenAI-style top-level `usage`.
+
+```json
+{
+  "error": {
+    "code": 500,
+    "message": "no image generated (request id: 20260608235925709515189aBDufjPK)",
+    "status": "one_hub_error"
+  },
+  "usageMetadata": {
+    "promptTokenCount": 353,
+    "candidatesTokenCount": 0,
+    "totalTokenCount": 353,
+    "promptTokensDetails": [
+      { "modality": "TEXT", "tokenCount": 95 },
+      { "modality": "IMAGE", "tokenCount": 258 }
+    ]
+  }
+}
+```
+
+When no image is produced, `candidatesTokenCount` is usually `0`; ordinary unpaid failures do not return `usageMetadata`.

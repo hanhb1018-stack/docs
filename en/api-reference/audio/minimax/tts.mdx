@@ -1,0 +1,120 @@
+---
+title: "Text-to-Speech"
+---
+
+Use the MiniMax text-to-speech (TTS) capability with both synchronous and asynchronous calling styles. All requests are forwarded to MiniMax by GregAPI — no self-signing required, just pass the GregAPI API Key in the header.
+
+```bash
+export BASE_URL="https://api.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+Standard headers:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+## Endpoints
+
+| Operation | Method | Endpoint |
+|---|---|---|
+| Synchronous synthesis | `POST` | `/minimaxi/v1/t2a_v2` |
+| Asynchronous synthesis | `POST` | `/minimaxi/v1/t2a_async_v2` |
+| Asynchronous query | `GET` | `/minimaxi/v1/query/t2a_async_query_v2` |
+
+## Supported Models
+
+| Model | Notes |
+|---|---|
+| `speech-2.8-hd` | Recommended default, high-fidelity audio |
+| `speech-2.8-turbo` | Low latency, fast synthesis |
+| `speech-2.6-hd` | Previous-generation high-fidelity model |
+
+## Request Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `model` | string | Yes | Model name, e.g. `speech-2.8-hd` |
+| `text` | string | Yes | Text to synthesize |
+| `voice_id` | string | Yes | Voice ID, or a built-in platform alias |
+| `output_format` | string | No | `hex` (default) or `url`; non-streaming only, `url` validity follows the official return |
+| `emotion` | string | No | Emotion, see the enum below |
+| `sound_effects` | string | No | Sound effect, see the enum below |
+
+### Emotion enum
+
+`happy`, `sad`, `angry`, `fearful`, `disgusted`, `surprised`, `calm`, `fluent`, `whisper`
+
+Support depends on the model and voice combination; not all `voice_id` values support every emotion.
+
+### Sound effects enum
+
+`spacious_echo`, `auditorium_echo`, `lofi_telephone`, `robotic`
+
+## Voice aliases
+
+For OpenAI-style consistency, the platform maps common aliases to MiniMax voices:
+
+| Alias | MiniMax voice |
+|---|---|
+| `alloy` | `female-chengshu` (mature female) |
+| `echo` | `male-qn-qingse` (youth male - clear) |
+| `fable` | `male-qn-jingying` (youth male - elite) |
+| `onyx` | `presenter_male` |
+| `nova` | `presenter_female` |
+| `shimmer` | `audiobook_female_1` |
+
+When you use one of these aliases in `voice_id`, the platform converts it to the actual MiniMax voice, and fills in the default emotion automatically when the voice has one and no `emotion` is specified.
+
+## Return format (audio_mode)
+
+The audio return mode can be set via channel custom parameters:
+
+- `audio_mode = json` (default): the response body is JSON, with `data.audio` as hex or URL (determined by `output_format`).
+- `audio_mode = hex`: returns a raw audio stream when `output_format=hex`; still returns JSON when `output_format=url`.
+
+## Synchronous example
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_v2" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "speech-2.8-hd",
+    "text": "Welcome to GregAPI",
+    "output_format": "hex"
+  }' \
+  --output minimax-tts.mp3
+```
+
+With `output_format=hex`, the response is a raw hex audio stream that can be written directly to an `.mp3` file.
+
+With `output_format=url`, the response is JSON; read the audio URL from `data.audio`.
+
+## Asynchronous example
+
+```bash
+curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "speech-2.8-hd",
+    "text": "hello"
+  }'
+```
+
+Query the result:
+
+```bash
+curl "https://api.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Async synthesis preserves your `voice_id` and parameters in the JSON payload; if you used an alias, the platform converts it and fills in the emotion before the upstream request.
+
+## Billing
+
+- Billed by the audio successfully synthesized; see the MiniMax speech entries under "Model Pricing" in the console for exact prices.
+- Actual amounts follow the upstream consumption logs.
