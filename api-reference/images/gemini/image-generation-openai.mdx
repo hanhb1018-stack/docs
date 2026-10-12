@@ -23,7 +23,7 @@ Content-Type: application/json
 
 **方法**：`POST`
 
-**Base URL**：`https://api.gregapi.com/v1/images/generations`
+**Base URL**：`https://www.gregapi.com/v1/images/generations`
 
 ### 请求参数
 
@@ -47,7 +47,7 @@ Content-Type: application/json
 ### 请求示例
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -114,7 +114,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
 
 **方法**：`POST`（multipart/form-data）
 
-**Base URL**：`https://api.gregapi.com/v1/images/edits`
+**Base URL**：`https://www.gregapi.com/v1/images/edits`
 
 ### 请求参数
 
@@ -140,7 +140,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
 ### 改图示例
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits" \
+curl -X POST "https://www.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=将这张图片转换为油画风格" \

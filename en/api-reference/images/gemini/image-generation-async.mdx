@@ -17,7 +17,7 @@ Async image tasks require configured object storage (S3 or AliOSS) to upload gen
 | Query text-to-image task | `GET` | `/v1/images/generations/{id}` |
 | Query edit task | `GET` | `/v1/images/edits/{id}` |
 
-**Base URL**: `https://api.gregapi.com`
+**Base URL**: `https://www.gregapi.com`
 
 ### Authentication
 
@@ -34,7 +34,7 @@ Content-Type: application/json
 ## Text-to-image: Create task
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
+curl -X POST "https://www.gregapi.com/v1/images/generations/async" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -64,7 +64,7 @@ Create response:
 Poll:
 
 ```bash
-curl -X GET "https://api.gregapi.com/v1/images/generations/image_01KCRVET35FAVZME1CEEED9VBS" \
+curl -X GET "https://www.gregapi.com/v1/images/generations/image_01KCRVET35FAVZME1CEEED9VBS" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -141,7 +141,7 @@ no-image billed failure (with usage):
 Request style: multipart/form-data
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=Convert this image to oil-painting style" \
@@ -152,7 +152,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
 Or pass URLs:
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=Convert this image to oil-painting style (URL references)" \

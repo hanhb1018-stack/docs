@@ -20,7 +20,7 @@ title: "请求追踪（Request ID）"
 ## 如何获取请求 ID
 
 ```bash
-curl -i "https://api.gregapi.com/v1/chat/completions" \
+curl -i "https://www.gregapi.com/v1/chat/completions" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"gpt-4o-mini","messages":[{"role":"user","content":"hi"}]}'
@@ -32,7 +32,7 @@ Python：
 from openai import OpenAI
 
 client = OpenAI(
-    base_url="https://api.gregapi.com/v1",
+    base_url="https://www.gregapi.com/v1",
     api_key="YOUR_API_KEY",
 )
 resp = client.chat.completions.with_raw_response.create(
@@ -47,7 +47,7 @@ Node.js：
 ```js
 const OpenAI = require("openai");
 const client = new OpenAI({
-  baseURL: "https://api.gregapi.com/v1",
+  baseURL: "https://www.gregapi.com/v1",
   apiKey: "YOUR_API_KEY",
 });
 const resp = await client.chat.completions

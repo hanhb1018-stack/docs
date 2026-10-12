@@ -5,7 +5,7 @@ title: "音色快速复刻"
 使用 MiniMax 音色快速复刻（Voice Cloning）能力，克隆某一音色并以指定文本试听。与 MiniMax 官方 `/v1/voice_clone` 接口保持一致，由 GregAPI 转发，无需自行签名。
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -27,7 +27,7 @@ Content-Type: application/json
 ### 1. 上传待复刻音频，获取 `file_id`
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -H "Authorization: Bearer $TOKEN" \
   -F "purpose=voice_clone" \
   -F "file=@/path/to/audio.mp3"
@@ -38,7 +38,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
 ### 2.（可选）上传示例音频，获取 `prompt_audio` 的 `file_id`
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -H "Authorization: Bearer $TOKEN" \
   -F "purpose=prompt_audio" \
   -F "file=@/path/to/short-sample.mp3"
@@ -73,7 +73,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
 ## 示例：带试听音频返回
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/voice_clone" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/voice_clone" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

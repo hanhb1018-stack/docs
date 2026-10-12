@@ -5,7 +5,7 @@ title: "Voice Cloning"
 Use the MiniMax voice cloning capability to clone a voice and audition it with specified text. It stays consistent with MiniMax's official `/v1/voice_clone` and is forwarded by GregAPI — no self-signing required.
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -27,7 +27,7 @@ Media type: `application/json`. Use cases: IP voice cloning, timbre cloning, and
 ### 1. Upload the audio to clone and get a `file_id`
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -H "Authorization: Bearer $TOKEN" \
   -F "purpose=voice_clone" \
   -F "file=@/path/to/audio.mp3"
@@ -38,7 +38,7 @@ Pass the returned `file.file_id` to `POST /minimaxi/v1/voice_clone`; `file.filen
 ### 2. (Optional) Upload a sample audio to get the `prompt_audio` `file_id`
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -H "Authorization: Bearer $TOKEN" \
   -F "purpose=prompt_audio" \
   -F "file=@/path/to/short-sample.mp3"
@@ -73,7 +73,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/files/upload" \
 ## Example: with audition audio
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/voice_clone" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/voice_clone" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

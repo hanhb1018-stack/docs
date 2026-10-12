@@ -5,7 +5,7 @@ title: "语音合成"
 使用 MiniMax 语音合成（TTS）能力，支持同步与异步两种调用方式。所有请求由 GregAPI 转发到 MiniMax，无需自行签名，只需在 Header 中携带 GregAPI API Key。
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -78,7 +78,7 @@ Content-Type: application/json
 ## 同步合成示例
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_v2" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/t2a_v2" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -96,7 +96,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_v2" \
 ## 异步合成示例
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/t2a_async_v2" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -108,7 +108,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
 查询结果：
 
 ```bash
-curl "https://api.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
+curl "https://www.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

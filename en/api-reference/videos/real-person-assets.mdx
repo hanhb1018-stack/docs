@@ -19,7 +19,7 @@ Content-Type: application/json
 ```
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -54,7 +54,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
   -H "Content-Type: application/json" \
   -d '{
     "model": "doubao-seedance-2-5",
-    "CallbackURL": "https://api.gregapi.com/real-person/callback",
+    "CallbackURL": "https://www.gregapi.com/real-person/callback",
     "ProjectName": "default"
   }'
 ```
@@ -72,7 +72,7 @@ Typical response:
   "Result": {
     "BytedToken": "one-time-token",
     "H5Link": "https://example.byte-provider.com/verify/...",
-    "CallbackURL": "https://api.gregapi.com/real-person/callback"
+    "CallbackURL": "https://www.gregapi.com/real-person/callback"
   }
 }
 ```
@@ -84,7 +84,7 @@ Typical response:
 | `BytedToken`  | One-time verification credential, usually valid for 30 minutes; do not write into logs or databases. |
 | `H5Link`      | One-time real-person verification link; only hand it to the person granted this authorization. |
 
-If you do not have your own callback page, you can use the GregAPI-provided `https://api.gregapi.com/real-person/callback`. This page only indicates that the H5 operation has finished; it does not store or display callback parameters and does not represent successful verification. You must still call `GetVisualValidateResult` with the original `BytedToken` afterward.
+If you do not have your own callback page, you can use the GregAPI-provided `https://www.gregapi.com/real-person/callback`. This page only indicates that the H5 operation has finished; it does not store or display callback parameters and does not represent successful verification. You must still call `GetVisualValidateResult` with the original `BytedToken` afterward.
 
 To specify the H5 language, append `lng=zh`, `lng=en`, or `lng=zh-Hant` after `H5Link`.
 

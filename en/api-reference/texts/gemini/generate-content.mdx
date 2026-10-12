@@ -16,7 +16,7 @@ The native interface supports `Authorization: Bearer <TOKEN>`, and also `x-goog-
 ## Quick start
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1beta/models/gemini-2.5-flash:generateContent" \
+curl -X POST "https://www.gregapi.com/v1beta/models/gemini-2.5-flash:generateContent" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -27,7 +27,7 @@ curl -X POST "https://api.gregapi.com/v1beta/models/gemini-2.5-flash:generateCon
 ## Streaming output
 
 ```bash
-curl -N "https://api.gregapi.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse" \
+curl -N "https://www.gregapi.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -42,7 +42,7 @@ The native interface carries multimodal content through `contents[].parts[]`: te
 ### Audio understanding
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1beta/models/gemini-2.5-flash:generateContent" \
+curl -X POST "https://www.gregapi.com/v1beta/models/gemini-2.5-flash:generateContent" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -99,7 +99,7 @@ from google import genai
 
 client = genai.Client(
     api_key="your-token",
-    http_options={"base_url": "https://api.gregapi.com"},
+    http_options={"base_url": "https://www.gregapi.com"},
 )
 
 response = client.models.generate_content(

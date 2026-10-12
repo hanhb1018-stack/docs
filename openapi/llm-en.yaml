@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Large language model (LLM) endpoints behind the GregAPI unified gateway, covering general chat completion, multi-modal responses, and native message/generation protocols.
 servers:
-  - url: https://api.gregapi.com
+  - url: https://www.gregapi.com
 security:
   - bearerAuth: []
 components:

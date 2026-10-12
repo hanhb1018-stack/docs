@@ -13,7 +13,7 @@ GregAPI 对外提供 BytePlus 原生接口兼容。任务创建、查询和素�
 ## 1. 前置条件
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -100,7 +100,7 @@ Content-Type: application/json
 ## 5. 创建任务
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -186,7 +186,7 @@ GregAPI 默认要求先通过素材库上传图片、视频或音频，等素材
 视频编辑示例：
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -221,7 +221,7 @@ curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks"
 视频延展示例：
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -264,7 +264,7 @@ curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks"
 ## 6. 查询任务
 
 ```bash
-curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -313,7 +313,7 @@ curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-2026
 ## 7. 查询租户任务列表
 
 ```bash
-curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
+curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -350,7 +350,7 @@ curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num
 ## 8. 取消或删除任务
 
 ```bash
-curl -X DELETE "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -402,7 +402,7 @@ POST /volcark/?Action={ActionName}&Version=2024-01-01
 ### 9.1 创建素材组
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -432,7 +432,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2
 ### 9.2 创建素材
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -470,7 +470,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-0
 ### 9.3 查询素材
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -492,7 +492,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-0
 ### 9.4 查询素材列表
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -540,7 +540,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=ListAssets&Version=2024-01
 素材进入 `Active` 后，用 `asset://<Asset_Id>` 作为 BytePlus content 输入：
 
 ```bash
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{

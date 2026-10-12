@@ -12,7 +12,7 @@ When you need to use real-person imagery, video, or audio that has been verified
 
 ## Endpoint
 
-**POST** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
+**POST** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
 The overseas entry point is the BytePlus native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
 
@@ -110,7 +110,7 @@ The overseas Mini supports only `480p` / `720p` and supports audio reference inp
 
 <CodeGroup>
 ```bash cURL
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -160,7 +160,7 @@ data = {
 }
 
 resp = requests.post(
-    "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks",
+    "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks",
     headers=headers,
     json=data,
 )
@@ -168,7 +168,7 @@ print(resp.json())
 ```
 
 ```javascript JavaScript
-const resp = await fetch("https://api.gregapi.com/volcark/api/v3/contents/generations/tasks", {
+const resp = await fetch("https://www.gregapi.com/volcark/api/v3/contents/generations/tasks", {
   method: "POST",
   headers: {
     "Authorization": "Bearer $GRAPAPI_API_KEY",
@@ -222,10 +222,10 @@ Task creation is asynchronous; a successful response only returns the task ID. Q
 
 ## Query a task
 
-**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -262,10 +262,10 @@ Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancell
 
 ## List tenant tasks
 
-**GET** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks`
+**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
 
 ```bash cURL
-curl "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
+curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -297,10 +297,10 @@ The list endpoint is the BytePlus-compatible list within the current GregAPI ten
 
 ## Cancel or delete a task
 
-**DELETE** `https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+**DELETE** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
 
 ```bash cURL
-curl -X DELETE "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
+curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY"
 ```
 
@@ -333,7 +333,7 @@ Video generation, editing, and extension are all expressed through the same crea
 GregAPI requires you to first upload images, videos, or audio through the asset library and wait until the asset becomes `Active` before passing it as `asset://<Asset_Id>`. Tasks that include `content[].type=video_url` are billed under the video-reference-input SKU; tasks without `video_url` do not enter the `*-video` SKU.
 
 ```bash Video editing
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -362,7 +362,7 @@ curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks"
 ```
 
 ```bash Video extension
-curl -X POST "https://api.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -416,7 +416,7 @@ All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-0
 ### Create asset group
 
 ```bash cURL
-curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -442,7 +442,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2
 ### Create asset
 
 ```bash cURL
-curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -474,7 +474,7 @@ curl -X POST "https://api.gregapi.com/volcark/?Action=CreateAsset&Version=2024-0
 ### Query an asset
 
 ```bash cURL
-curl -X POST "https://api.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -488,7 +488,7 @@ Common statuses: `Processing`, `Active`, `Failed`. After `CreateAsset` returns `
 ### List assets
 
 ```bash cURL
-curl -X POST "https://api.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
   -H "Authorization: Bearer $GRAPAPI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{

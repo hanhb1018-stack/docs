@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: GregAPI 统一网关下的大语言模型（LLM）接口，覆盖通用对话补全、多模态响应，以及各家原生消息与生成协议。
 servers:
-  - url: https://api.gregapi.com
+  - url: https://www.gregapi.com
 security:
   - bearerAuth: []
 components:

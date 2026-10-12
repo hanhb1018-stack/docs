@@ -19,7 +19,7 @@ Content-Type: application/json
 ```
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -54,7 +54,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
   -H "Content-Type: application/json" \
   -d '{
     "model": "doubao-seedance-2-5",
-    "CallbackURL": "https://api.gregapi.com/real-person/callback",
+    "CallbackURL": "https://www.gregapi.com/real-person/callback",
     "ProjectName": "default"
   }'
 ```
@@ -72,7 +72,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
   "Result": {
     "BytedToken": "one-time-token",
     "H5Link": "https://example.byte-provider.com/verify/...",
-    "CallbackURL": "https://api.gregapi.com/real-person/callback"
+    "CallbackURL": "https://www.gregapi.com/real-person/callback"
   }
 }
 ```
@@ -84,7 +84,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
 | `BytedToken`  | 一次性认证凭证，通常 30 分钟内有效；不要写入日志或数据库 |
 | `H5Link`      | 一次性真人认证地址，只交给本次获得授权的真人本人       |
 
-没有自有回调页面时，可以直接使用 GregAPI 提供的 `https://api.gregapi.com/real-person/callback`。该页面只提示 H5 操作已经结束，不保存或展示回调参数，也不代表认证成功；之后仍须使用原 `BytedToken` 调用 `GetVisualValidateResult`。
+没有自有回调页面时，可以直接使用 GregAPI 提供的 `https://www.gregapi.com/real-person/callback`。该页面只提示 H5 操作已经结束，不保存或展示回调参数，也不代表认证成功；之后仍须使用原 `BytedToken` 调用 `GetVisualValidateResult`。
 
 如需指定 H5 语言，可在 `H5Link` 后追加 `lng=zh`、`lng=en` 或 `lng=zh-Hant`。
 

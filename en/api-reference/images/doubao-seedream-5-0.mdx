@@ -7,7 +7,7 @@ Call the Doubao Seedream 5.0 series image models through the OpenAI-compatible i
 All requests are forwarded to Volcengine Ark through GregAPI. You do not need to sign requests yourself; just carry the GregAPI API Key in the header.
 
 ```bash
-export BASE_URL="https://api.gregapi.com/v1"
+export BASE_URL="https://www.gregapi.com/v1"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -122,7 +122,7 @@ The MIME type must match the actual image format, with no spaces or line breaks 
 ### Text-to-image
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -140,7 +140,7 @@ For image-to-image with a reference image, or to use `doubao-seedream-5.0` / `do
 Replace `<full JPEG image Base64>` with the full Base64 of a JPEG image, keeping the leading `data:image/jpeg;base64,`. For PNG images, use `data:image/png;base64,` instead.
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   --data-raw '{

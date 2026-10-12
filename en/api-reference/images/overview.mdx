@@ -17,7 +17,7 @@ Generate and edit images with OpenAI GPT image models through the OpenAI-compati
 ## Quickstart
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -34,7 +34,7 @@ Python SDK:
 ```python
 from openai import OpenAI
 
-client = OpenAI(base_url="https://api.gregapi.com/v1", api_key="$TOKEN")
+client = OpenAI(base_url="https://www.gregapi.com/v1", api_key="$TOKEN")
 
 result = client.images.generate(
     model="gpt-image-2",
@@ -142,7 +142,7 @@ Actual available sizes remain subject to the channel your account routes to.
 Both series share this endpoint; the `model` field selects the model. Example request:
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -220,7 +220,7 @@ The behavior is deterministic:
 Specify the base image via `images[].image_url` or `images[].file_id`:
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits" \
+curl -X POST "https://www.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -237,7 +237,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits" \
 Multiple-reference example:
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits" \
+curl -X POST "https://www.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -256,7 +256,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits" \
 ### Multipart upload
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits" \
+curl -X POST "https://www.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gpt-image-2" \
   -F "image=@base.png" \
@@ -294,7 +294,7 @@ The platform offers managed async image task endpoints. This is not OpenAI's bac
 ### Text-to-image task
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
+curl -X POST "https://www.gregapi.com/v1/images/generations/async" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -309,14 +309,14 @@ curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
 Query the task:
 
 ```bash
-curl -X GET "https://api.gregapi.com/v1/images/generations/{id}" \
+curl -X GET "https://www.gregapi.com/v1/images/generations/{id}" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 ### Edit task
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gpt-image-2" \
   -F "prompt=Convert this image to a clean e-commerce hero shot" \

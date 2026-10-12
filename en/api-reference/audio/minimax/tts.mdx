@@ -5,7 +5,7 @@ title: "Text-to-Speech"
 Use the MiniMax text-to-speech (TTS) capability with both synchronous and asynchronous calling styles. All requests are forwarded to MiniMax by GregAPI — no self-signing required, just pass the GregAPI API Key in the header.
 
 ```bash
-export BASE_URL="https://api.gregapi.com"
+export BASE_URL="https://www.gregapi.com"
 export TOKEN="oh-xxxxxxxxxxxxxxxx"
 ```
 
@@ -78,7 +78,7 @@ The audio return mode can be set via channel custom parameters:
 ## Synchronous example
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_v2" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/t2a_v2" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -96,7 +96,7 @@ With `output_format=url`, the response is JSON; read the audio URL from `data.au
 ## Asynchronous example
 
 ```bash
-curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
+curl -X POST "https://www.gregapi.com/minimaxi/v1/t2a_async_v2" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -108,7 +108,7 @@ curl -X POST "https://api.gregapi.com/minimaxi/v1/t2a_async_v2" \
 Query the result:
 
 ```bash
-curl "https://api.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
+curl "https://www.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK_ID" \
   -H "Authorization: Bearer $TOKEN"
 ```
 

@@ -17,7 +17,7 @@ title: "图像生成（异步接口）"
 | 查询文生图任务 | `GET` | `/v1/images/generations/{id}` |
 | 查询改图任务 | `GET` | `/v1/images/edits/{id}` |
 
-**Base URL**：`https://api.gregapi.com`
+**Base URL**：`https://www.gregapi.com`
 
 ### 认证方式
 
@@ -34,7 +34,7 @@ Content-Type: application/json
 ## 文生图：创建任务
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
+curl -X POST "https://www.gregapi.com/v1/images/generations/async" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -64,7 +64,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations/async" \
 轮询查询：
 
 ```bash
-curl -X GET "https://api.gregapi.com/v1/images/generations/image_01KCRVET35FAVZME1CEEED9VBS" \
+curl -X GET "https://www.gregapi.com/v1/images/generations/image_01KCRVET35FAVZME1CEEED9VBS" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -141,7 +141,7 @@ no-image 已计费失败响应（额外返回 usage）：
 请求方式：multipart/form-data
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=将这张图片转换为油画风格" \
@@ -152,7 +152,7 @@ curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
 或传入 URL：
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits/async" \
+curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=将这张图转换为油画风格（URL 参考图）" \

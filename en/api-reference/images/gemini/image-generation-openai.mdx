@@ -23,7 +23,7 @@ Content-Type: application/json
 
 **Method**: `POST`
 
-**Base URL**: `https://api.gregapi.com/v1/images/generations`
+**Base URL**: `https://www.gregapi.com/v1/images/generations`
 
 ### Request Parameters
 
@@ -47,7 +47,7 @@ Aspect ratio values:
 ### Example
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/generations" \
+curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -114,7 +114,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
 
 **Method**: `POST` (multipart/form-data)
 
-**Base URL**: `https://api.gregapi.com/v1/images/edits`
+**Base URL**: `https://www.gregapi.com/v1/images/edits`
 
 ### Request Parameters
 
@@ -140,7 +140,7 @@ curl -X POST "https://api.gregapi.com/v1/images/generations" \
 ### Example
 
 ```bash
-curl -X POST "https://api.gregapi.com/v1/images/edits" \
+curl -X POST "https://www.gregapi.com/v1/images/edits" \
   -H "Authorization: Bearer $TOKEN" \
   -F "model=gemini-3-pro-image-preview" \
   -F "prompt=Convert this image to oil-painting style" \
