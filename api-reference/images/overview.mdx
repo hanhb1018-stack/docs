@@ -12,7 +12,7 @@ title: "GPT生图"
 | `gpt-image-2.5-sunburst` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | 高精度编辑，参考图保真与版式控制更强 |
 | `gpt-image-2.5-flare` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | 低延迟、高吞吐，适合大批量快速出图 |
 
-> `gpt-image-2` 另有 `gpt-image-2-low` / `gpt-image-2-medium` / `gpt-image-2-high` 按张 SKU 通道；`gpt-image-2.5` 不使用按张 SKU。使用前需在 OpenAI 官方或兼容渠道开通对应模型，将示例中的 `model` 替换为准确模型名。实际模型供给和参数支持需以渠道验收为准。
+> 使用前需在 OpenAI 官方或兼容渠道开通对应模型，将示例中的 `model` 替换为准确模型名。实际模型供给和参数支持需以渠道验收为准。
 
 ## 快速开始
 
@@ -135,7 +135,7 @@ print(result.data[0].b64_json)
 
 - 2.5 系列使用分辨率档位（`1K` / `2K` / `4K`）配合 `aspect_ratio`，而非 `gpt-image-2` 的精确像素尺寸。
 - 返回 URL 需要平台对象存储配置。
-- 默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。2.5 不使用 `gpt-image-2-low-*` 按张 SKU。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。
+- 默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。
 
 ## 文生图 `/v1/images/generations`
 
@@ -346,7 +346,7 @@ token 计费通道按平台记录或上游返回的 token 用量结算：
 
 有上游 `usage` 时按该用量结算；缺失时按成功返回图片数量、尺寸和 2.5 质量系数估算。`auto` 的用量取决于上游选择，缺失 usage 的结果只代表平台估算。单张预估只用于成本预估，实际账单以消费日志和控制台「模型价格」页面为准。
 
-按张计费和 token 计费的折扣、单价、账单字段不同。对账时以消费日志中的实际金额为准，不要把展示用 token bucket 当成额外账单行。
+对账时以消费日志中的实际金额为准，不要把展示用 token bucket 当成额外账单行。
 
 ## 错误码
 
