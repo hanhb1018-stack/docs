@@ -11,6 +11,7 @@ title: "图像生成（OpenAI 风格）"
 | `gemini-2.5-flash-image` | 1K（仅 1K） |
 | `gemini-3-pro-image-preview` | 1K / 2K / 4K |
 | `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+| `gemini-nano-banana-2.1` | 1K / 2K / 4K |
 
 ## 认证方式
 
@@ -29,7 +30,7 @@ Content-Type: application/json
 
 | 参数 | 类型 | 必填 | 默认值 | 取值 | 说明 |
 |---|---|---|---|---|---|
-| `model` | string | 是 | - | 模型名 | `gemini-2.5-flash-image`、`gemini-3-pro-image-preview`、`gemini-3.1-flash-image` |
+| `model` | string | 是 | - | 模型名 | `gemini-2.5-flash-image`、`gemini-3-pro-image-preview`、`gemini-3.1-flash-image`、`gemini-nano-banana-2.1` |
 | `prompt` | string | 是 | - | - | 图像描述文本 |
 | `n` | integer | 否 | 1 | 仅支持 1 | 生成数量 |
 | `size` | string | 否 | 自动推断 | `512` / `1K` / `2K` / `4K` 或 `widthxheight` | 分辨率；档位格式（推荐）或数字格式（历史兼容） |
@@ -42,7 +43,7 @@ Content-Type: application/json
 1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
 ```
 
-`gemini-3.1-flash-image` 额外支持 `1:4`、`4:1`、`1:8`、`8:1`、`9:21`。
+`gemini-3.1-flash-image` 与 `gemini-nano-banana-2.1` 额外支持 `1:4`、`4:1`、`1:8`、`8:1`、`9:21`。
 
 ### 请求示例
 

@@ -11,6 +11,7 @@ Call Gemini image models through OpenAI-compatible endpoints (`/v1/images/genera
 | `gemini-2.5-flash-image` | 1K only |
 | `gemini-3-pro-image-preview` | 1K / 2K / 4K |
 | `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+| `gemini-nano-banana-2.1` | 1K / 2K / 4K |
 
 ## Authentication
 
@@ -29,7 +30,7 @@ Content-Type: application/json
 
 | Parameter | Type | Required | Default | Values | Description |
 |---|---|---|---|---|---|
-| `model` | string | Yes | - | Model name | `gemini-2.5-flash-image`, `gemini-3-pro-image-preview`, `gemini-3.1-flash-image` |
+| `model` | string | Yes | - | Model name | `gemini-2.5-flash-image`, `gemini-3-pro-image-preview`, `gemini-3.1-flash-image`, `gemini-nano-banana-2.1` |
 | `prompt` | string | Yes | - | - | Image description text |
 | `n` | integer | No | 1 | 1 only | Number of images |
 | `size` | string | No | auto | `512` / `1K` / `2K` / `4K` or `widthxheight` | Resolution; tier format (recommended) or numeric format (legacy) |
@@ -42,7 +43,7 @@ Aspect ratio values:
 1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
 ```
 
-`gemini-3.1-flash-image` additionally supports `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
+`gemini-3.1-flash-image` and `gemini-nano-banana-2.1` additionally support `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
 
 ### Example
 

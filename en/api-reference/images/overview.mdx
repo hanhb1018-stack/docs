@@ -12,7 +12,7 @@ Generate and edit images with OpenAI GPT image models through the OpenAI-compati
 | `gpt-image-2.5-sunburst` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | Precision editing, stronger reference preservation and layout control |
 | `gpt-image-2.5-flare` | `low` / `medium` / `high` / `xhigh` / `max` / `auto` | `1K` / `2K` / `4K` | Low latency, high throughput for batch generation |
 
-> Enable the model on the OpenAI official or compatible channel first, then replace `model` in the examples with the exact model name. Actual model availability and parameter support are subject to channel validation.
+> Enable the model on the OpenAI official or compatible channel first, then replace `model` in the examples with the exact model name. Actual model availability and parameter support are subject to channel validation. `gpt-image-2` supports both per-image and token billing; the `gpt-image-2.5` series supports token billing only.
 
 ## Quickstart
 
@@ -335,7 +335,16 @@ Async tasks require publicly accessible object storage. Without it, creating a t
 
 ## Billing
 
-Token-billed channels settle by recorded or upstream token usage:
+`gpt-image-2` supports two billing modes; the `gpt-image-2.5` series supports token billing only:
+
+| Mode | Best for | Billing basis |
+|---|---|---|
+| Per-image | Stable, low-cost text-to-image, editing, and async image tasks | Successfully returned and decodable images × the corresponding resolution SKU unit price |
+| Token | Official full compatibility, complex parameters, editing | Recorded or upstream token usage |
+
+The `model` parameter stays `gpt-image-2` in both cases; whether a request is billed per image or per token depends on the model pricing and billing SKU enabled for your account in the console.
+
+### Token billing
 
 | Type | Pricing basis |
 |---|---|
@@ -346,7 +355,35 @@ Token-billed channels settle by recorded or upstream token usage:
 
 With upstream `usage`, billing follows that usage; otherwise it is estimated from the number of successfully returned images, sizes, and the 2.5 quality coefficient. For `auto`, usage depends on upstream selection; results without usage represent only a platform estimate. Per-image estimates are for cost estimation only — actual bills follow consumption logs and the platform's "Model Pricing" page.
 
-Reconcile against actual amounts in consumption logs; do not treat the display token bucket as an extra billing line.
+### Per-image billing
+
+Per-image billing is the stable, low-cost channel for `gpt-image-2`, billed by successfully decoded images × the resolution SKU unit price. Text-to-image, editing, and async tasks share the same stable parameter set.
+
+| Parameter | Stable value | Notes |
+|---|---|---|
+| `model` | `gpt-image-2` | Fixed model name |
+| `size` | See the SKU table below | Determines the 1K / 2K / 4K billing tier |
+| `response_format` | `url` | Only `url` is guaranteed |
+| `output_format` | `png` | Only `png` is guaranteed |
+| `quality` | `low` / `medium` / `high` / `auto` | Omitted or `auto` is treated as `low` |
+| `n` | `1` | Single image only |
+
+Resolution SKU table:
+
+| SKU | `size` values | Aspect ratio |
+|---|---|---|
+| 1K | `1024x1536`, `1536x1024` | 2:3 / 3:2 |
+| 2K | `2048x2048`, `2048x1152`, `1152x2048`, `2048x1536`, `1536x2048`, `2048x1024`, `1024x2048`, `2048x1280`, `1280x2048` | 1:1 / 16:9 / 9:16 / 4:3 / 3:4 / 2:1 / 1:2 / 8:5 / 5:8 |
+| 4K | `1280x3840`, `3840x1280`, `3840x2160`, `2160x3840` | 1:3 / 3:1 / 16:9 / 9:16 |
+
+Per-image billing limitations:
+
+- Only `response_format=url` and `output_format=png` are guaranteed; `b64_json`, `jpeg`, and `webp` are not stable commitments.
+- Only `n=1` single-image generation is supported; split `n>1` into multiple requests.
+- `size=auto`, sizes outside the SKU table, `background`, `moderation`, `user`, `input_fidelity`, `stream`, and `partial_images` are not stable per-image parameters.
+- Under per-image billing, `usage.*` may be recorded for troubleshooting but is not a billing basis.
+
+In both modes, reconcile against actual amounts in consumption logs; do not treat the display token bucket as an extra billing line.
 
 ## Error codes
 

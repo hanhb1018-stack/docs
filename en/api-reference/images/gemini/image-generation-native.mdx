@@ -24,6 +24,7 @@ Content-Type: application/json
 | `gemini-2.5-flash-image` | 1K only |
 | `gemini-3-pro-image-preview` | 1K / 2K / 4K |
 | `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
+| `gemini-nano-banana-2.1` | 1K / 2K / 4K |
 
 ## Request Structure
 
@@ -82,7 +83,7 @@ Each content object contains a `parts` array with the following part types:
 1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
 ```
 
-`gemini-3.1-flash-image` additionally supports `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
+`gemini-3.1-flash-image` and `gemini-nano-banana-2.1` additionally support `1:4`, `4:1`, `1:8`, `8:1`, `9:21`.
 
 ## Reference Image Editing
 

@@ -23,6 +23,7 @@ Content-Type: application/json
 | `gemini-2.5-flash-image` | 1K | GA | Fast, low latency, ideal for prototyping; up to 3 reference images per request |
 | `gemini-3-pro-image-preview` | 4K | Public Preview | High quality, complex prompt understanding, reference-image editing, thinking / grounding; up to 14 reference images per request |
 | `gemini-3.1-flash-image` | 4K | GA | Balanced speed / cost / quality, supports 512/1K/2K/4K and additional aspect ratios; up to 14 reference images per request |
+| `gemini-nano-banana-2.1` | 4K | GA | Multimodal generation and editing with balanced price and performance; up to 14 reference images per request |
 
 ## Resolution Tiers
 
@@ -40,16 +41,17 @@ Supported tiers per model:
 - `gemini-2.5-flash-image`: `1K` only; higher tiers auto-downgrade to `1K`
 - `gemini-3-pro-image-preview`: `1K` / `2K` / `4K`
 - `gemini-3.1-flash-image`: `512` / `1K` / `2K` / `4K`
+- `gemini-nano-banana-2.1`: `1K` / `2K` / `4K`
 
 ## Aspect Ratios
 
-All three models support:
+All four models support:
 
 ```
 1:1  2:3  3:2  3:4  4:3  4:5  5:4  9:16  16:9  21:9
 ```
 
-`gemini-3.1-flash-image` additionally supports:
+`gemini-3.1-flash-image` and `gemini-nano-banana-2.1` additionally support:
 
 ```
 1:4  4:1  1:8  8:1  9:21
@@ -73,6 +75,7 @@ All three models support:
 - Image output: prioritizes upstream `usageMetadata` image tokens; if unavailable, estimated per tier:
   - `gemini-2.5-flash-image` / `gemini-3-pro-image-preview`: 1120 tokens per 1K/2K image, 2000 tokens per 4K image.
   - `gemini-3.1-flash-image`: 747 tokens (512), 1120 tokens (1K), 1680 tokens (2K), 2520 tokens (4K).
+  - `gemini-nano-banana-2.1`: 1120 tokens (1K), 1680 tokens (2K), 3780 tokens (4K).
 - no-image responses that were already billed return usage: top-level `usage` for OpenAI-style, `usageMetadata` for native API, and top-level `usage` for async task queries.
 
 See the platform's "Model Pricing" page for exact rates, subject to upstream usage logs.
