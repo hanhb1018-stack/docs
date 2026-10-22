@@ -1,0 +1,236 @@
+---
+title: "Seedance 2.0 · 漫剧特价"
+---
+
+`seedance-2-0-manju-special` 是 Seedance 2.0 快速版的 **按次特价**通道，面向漫剧、短剧场景做了能力裁剪：固定 `720p`、5 / 10 / 15 秒同价、含音轨，支持真人照片过脸，可用文生视频、首帧生视频、首尾帧和最多 9 张参考图的参考生。
+
+该模型是阉割版，只开放本页列出的参数。未列出的 Seedance 2.0 官方参数（`1080p` / `4k` 分辨率、视频参考、音频参考、`watermark`、`return_last_frame`、`camera_fixed`、`priority`、`seed` 等）在本模型上不可用，传入也不会生效。
+
+需要 `1080p` / `4k`、视频编辑或视频延展等完整能力时，请使用 [Doubao Seedance 2.0](/api-reference/videos/seedance2) 或 [Seedance 2.5](/api-reference/videos/seedance-2-5)。
+
+## 1. 能力与限制
+
+| 能力项 | 漫剧特价 | 说明 |
+| --- | --- | --- |
+| 分辨率 | `720p` | 固定值，不接受其他档位 |
+| 时长 | `5` / `10` / `15` 秒 | 三档同价，按次计费 |
+| 音轨 | 含音轨 | 无需开关参数 |
+| 生成模式 | 文生视频 / 首帧生视频 / 首尾帧 / 参考生 | 见参数 `mode` |
+| 参考图数量 | 最多 9 张 | 首帧、首尾帧、参考生均为 9 张 |
+| 真人照片 | 支持 | 作为首帧或参考图，人物形象保真 |
+| 视频 / 音频参考输入 | 不支持 | 仅接受图片输入 |
+| 生成数量 | `1`–`50` | `count` 成倍计价 |
+| 提示词长度 | 5000 Unicode 码点 | 非字节数 |
+
+特价通道稳定性一般，高峰期可能出现等待时间较长或上游拥挤报错，重试即可；需要稳定交付时请改用官方直连模型。
+
+## 2. 接口
+
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+| 操作 | 路径 |
+| --- | --- |
+| 创建任务 | `POST /v1/video/generations` |
+| 查询任务 | `GET /v1/video/generations/{task_id}` |
+
+统一请求头：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+视频生成是异步任务：创建成功后返回任务标识，再用查询接口轮询到终态。
+
+## 3. 参数
+
+视频参数统一放在请求体的 `params` 对象里，`model` 与 `prompt` 位于顶层。
+
+| 参数 | 类型 | 必填 | 取值 / 范围 | 说明 |
+| --- | --- | --- | --- | --- |
+| `model` | string | 是 | `seedance-2-0-manju-special` | 模型名 |
+| `prompt` | string | 是 | 最多 5000 Unicode 码点 | 视频内容描述 |
+| `params.aspect_ratio` | string | 否 | `16:9` / `9:16` / `1:1` / `4:3` / `3:4`，默认 `16:9` | 视频比例 |
+| `params.duration` | string | 否 | `5` / `10` / `15`，默认 `15` | 视频时长（秒），三档同价 |
+| `params.mode` | string | 否 | `text-to-video` / `first-frame` / `first-last` / `reference`，默认 `first-frame` | 生成模式 |
+| `params.resolution` | string | 否 | `720p`，默认 `720p` | 清晰度，固定值 |
+| `params.count` | integer | 否 | `1`–`50`，默认 `1` | 一次生成的视频数量 |
+| `params.images` | array | 否 | 最多 9 个 URL 或 Data URL | 首尾帧 / 参考图片 |
+
+`params.images` 的素材约束：
+
+- 单边 `300`–`6000` 像素；
+- 宽高比 `0.4`–`2.5`；
+- 支持公网可访问的 `https://` URL，或 `data:image/png;base64,...` 形式的 Base64 Data URL。
+
+### 3.1 生成模式与参考图数量
+
+| `params.mode` | 场景 | `params.images` 上限 |
+| --- | --- | --- |
+| `text-to-video` | 纯文字生成 | 0 |
+| `first-frame` | 上传 1 张图作为画面起点（默认） | 9 |
+| `first-last` | 上传首帧 + 尾帧，AI 补中间过渡 | 9 |
+| `reference` | 上传人物 / 场景参考图，支持真人照片 | 9 |
+
+模式与图片数量不匹配时任务会被拒绝：`first-frame` 至少 1 张，`first-last` 至少 2 张，`reference` 至少 1 张，`text-to-video` 不应携带图片。
+
+## 4. 创建任务
+
+### 4.1 文生视频
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "一位古装女子站在雨夜长街上回眸，镜头缓慢推近，电影感打光。",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "15",
+      "mode": "text-to-video",
+      "resolution": "720p"
+    }
+  }'
+```
+
+### 4.2 首帧 / 首尾帧
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "人物从窗前转身走向门口，镜头跟随，保持人物面部特征一致。",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "10",
+      "mode": "first-last",
+      "resolution": "720p",
+      "images": [
+        "https://your-host.com/first-frame.jpg",
+        "https://your-host.com/last-frame.jpg"
+      ]
+    }
+  }'
+```
+
+`first-last` 模式下数组顺序即首帧、尾帧；`first-frame` 模式只需传 1 张。
+
+### 4.3 参考生（含真人照片）
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "参考图中的人物在咖啡馆窗前阅读，镜头缓慢环绕。",
+    "params": {
+      "aspect_ratio": "16:9",
+      "duration": "15",
+      "mode": "reference",
+      "resolution": "720p",
+      "images": [
+        "https://your-host.com/person.jpg",
+        "https://your-host.com/scene.jpg"
+      ],
+      "count": 1
+    }
+  }'
+```
+
+参考图可以是真人照片，人物形象在生成结果中保持较好一致性；参考图之间不要混入无关内容，避免风格互相拉扯。
+
+### 4.4 批量生成
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "武侠人物在竹林中对峙，风吹动衣摆，慢镜头。",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "5",
+      "mode": "text-to-video",
+      "resolution": "720p",
+      "count": 4
+    }
+  }'
+```
+
+`count` 为一次生成的视频数量，按次计价时总价为单次价格 × `count`。
+
+## 5. 提交响应
+
+```json
+{
+  "task_id": "task-1784660000-1",
+  "status": "pending"
+}
+```
+
+部分渠道会原样透传上游结构：
+
+```json
+{
+  "code": 200,
+  "msg": "任务创建成功",
+  "data": {
+    "task_id": "task-1784660000-1",
+    "status": "pending",
+    "is_final": false
+  }
+}
+```
+
+两种形态都能取到 `task_id`，用它查询任务状态即可。创建成功只代表任务入队，不代表已经出片。
+
+## 6. 查询任务
+
+```bash
+curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+典型响应：
+
+```json
+{
+  "task_id": "task-1784660000-1",
+  "status": "succeeded",
+  "progress": 100,
+  "video_url": "https://.../output.mp4"
+}
+```
+
+| 字段 | 说明 |
+| --- | --- |
+| `status` | `pending` / `running` / `succeeded` / `failed` |
+| `progress` | 进度百分比，部分渠道不返回 |
+| `video_url` | 成功后返回的视频地址，通常有有效期，建议及时转存 |
+| `error` | 失败时的错误说明 |
+
+轮询建议：间隔 5 秒起，逐步放宽到 10–20 秒；任务进入 `succeeded` / `failed` 后停止。
+
+## 7. 计费
+
+- 按次计费，`5` / `10` / `15` 秒同价，`params.count` 按数量成倍。
+- 只对成功出片的任务计费，失败任务不计费。
+- 具体单价以控制台模型广场和账单为准。
+
+## 8. 常见问题
+
+| 现象 | 原因与处理 |
+| --- | --- |
+| 返回参数不合法 | `duration` 只接受 5 / 10 / 15，`resolution` 只接受 `720p`，`aspect_ratio` 不在 5 个枚举内 |
+| 参考图被拒绝 | 检查单边 300–6000 像素、宽高比 0.4–2.5、图片数量不超过 9 张 |
+| 任务长时间 `pending` | 特价通道排队或上游拥挤，稍等或降低 `count` 重试 |
+| 人物形象不稳定 | 参考生模式优先使用正脸清晰照片，减少无关参考图 |
+| 视频地址打不开 | 结果地址有有效期，出片后尽快下载转存 |

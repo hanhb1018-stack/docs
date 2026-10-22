@@ -1,0 +1,236 @@
+---
+title: "Seedance 2.0 · Anime Drama Special"
+---
+
+`seedance-2-0-manju-special` is the **per-request special-price** lane of Seedance 2.0 Fast, trimmed for anime-drama and short-drama production: fixed `720p`, 5 / 10 / 15 seconds at the same price, audio included, real-person face support, and text-to-video, first-frame, first-last and reference modes with up to 9 reference images.
+
+This is a cut-down model that only exposes the parameters listed on this page. Seedance 2.0 parameters that are not listed here (`1080p` / `4k` resolutions, video reference, audio reference, `watermark`, `return_last_frame`, `camera_fixed`, `priority`, `seed`, etc.) are unavailable on this model; passing them has no effect.
+
+For `1080p` / `4k`, video editing or video extension, use [Doubao Seedance 2.0](/en/api-reference/videos/seedance2) or [Seedance 2.5](/en/api-reference/videos/seedance-2-5).
+
+## 1. Capabilities and limits
+
+| Item | Anime Drama Special | Notes |
+| --- | --- | --- |
+| Resolution | `720p` | Fixed; other tiers are rejected |
+| Duration | `5` / `10` / `15` seconds | Same price across all three |
+| Audio track | Included | No toggle parameter |
+| Modes | text-to-video / first-frame / first-last / reference | See `mode` |
+| Reference images | Up to 9 | 9 for first-frame, first-last and reference |
+| Real-person photos | Supported | As first frame or reference image |
+| Video / audio reference input | Not supported | Images only |
+| Generation count | `1`–`50` | `count` multiplies the price |
+| Prompt length | 5000 Unicode code points | Not bytes |
+
+This special lane has average stability: at peak hours you may see longer waits or upstream congestion errors — just retry. For stable delivery, switch to an official direct-connect model.
+
+## 2. Endpoints
+
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+| Operation | Path |
+| --- | --- |
+| Create task | `POST /v1/video/generations` |
+| Query task | `GET /v1/video/generations/{task_id}` |
+
+Common headers:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+Video generation is asynchronous: the create call returns a task identifier, then poll the query endpoint until it reaches a terminal state.
+
+## 3. Parameters
+
+Video parameters live in the top-level `params` object, alongside the top-level `model` and `prompt`.
+
+| Parameter | Type | Required | Values / range | Description |
+| --- | --- | --- | --- | --- |
+| `model` | string | Yes | `seedance-2-0-manju-special` | Model name |
+| `prompt` | string | Yes | Up to 5000 Unicode code points | Video description |
+| `params.aspect_ratio` | string | No | `16:9` / `9:16` / `1:1` / `4:3` / `3:4`, default `16:9` | Aspect ratio |
+| `params.duration` | string | No | `5` / `10` / `15`, default `15` | Duration in seconds; same price |
+| `params.mode` | string | No | `text-to-video` / `first-frame` / `first-last` / `reference`, default `first-frame` | Generation mode |
+| `params.resolution` | string | No | `720p`, default `720p` | Resolution; fixed value |
+| `params.count` | integer | No | `1`–`50`, default `1` | Number of videos per request |
+| `params.images` | array | No | Up to 9 URLs or Data URLs | First/last frame or reference images |
+
+Constraints for `params.images`:
+
+- Edge length `300`–`6000` px;
+- Aspect ratio `0.4`–`2.5`;
+- Publicly reachable `https://` URLs, or Base64 Data URLs in the form `data:image/png;base64,...`.
+
+### 3.1 Mode and image count
+
+| `params.mode` | Scenario | Max `params.images` |
+| --- | --- | --- |
+| `text-to-video` | Text only | 0 |
+| `first-frame` | One image as the starting frame (default) | 9 |
+| `first-last` | First + last frame, AI fills the transition | 9 |
+| `reference` | Character / scene references, real-person photos allowed | 9 |
+
+Mismatched mode and image count is rejected: `first-frame` needs at least 1, `first-last` at least 2, `reference` at least 1, and `text-to-video` must not carry images.
+
+## 4. Create a task
+
+### 4.1 Text to video
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "A woman in period costume looks back on a rainy night street, camera slowly pushes in, cinematic lighting.",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "15",
+      "mode": "text-to-video",
+      "resolution": "720p"
+    }
+  }'
+```
+
+### 4.2 First frame / first-last frame
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "The character turns from the window and walks to the door, camera follows, keep the face consistent.",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "10",
+      "mode": "first-last",
+      "resolution": "720p",
+      "images": [
+        "https://your-host.com/first-frame.jpg",
+        "https://your-host.com/last-frame.jpg"
+      ]
+    }
+  }'
+```
+
+In `first-last` mode the array order is first frame then last frame; `first-frame` mode needs only one image.
+
+### 4.3 Reference mode (real-person photos)
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "The person in the reference image reads by a cafe window, camera orbits slowly.",
+    "params": {
+      "aspect_ratio": "16:9",
+      "duration": "15",
+      "mode": "reference",
+      "resolution": "720p",
+      "images": [
+        "https://your-host.com/person.jpg",
+        "https://your-host.com/scene.jpg"
+      ],
+      "count": 1
+    }
+  }'
+```
+
+Reference images may be real-person photos and the likeness holds up well. Avoid unrelated content in the reference set, which would pull the style apart.
+
+### 4.4 Batch generation
+
+```bash
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "Two martial artists face off in a bamboo forest, robes blowing in the wind, slow motion.",
+    "params": {
+      "aspect_ratio": "9:16",
+      "duration": "5",
+      "mode": "text-to-video",
+      "resolution": "720p",
+      "count": 4
+    }
+  }'
+```
+
+`count` is the number of videos per request; with per-request pricing the total is the unit price × `count`.
+
+## 5. Create response
+
+```json
+{
+  "task_id": "task-1784660000-1",
+  "status": "pending"
+}
+```
+
+Some channels pass the upstream structure through unchanged:
+
+```json
+{
+  "code": 200,
+  "msg": "task created",
+  "data": {
+    "task_id": "task-1784660000-1",
+    "status": "pending",
+    "is_final": false
+  }
+}
+```
+
+Both forms carry `task_id`; use it to poll the task. A successful create only means the task was queued, not that a video has been produced.
+
+## 6. Query a task
+
+```bash
+curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Typical response:
+
+```json
+{
+  "task_id": "task-1784660000-1",
+  "status": "succeeded",
+  "progress": 100,
+  "video_url": "https://.../output.mp4"
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `status` | `pending` / `running` / `succeeded` / `failed` |
+| `progress` | Percentage; not returned by every channel |
+| `video_url` | Video location after success; usually expires, so archive it promptly |
+| `error` | Failure description |
+
+Polling: start at 5-second intervals and widen to 10–20 seconds; stop once the task is `succeeded` / `failed`.
+
+## 7. Billing
+
+- Per request: `5` / `10` / `15` seconds cost the same, and `params.count` multiplies the price.
+- Only successful tasks are billed; failed tasks are not.
+- See the console model gallery and your invoice for the exact unit price.
+
+## 8. Troubleshooting
+
+| Symptom | Cause and fix |
+| --- | --- |
+| Invalid parameter | `duration` only accepts 5 / 10 / 15, `resolution` only `720p`, `aspect_ratio` must be one of the five values |
+| Reference image rejected | Check 300–6000 px edges, aspect ratio 0.4–2.5, and no more than 9 images |
+| Task stuck in `pending` | Special lane queue or upstream congestion; wait or retry with a smaller `count` |
+| Unstable likeness | In reference mode prefer a clear front-facing photo and drop unrelated references |
+| Video URL fails to open | Result URLs expire; download and archive right after generation |
