@@ -1,36 +1,123 @@
 ---
 title: "Quickstart"
-description: "Sign up, configure, and complete pre-launch checks in three steps"
+description: "Make your first request in five minutes: sign up, get a token, call text, image, and video APIs"
 ---
 
-Complete your GregAPI sign-up, basic configuration, and pre-launch checks in three steps.
+Follow the three steps below to make your first request in five minutes. Every example on this page can be copied and run directly — you only need to replace the token and the model name.
 
-## Step 1: Sign up & log in
+<Steps>
+  <Step title="Sign up and log in">
+    Go to [www.gregapi.com](https://www.gregapi.com/) to register an account and log in to the console, then confirm your profile and initial permissions.
+  </Step>
+  <Step title="Create an API token">
+    In the console, open Profile and create a model-calling token, then copy and save it. The full token is shown only once at creation time.
+  </Step>
+  <Step title="Make your first call">
+    Replace `$TOKEN` in the examples below and run one to confirm you get a response.
+  </Step>
+</Steps>
 
-Sign up for an account directly on the GregAPI platform. After registering, log in to the console to confirm your profile and initial permissions.
+## Prepare your environment
 
-## Step 2: Basic configuration
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
 
-- Regular users: confirm your profile, team permissions, quota, and available features.
-- Platform-level settings (channels, callbacks, etc.) are usually managed by an administrator. See [Console guide](/en/console).
-- Confirm the models, billing, and log scopes visible to your account. Contact your administrator or support if your permissions are insufficient.
+## Call a text model
 
-## Step 3: Pre-launch checks
+<CodeGroup>
+```bash cURL
+curl -X POST "$BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "Introduce yourself in one sentence"}]
+  }'
+```
 
-- Verify models, quota, billing rules, and usage scenarios against your provisioned scope.
-- Avoid exposing sensitive configuration (such as tokens) in public environments.
-- Review logs, billing, and results pages in the console to confirm business and cost expectations.
+```python Python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://www.gregapi.com/v1", api_key="oh-xxxxxxxxxxxxxxxx")
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "Introduce yourself in one sentence"}],
+)
+print(resp.choices[0].message.content)
+```
+
+```js Node.js
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://www.gregapi.com/v1",
+  apiKey: "oh-xxxxxxxxxxxxxxxx",
+});
+const resp = await client.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages: [{ role: "user", content: "Introduce yourself in one sentence" }],
+});
+console.log(resp.choices[0].message.content);
+```
+</CodeGroup>
+
+Replace the model name with one you have enabled in the console's model gallery. For the full list and parameters, see [LLM APIs](/en/api-reference/texts/openai/chat-completions).
+
+## Call an image model
+
+```bash
+curl -X POST "$BASE_URL/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "prompt": "An orange cat wearing sunglasses, flat illustration style",
+    "size": "1024x1024"
+  }'
+```
+
+See [GPT image generation](/en/api-reference/images/overview) and [Seedream image generation](/en/api-reference/images/doubao-seedream-5-0) for details.
+
+## Call a video model
+
+Video is asynchronous: create a task first, then poll for the result.
+
+```bash
+# 1. Create the task
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "A character looks back on a rainy street at night, camera slowly pushes in",
+    "params": {"aspect_ratio": "9:16", "duration": "5", "mode": "text-to-video"}
+  }'
+
+# 2. Query with the returned task_id
+curl "$BASE_URL/v1/video/generations/{task_id}" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+For more video models, see [Video model APIs](/en/api-reference/videos/seedance2).
+
+## Pre-launch checks
+
+- Confirm the enabled models, quota, and billing rules so you do not discover a quota shortfall after launch.
+- Keep the token in a server-side environment variable only; never put it in front-end code or a public repository.
+- Use the [Request ID](/en/request-id) to correlate logs, and check call records and costs in [Usage logs](/en/console).
 
 ## Next steps
 
 <CardGroup cols={3}>
+  <Card title="API overview" icon="book" href="/en/api-overview">
+    What the three API families are each for.
+  </Card>
   <Card title="Console guide" icon="desktop" href="/en/console">
     Navigate the console and its common operations.
   </Card>
-  <Card title="Security & compliance" icon="shield" href="/en/security">
-    Understand data security and access control.
-  </Card>
-  <Card title="Account & billing" icon="user" href="/en/account-billing">
-    Manage teams, subscriptions, quota, and invoices.
+  <Card title="Billing basics" icon="coins" href="/en/quota-billing">
+    Understand how quota points are deducted.
   </Card>
 </CardGroup>

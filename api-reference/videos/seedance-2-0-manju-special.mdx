@@ -1,5 +1,6 @@
 ---
 title: "Seedance 2.0 · 漫剧特价"
+description: "Seedance 2.0 漫剧特价模型的参数、示例与计费"
 ---
 
 `seedance-2-0-manju-special` 是 Seedance 2.0 快速版的 **按次特价**通道，面向漫剧、短剧场景做了能力裁剪：固定 `720p`、5 / 10 / 15 秒同价、含音轨，支持真人照片过脸，可用文生视频、首帧生视频、首尾帧和最多 9 张参考图的参考生。
@@ -8,7 +9,9 @@ title: "Seedance 2.0 · 漫剧特价"
 
 需要 `1080p` / `4k`、视频编辑或视频延展等完整能力时，请使用 [Doubao Seedance 2.0](/api-reference/videos/seedance2) 或 [Seedance 2.5](/api-reference/videos/seedance-2-5)。
 
-## 1. 能力与限制
+本页只说明该模型的参数与示例；Base URL、鉴权与异步任务范式见 [通用约定](/api-reference/common)。
+
+## 能力与限制
 
 | 能力项 | 漫剧特价 | 说明 |
 | --- | --- | --- |
@@ -24,30 +27,18 @@ title: "Seedance 2.0 · 漫剧特价"
 
 特价通道稳定性一般，高峰期可能出现等待时间较长或上游拥挤报错，重试即可；需要稳定交付时请改用官方直连模型。
 
-## 2. 接口
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## 接口
 
 | 操作 | 路径 |
 | --- | --- |
 | 创建任务 | `POST /v1/video/generations` |
 | 查询任务 | `GET /v1/video/generations/{task_id}` |
 
-统一请求头：
+以上请求均使用 GregAPI API Token；视频生成是异步任务，创建成功后返回任务标识，再用查询接口轮询到终态。鉴权与异步任务范式见 [通用约定](/api-reference/common)。
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+## 参数
 
-视频生成是异步任务：创建成功后返回任务标识，再用查询接口轮询到终态。
-
-## 3. 参数
-
-视频参数统一放在请求体的 `params` 对象里，`model` 与 `prompt` 位于顶层。
+视频参数统一放在请求体的 `params` 对象里，`model` 与 `prompt` 位于顶层。只有 `model` 和 `prompt` 必填，其余参数均有默认值。
 
 | 参数 | 类型 | 必填 | 取值 / 范围 | 说明 |
 | --- | --- | --- | --- | --- |
@@ -60,13 +51,13 @@ Content-Type: application/json
 | `params.count` | integer | 否 | `1`–`50`，默认 `1` | 一次生成的视频数量 |
 | `params.images` | array | 否 | 最多 9 个 URL 或 Data URL | 首尾帧 / 参考图片 |
 
-`params.images` 的素材约束：
-
+<Accordion title="图片素材边界（params.images）">
 - 单边 `300`–`6000` 像素；
 - 宽高比 `0.4`–`2.5`；
 - 支持公网可访问的 `https://` URL，或 `data:image/png;base64,...` 形式的 Base64 Data URL。
+</Accordion>
 
-### 3.1 生成模式与参考图数量
+### 生成模式与参考图数量
 
 | `params.mode` | 场景 | `params.images` 上限 |
 | --- | --- | --- |
@@ -77,9 +68,9 @@ Content-Type: application/json
 
 模式与图片数量不匹配时任务会被拒绝：`first-frame` 至少 1 张，`first-last` 至少 2 张，`reference` 至少 1 张，`text-to-video` 不应携带图片。
 
-## 4. 创建任务
+## 创建任务
 
-### 4.1 文生视频
+### 文生视频
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -97,7 +88,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
   }'
 ```
 
-### 4.2 首帧 / 首尾帧
+### 首帧 / 首尾帧
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -121,7 +112,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 `first-last` 模式下数组顺序即首帧、尾帧；`first-frame` 模式只需传 1 张。
 
-### 4.3 参考生（含真人照片）
+### 参考生（含真人照片）
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -146,7 +137,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 参考图可以是真人照片，人物形象在生成结果中保持较好一致性；参考图之间不要混入无关内容，避免风格互相拉扯。
 
-### 4.4 批量生成
+### 批量生成
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -167,7 +158,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 `count` 为一次生成的视频数量，按次计价时总价为单次价格 × `count`。
 
-## 5. 提交响应
+### 提交响应
 
 ```json
 {
@@ -192,7 +183,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 两种形态都能取到 `task_id`，用它查询任务状态即可。创建成功只代表任务入队，不代表已经出片。
 
-## 6. 查询任务
+## 查询任务
 
 ```bash
 curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
@@ -219,14 +210,13 @@ curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
 
 轮询建议：间隔 5 秒起，逐步放宽到 10–20 秒；任务进入 `succeeded` / `failed` 后停止。
 
-## 7. 计费
+## 计费与常见问题
 
 - 按次计费，`5` / `10` / `15` 秒同价，`params.count` 按数量成倍。
 - 只对成功出片的任务计费，失败任务不计费。
 - 具体单价以控制台模型广场和账单为准。
 
-## 8. 常见问题
-
+<Accordion title="常见问题与排查">
 | 现象 | 原因与处理 |
 | --- | --- |
 | 返回参数不合法 | `duration` 只接受 5 / 10 / 15，`resolution` 只接受 `720p`，`aspect_ratio` 不在 5 个枚举内 |
@@ -234,3 +224,15 @@ curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
 | 任务长时间 `pending` | 特价通道排队或上游拥挤，稍等或降低 `count` 重试 |
 | 人物形象不稳定 | 参考生模式优先使用正脸清晰照片，减少无关参考图 |
 | 视频地址打不开 | 结果地址有有效期，出片后尽快下载转存 |
+</Accordion>
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" icon="scroll" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    错误类型、状态码与排查路径。
+  </Card>
+</CardGroup>

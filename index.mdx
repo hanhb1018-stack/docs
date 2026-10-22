@@ -1,36 +1,52 @@
 ---
 title: "概览"
-description: "GregAPI 平台用户文档总览"
+description: "GregAPI 平台用户文档总览：接入动线、能力入口与常用页"
 ---
-
-## 欢迎使用 GregAPI 平台
 
 GregAPI 提供统一的多模型、多能力 API 网关，通过一个账号与统一的 Token 即可调用文本、图像、视频、语音等各类生成能力。这里是面向平台用户的使用文档，帮助你快速上手，熟练使用控制台、账单、安全与支持流程。
 
-## 快速导航
+## 推荐动线
 
-<CardGroup cols={3}>
-  <Card title="快速开始" icon="rocket" href="/quickstart">
-    三步完成账号开通、基础配置与上线前检查。
-  </Card>
-  <Card title="控制台指南" icon="desktop" href="/console">
-    掌握控制台导航与常用操作。
-  </Card>
-  <Card title="安全与合规" icon="shield" href="/security">
-    了解数据安全、权限与合规说明。
-  </Card>
-</CardGroup>
+<Steps>
+  <Step title="跑通第一条请求">
+    看 [快速开始](/quickstart)，5 分钟拿到第一条返回结果。
+  </Step>
+  <Step title="搞清楚接口怎么分">
+    看 [API 概览](/api-overview) 与 [通用约定](/api-reference/common)，确定用哪套协议、怎么鉴权。
+  </Step>
+  <Step title="按能力查接口文档">
+    进 [API 参考](/api-reference/introduction)，按文本、图像、视频、语音逐级定位。
+  </Step>
+  <Step title="对上账、出问题能自助">
+    计费与对账见 [计费原理](/quota-billing)，报障见 [支持与工单](/support)。
+  </Step>
+</Steps>
 
 ## 常用入口
 
 <CardGroup cols={3}>
-  <Card title="账号与计费" icon="user" href="/account-billing">
+  <Card title="快速开始" icon="rocket" href="/quickstart">
+    三步完成开通、取 Token 与首条调用。
+  </Card>
+  <Card title="API 参考" icon="book" href="/api-reference/introduction">
+    文本、图像、视频、语音四类接口文档。
+  </Card>
+  <Card title="通用约定" icon="scroll" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构。
+  </Card>
+  <Card title="控制台指南" icon="desktop" href="/console">
+    掌握控制台导航与常用操作。
+  </Card>
+  <Card title="计费原理" icon="coins" href="/quota-billing">
+    搞懂额度点是怎么扣的。
+  </Card>
+  <Card title="账号与订阅" icon="user" href="/account-billing">
     管理团队、订阅、额度与发票。
+  </Card>
+  <Card title="安全与合规" icon="shield" href="/security">
+    了解数据安全、权限与合规说明。
   </Card>
   <Card title="支持与工单" icon="headset" href="/support">
     获取帮助、提交问题与联系支持。
-  </Card>
-  <Card title="API 参考" icon="book" href="/api-reference/introduction">
-    查看各类模型接口文档。
   </Card>
 </CardGroup>

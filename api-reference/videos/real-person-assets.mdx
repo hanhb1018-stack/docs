@@ -1,5 +1,6 @@
 ---
 title: "真人素材库 API"
+description: "真人认证、LivenessFace 素材管理与 Seedance 使用的完整流程"
 ---
 
 通过 GregAPI 完成字节国内与海外真人认证、LivenessFace 素材管理和 Seedance 视频调用。
@@ -8,7 +9,7 @@ title: "真人素材库 API"
 
 这里的“真人认证”是活体检测和同人比对，不是身份证、姓名或公安库实名核验。认证必须由真人本人在返回的 H5 页面完成。
 
-## 1. 接口与模型
+## 接口与模型
 
 所有素材库请求使用同一个入口：
 
@@ -32,7 +33,7 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 
 真人素材不会在国内、海外或第三方渠道之间自动迁移或降级。已经创建真人 Group/Asset 后，请继续使用原模型地域和 Project。
 
-## 2. 完整流程
+## 完整流程
 
 1. 调用 `CreateVisualValidateSession` 创建一次性认证会话。
 2. 保存响应中的 `BytedToken`，让真人本人打开 `H5Link` 完成活体认证。
@@ -46,7 +47,7 @@ H5 回调只能作为流程通知。即使 `resultCode=10000`，服务端仍应�
 
 当国内请求命中已启用真人能力的 ZLHub 渠道时，`H5Link` 是 GregAPI 托管认证页：页面承载供应商 H5，并在可信 Group 绑定成功后按同样的字节参数跳转 `CallbackURL`。调用方流程无需区分渠道。
 
-## 3. 创建真人认证会话
+## 创建认证会话
 
 ```bash
 curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024-01-01" \
@@ -88,7 +89,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024
 
 如需指定 H5 语言，可在 `H5Link` 后追加 `lng=zh`、`lng=en` 或 `lng=zh-Hant`。
 
-## 4. 查询认证结果
+## 查询认证结果
 
 真人本人完成 H5 后，用原 `BytedToken` 查询：
 
@@ -121,7 +122,7 @@ curl -X POST "$BASE_URL/volcark/?Action=GetVisualValidateResult&Version=2024-01-
 
 `GroupId` 已由 GregAPI 绑定到当前 API 用户、官方渠道、地域和 Project。真人 Group 不能通过 `CreateAssetGroup` 创建，也不能作为其他用户或其他地域的素材组使用。
 
-## 5. 创建真人素材
+## 创建真人素材
 
 ```bash
 curl -X POST "$BASE_URL/volcark/?Action=CreateAsset&Version=2024-01-01" \
@@ -173,7 +174,7 @@ curl -X POST "$BASE_URL/volcark/?Action=CreateAsset&Version=2024-01-01" \
 
 `Moderation.Strategy=Skip` 不开放。
 
-## 6. 查询素材状态
+## 查询素材状态
 
 `CreateAsset` 是异步操作。使用官方字段 `Id` 查询，直到进入终态：
 
@@ -215,7 +216,7 @@ curl -X POST "$BASE_URL/volcark/?Action=GetAsset&Version=2024-01-01" \
 
 查询响应中的素材 URL 是短期地址，不要保存或用于 Seedance 请求。
 
-## 7. 列表、更新和删除
+## 列表、更新与删除
 
 支持以下 Action：
 
@@ -263,7 +264,7 @@ curl -X POST "$BASE_URL/volcark/?Action=DeleteAsset&Version=2024-01-01" \
 
 删除请求开始后，该素材会立即停止接受新的 `asset://` 推理。上游删除失败时，可以使用同一个官方 `Id` 重试。Delete 只接受字段 `Id`，不接受 `ID`、`AssetId`、`AssetID` 或 `asset_id`。
 
-## 8. 使用真人素材生成视频
+## 使用真人素材生成视频
 
 只有 `Active` 素材可以用于视频。原生 Seedance 任务示例：
 
@@ -308,7 +309,7 @@ OpenAI 风格 `/v1/videos` 也接受 `asset://` 参考素材：
 }
 ```
 
-## 9. 错误响应
+## 错误响应
 
 错误保持字节 `ResponseMetadata.Error` 结构：
 
@@ -340,7 +341,7 @@ OpenAI 风格 `/v1/videos` 也接受 `asset://` 参考素材：
 
 真人素材上游错误会使用中性错误信息，避免把一次性凭证或临时媒体 URL 回显到响应和日志。
 
-## 10. 计费与合规
+## 计费与合规
 
 * 真人认证和素材 Create/Get/List/Update/Delete 当前不扣 GregAPI 模型余额。
 * 使用真人 `asset://` 生成视频时，仍按成功任务返回的实际 Seedance Token 正常计费一次。

@@ -1,18 +1,11 @@
 ---
 title: "Voice Cloning"
+description: "MiniMax voice cloning: upload audio, clone a voice and audition it in three steps"
 ---
 
 Use the MiniMax voice cloning capability to clone a voice and audition it with specified text. It stays consistent with MiniMax's official `/v1/voice_clone` and is forwarded by GregAPI — no self-signing required.
 
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
 ## Endpoint
 
@@ -24,7 +17,8 @@ Media type: `application/json`. Use cases: IP voice cloning, timbre cloning, and
 
 ## Quickstart: clone a voice in three steps
 
-### 1. Upload the audio to clone and get a `file_id`
+<Steps>
+<Step title="Upload the audio to clone and get a file_id">
 
 ```bash
 curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
@@ -35,7 +29,8 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
 
 Pass the returned `file.file_id` to `POST /minimaxi/v1/voice_clone`; `file.filename` is the original filename.
 
-### 2. (Optional) Upload a sample audio to get the `prompt_audio` `file_id`
+</Step>
+<Step title="(Optional) Upload a sample audio to get the prompt_audio file_id">
 
 ```bash
 curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
@@ -44,7 +39,13 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -F "file=@/path/to/short-sample.mp3"
 ```
 
-### 3. Call the clone endpoint to finish cloning and get an audition audio
+</Step>
+<Step title="Call the clone endpoint to finish cloning and get an audition audio">
+
+See "Example: with audition audio" below and pass the `file_id` from the previous step to `voice_clone`.
+
+</Step>
+</Steps>
 
 ## Request parameters (aligned with MiniMax official `/v1/voice_clone`)
 
@@ -90,3 +91,14 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/voice_clone" \
 
 - Billed by actual cloning and audition usage; see the MiniMax speech entries under "Model Pricing" in the console for exact prices.
 - Actual amounts follow the upstream consumption logs.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="Text-to-Speech" href="/en/api-reference/audio/minimax/tts">
+    MiniMax TTS synchronous and asynchronous synthesis.
+  </Card>
+</CardGroup>

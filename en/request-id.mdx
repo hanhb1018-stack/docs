@@ -1,5 +1,6 @@
 ---
 title: "Request ID"
+description: "Trace a single call, reconcile usage and open tickets with request IDs"
 ---
 
 Every API request is automatically assigned a platform request ID for tracking, troubleshooting, and ticket submission, applicable to all endpoints.
@@ -12,10 +13,6 @@ Every API request is automatically assigned a platform request ID for tracking, 
 ## Custom request ID
 
 The request may pass `X-Oneapi-Request-Id` (preferred) or `request-id` (alias) in the header; leading/trailing whitespace is trimmed, and empty values or values over 128 characters cause the platform to regenerate the ID.
-
-## Request ID in error responses
-
-Error responses carry `error.request_id`, format like `20260320153045abcdefgh`.
 
 ## How to get the request ID
 
@@ -59,3 +56,5 @@ console.log(resp.headers.get("X-Oneapi-Request-Id"));
 ## Usage
 
 Include the request ID when submitting tickets so support can quickly locate the corresponding call record.
+
+The request ID in error responses is documented in [Request ID in error responses](/en/errors#request-id-in-error-responses).

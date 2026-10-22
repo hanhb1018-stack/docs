@@ -1,6 +1,6 @@
 ---
 title: "通用对话接口"
-description: "通过 GregAPI 兼容 OpenAI 的对话补全与工具调用接口。"
+description: "OpenAI 兼容的对话补全与工具调用接口，适合需要快速接入对话能力的应用。"
 openapi: "openapi/llm.yaml POST /v1/chat/completions"
 ---
 
@@ -60,3 +60,20 @@ GregAPI 会自动对齐常见兼容接口中的差异字段，减少模型切换
 ```
 
 结合计费对账中的单价字段，可直接从响应体实时估算单次请求的缓存写入费用。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="OpenAI 多模态响应接口" icon="layer-group" href="/api-reference/texts/openai/responses">
+    统一的多模态响应接口。
+  </Card>
+  <Card title="Claude 消息接口" icon="message" href="/api-reference/texts/claude/messages">
+    Anthropic Messages 协议调用 Claude。
+  </Card>
+  <Card title="Gemini 原生格式" icon="gem" href="/api-reference/texts/gemini/generate-content">
+    Gemini 原生 generateContent 接口。
+  </Card>
+  <Card title="通用约定" icon="book" href="/api-reference/common">
+    Base URL、鉴权与错误结构。
+  </Card>
+</CardGroup>

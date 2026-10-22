@@ -1,6 +1,6 @@
 ---
 title: "Chat Completions"
-description: "Use GregAPI's OpenAI-compatible chat completion and tool-calling interface."
+description: "OpenAI-compatible chat completion and tool calling, for fast chat integration."
 openapi: "openapi/llm-en.yaml POST /v1/chat/completions"
 ---
 
@@ -60,3 +60,20 @@ The following fields are GregAPI's extensions on top of the standard OpenAI resp
 ```
 
 Combined with the unit-price fields in billing reconciliation, you can estimate the cache-write cost of a single request directly from the response body.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Responses" icon="layer-group" href="/en/api-reference/texts/openai/responses">
+    Unified multimodal response interface.
+  </Card>
+  <Card title="Messages API" icon="message" href="/en/api-reference/texts/claude/messages">
+    Call Claude via the Anthropic Messages protocol.
+  </Card>
+  <Card title="Gemini Native Format" icon="gem" href="/en/api-reference/texts/gemini/generate-content">
+    Gemini native generateContent interface.
+  </Card>
+  <Card title="Common Conventions" icon="book" href="/en/api-reference/common">
+    Base URL, authentication and error structure.
+  </Card>
+</CardGroup>

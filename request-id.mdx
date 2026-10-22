@@ -1,5 +1,6 @@
 ---
 title: "请求追踪（Request ID）"
+description: "用平台请求 ID 追踪一次调用、对账与提交工单"
 ---
 
 每次 API 请求自动分配平台请求 ID，用于追踪、排障与提交工单，适用于所有接口。
@@ -12,10 +13,6 @@ title: "请求追踪（Request ID）"
 ## 自定义请求 ID
 
 请求头可传 `X-Oneapi-Request-Id`（优先）或 `request-id`（别名）；去除首尾空白，空值或超 128 字符时平台重新生成。
-
-## 错误响应中的请求 ID
-
-错误响应 `error.request_id` 字段，格式如 `20260320153045abcdefgh`。
 
 ## 如何获取请求 ID
 
@@ -59,3 +56,5 @@ console.log(resp.headers.get("X-Oneapi-Request-Id"));
 ## 使用场景
 
 提交工单时附上请求 ID，便于支持团队快速定位对应调用记录。
+
+错误响应里的请求 ID 见 [错误响应中的请求 ID](/errors#错误响应中的请求-id)。

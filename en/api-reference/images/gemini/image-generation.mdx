@@ -1,20 +1,28 @@
 ---
 title: "Image Generation"
+description: "Gemini image generation overview: style selection, resolution tiers, aspect ratios and calling styles"
 ---
 
-Generate images with Google Gemini image models through GregAPI, supporting OpenAI-compatible, async task, and native `generateContent` calling styles. All requests are forwarded by GregAPI — no self-signing required, just pass the GregAPI API Key in the header.
+Generate images with Google Gemini image models through GregAPI, supporting OpenAI-compatible, async task, and native `generateContent` calling styles. All requests are forwarded by GregAPI — no self-signing required.
 
-```bash
-export BASE_URL="https://www.gregapi.com/v1"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
-Standard headers:
+## Choose a Calling Style
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+<CardGroup cols={2}>
+  <Card title="Overview (this page)" href="/en/api-reference/images/gemini/image-generation">
+    Understand the models, resolution tiers and aspect ratios first, then pick an endpoint.
+  </Card>
+  <Card title="OpenAI-compatible" href="/en/api-reference/images/gemini/image-generation-openai">
+    Best when you already have OpenAI SDK code and want minimal migration.
+  </Card>
+  <Card title="Native API" href="/en/api-reference/images/gemini/image-generation-native">
+    For advanced cases needing full `contents` / `generationConfig` field control.
+  </Card>
+  <Card title="Async API" href="/en/api-reference/images/gemini/image-generation-async">
+    For time-consuming 2K / 4K generation you create and poll as a task.
+  </Card>
+</CardGroup>
 
 ## Supported Models
 
@@ -24,6 +32,8 @@ Content-Type: application/json
 | `gemini-3-pro-image-preview` | 4K | Public Preview | High quality, complex prompt understanding, reference-image editing, thinking / grounding; up to 14 reference images per request |
 | `gemini-3.1-flash-image` | 4K | GA | Balanced speed / cost / quality, supports 512/1K/2K/4K and additional aspect ratios; up to 14 reference images per request |
 | `gemini-nano-banana-2.1` | 4K | GA | Multimodal generation and editing with balanced price and performance; up to 14 reference images per request |
+
+**How to choose among the three styles**: use the OpenAI-compatible interface to migrate with your existing OpenAI SDK; use the async API for time-consuming 2K / 4K generation; use the native API when you need fine-grained `contents` / `generationConfig` control. See the calling-style comparison below.
 
 ## Resolution Tiers
 
@@ -69,7 +79,7 @@ All four models support:
 | Auto resolution inference | Supported (`gemini-3-pro-image-preview` only) | Applies | Not supported |
 | Learning curve | Low (OpenAI SDK compatible) | Medium (polling) | Medium |
 
-## Billing
+<Accordion title="Billing (per-tier token estimates)">
 
 - Text input: billed by prompt tokens.
 - Image output: prioritizes upstream `usageMetadata` image tokens; if unavailable, estimated per tier:
@@ -79,3 +89,22 @@ All four models support:
 - no-image responses that were already billed return usage: top-level `usage` for OpenAI-style, `usageMetadata` for native API, and top-level `usage` for async task queries.
 
 See the platform's "Model Pricing" page for exact rates, subject to upstream usage logs.
+
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="OpenAI-compatible" href="/en/api-reference/images/gemini/image-generation-openai">
+    Text-to-image and reference-image editing over `/v1/images/*`.
+  </Card>
+  <Card title="Native API" href="/en/api-reference/images/gemini/image-generation-native">
+    Full field control over the `generateContent` protocol.
+  </Card>
+  <Card title="Async API" href="/en/api-reference/images/gemini/image-generation-async">
+    Create a task and poll for 24-hour image URLs.
+  </Card>
+</CardGroup>

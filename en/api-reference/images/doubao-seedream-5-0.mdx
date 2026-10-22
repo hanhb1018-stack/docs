@@ -1,24 +1,17 @@
 ---
 title: "doubao-seedream-5.0"
+description: "Call the Doubao Seedream 5.0 series via the OpenAI-compatible API with text-to-image and image-to-image"
 ---
 
 Call the Doubao Seedream 5.0 series image models through the OpenAI-compatible interface, covering `doubao-seedream-5.0`, `doubao-seedream-5.0-lite`, and `doubao-seedream-5.0-pro`, with text-to-image and image-to-image support.
 
-All requests are forwarded to Volcengine Ark through GregAPI. You do not need to sign requests yourself; just carry the GregAPI API Key in the header.
+All requests are forwarded to Volcengine Ark through GregAPI; you do not need to sign requests yourself.
 
-```bash
-export BASE_URL="https://www.gregapi.com/v1"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
-Consistently use:
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
 ## Model overview
+
+All three models share one endpoint and differ only in resolution tiers and key capabilities; start with `doubao-seedream-5.0` and switch to lite / pro as needed.
 
 | Model | Model ID (version mapping) | Resolution | Output format | Key capabilities |
 |---|---|---|---|---|
@@ -38,13 +31,6 @@ Content-Type: application/json
 
 ```http
 POST /v1/images/generations
-```
-
-### Request headers
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
 ```
 
 On the console side, bind the `doubao-seedream-*` model name to a Doubao / VolcArk channel (`ChannelTypeVolcArk`) to access it through the unified OpenAI-style interface.
@@ -158,28 +144,49 @@ On success, read and decode the image from `data[0].b64_json`. For a single imag
 
 ## FAQ
 
-### How to choose a model?
+<AccordionGroup>
+<Accordion title="How to choose a model?">
 
 - For high-precision editing, precise localization, and layer decomposition: use `doubao-seedream-5.0-pro`.
 - For group generation, streaming, online search, or broader knowledge and consistency: use `doubao-seedream-5.0` or `doubao-seedream-5.0-lite` (lite is more cost-effective).
 
-### How long is the image URL valid?
+</Accordion>
+<Accordion title="How long is the image URL valid?">
 
 Generated image URLs are usually valid for 24 hours. Download and save them to your own storage within the validity period.
 
-### How to remove the watermark?
+</Accordion>
+<Accordion title="How to remove the watermark?">
 
 Set `"watermark": false` in the request body to disable the model watermark (provided the current model and account configuration allow it).
 
-### What to do when images won't upload for image-to-image?
+</Accordion>
+<Accordion title="What to do when images won't upload for image-to-image?">
 
 - Confirm the `image` field uses a publicly accessible HTTPS URL or a complete Data URI (e.g. `data:image/jpeg;base64,<full Base64>`);
 - On `InvalidParameter` / `invalid url specified`, check whether bare Base64 was passed by mistake, and add a prefix matching the actual format;
 - `response_format="b64_json"` is an output setting and cannot replace the Data URI prefix required for input images;
 - For large images, compress them in advance to avoid exceeding the upstream size limit.
 
+</Accordion>
+</AccordionGroup>
+
 ## Billing
 
 - Billed by the number of successfully generated images;
 - Failed generations are usually not billed (subject to the upstream bill);
 - See the Doubao Seedream entries under "Model Pricing" in the console for specific prices.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="GPT Image Generation" href="/en/api-reference/images/overview">
+    The `gpt-image-2` and `gpt-image-2.5` series: text-to-image, editing and async tasks.
+  </Card>
+  <Card title="Gemini Image Generation" href="/en/api-reference/images/gemini/image-generation">
+    Gemini image generation overview and calling-style selection.
+  </Card>
+</CardGroup>

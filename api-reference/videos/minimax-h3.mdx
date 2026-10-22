@@ -1,10 +1,13 @@
 ---
 title: "MiniMax-H3/H3-Max"
+description: "MiniMax-H3 / H3-Max 视频生成 v2 接口、媒体规则与计费"
 ---
 
 通过 GregAPI 调用 MiniMax-H3 与 MiniMax-H3-Max 视频生成（v2）能力。MiniMax 官方 v2 能力使用 `POST /v2/video_generation` 创建任务、`GET /v2/query/video_generation/{task_id}` 查询任务，GregAPI 以代理接口形式对外提供，两者都必须携带 Bearer Token。
 
-## 1. 模型与能力
+本页只说明该模型的参数与示例；Base URL、鉴权与异步任务范式见 [通用约定](/api-reference/common)。
+
+## 模型与能力
 
 | 模型 | 分辨率 | 时长范围 | 输入能力 |
 | --- | --- | --- | --- |
@@ -13,26 +16,16 @@ title: "MiniMax-H3/H3-Max"
 
 `minimax-h3-768p-second`、`minimax-h3-2k-second`、`minimax-h3-extra-input-image`、`minimax-h3-max-480p-second`、`minimax-h3-max-768p-second` 是 GregAPI 内部计费组件 SKU，不能作为 `model` 取值，也不是可配置的模型 allowlist 条目。
 
-## 2. 接口
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## 接口
 
 | 操作 | 路径 |
 | --- | --- |
 | 创建任务 | `POST /minimaxi/v2/video_generation` |
 | 查询任务 | `GET /minimaxi/v2/query/video_generation/{task_id}` |
 
-所有请求使用 GregAPI API Token：
+所有请求使用 GregAPI API Token，鉴权方式见 [通用约定](/api-reference/common)。
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
-## 3. 创建任务
+## 创建任务
 
 ### 请求体
 
@@ -83,7 +76,7 @@ curl -X POST "$BASE_URL/minimaxi/v2/video_generation" \
 }
 ```
 
-## 4. 内容与媒体规则
+## 内容与媒体规则
 
 `content` 中媒体项按类型和数量受限：
 
@@ -108,8 +101,7 @@ curl -X POST "$BASE_URL/minimaxi/v2/video_generation" \
 
 H3-Max 只支持首/尾帧模式，不支持参考素材。
 
-## 5. 媒体 locator 与大小限制
-
+<Accordion title="媒体 locator 与大小限制">
 每个 `image_url.url`、`video_url.url`、`audio_url.url` 只能使用以下 locator：
 
 - 公网 `https://` URL。GregAPI 会对 URL 做 DNS fail-closed 和私网/回环地址拦截；不接受 HTTP、`file:`、`ftp:`、`blob:`、`javascript:` 或协议相对 URL。
@@ -125,8 +117,9 @@ H3-Max 只支持首/尾帧模式，不支持参考素材。
 | `audio_url` | `audio/wav`、`audio/mp3` | 15 MiB |
 
 公网 HTTPS URL 和 `mm_file` 引用不会由 GregAPI 拉取或在本地检查媒体内容，媒体格式等官方约束由上游校验。完整 JSON 请求体最大为 64 MiB；data URI 的 Base64 膨胀和其他字段也计入该限制，因此实际可用的解码后大小会低于单文件上限。
+</Accordion>
 
-## 6. 查询任务
+## 查询任务
 
 将创建响应的 `task_id`（或 `platform_id`）放入路径参数：
 
@@ -155,7 +148,18 @@ curl "$BASE_URL/minimaxi/v2/query/video_generation/$TASK_ID" \
 }
 ```
 
-## 7. 计费与说明
+## 计费与说明
 
 - 成功结果中的 `task.content.url` 是上游签名 URL，会过期，具体有效期以该 URL 与上游返回为准；请在收到后及时使用，不要把完整签名 URL 写入日志或长期存储。
 - 创建失败、任务失败或取消时的计费结果以 GregAPI 账户和实际任务结算记录为准。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" icon="scroll" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    错误类型、状态码与排查路径。
+  </Card>
+</CardGroup>

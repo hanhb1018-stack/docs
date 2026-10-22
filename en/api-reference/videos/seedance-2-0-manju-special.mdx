@@ -1,5 +1,6 @@
 ---
 title: "Seedance 2.0 · Anime Drama Special"
+description: "Seedance 2.0 Anime Drama Special: parameters, examples and billing"
 ---
 
 `seedance-2-0-manju-special` is the **per-request special-price** lane of Seedance 2.0 Fast, trimmed for anime-drama and short-drama production: fixed `720p`, 5 / 10 / 15 seconds at the same price, audio included, real-person face support, and text-to-video, first-frame, first-last and reference modes with up to 9 reference images.
@@ -8,7 +9,9 @@ This is a cut-down model that only exposes the parameters listed on this page. S
 
 For `1080p` / `4k`, video editing or video extension, use [Doubao Seedance 2.0](/en/api-reference/videos/seedance2) or [Seedance 2.5](/en/api-reference/videos/seedance-2-5).
 
-## 1. Capabilities and limits
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern.
+
+## Capabilities and limits
 
 | Item | Anime Drama Special | Notes |
 | --- | --- | --- |
@@ -24,30 +27,18 @@ For `1080p` / `4k`, video editing or video extension, use [Doubao Seedance 2.0](
 
 This special lane has average stability: at peak hours you may see longer waits or upstream congestion errors — just retry. For stable delivery, switch to an official direct-connect model.
 
-## 2. Endpoints
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## Endpoints
 
 | Operation | Path |
 | --- | --- |
 | Create task | `POST /v1/video/generations` |
 | Query task | `GET /v1/video/generations/{task_id}` |
 
-Common headers:
+Video generation is asynchronous: the create call returns a task identifier, then poll the query endpoint until it reaches a terminal state. See [Common Conventions](/en/api-reference/common) for authentication and the async task pattern.
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+## Parameters
 
-Video generation is asynchronous: the create call returns a task identifier, then poll the query endpoint until it reaches a terminal state.
-
-## 3. Parameters
-
-Video parameters live in the top-level `params` object, alongside the top-level `model` and `prompt`.
+Video parameters live in the top-level `params` object, alongside the top-level `model` and `prompt`. Only `model` and `prompt` are required; the rest have defaults.
 
 | Parameter | Type | Required | Values / range | Description |
 | --- | --- | --- | --- | --- |
@@ -60,13 +51,13 @@ Video parameters live in the top-level `params` object, alongside the top-level 
 | `params.count` | integer | No | `1`–`50`, default `1` | Number of videos per request |
 | `params.images` | array | No | Up to 9 URLs or Data URLs | First/last frame or reference images |
 
-Constraints for `params.images`:
-
+<Accordion title="Image constraints (params.images)">
 - Edge length `300`–`6000` px;
 - Aspect ratio `0.4`–`2.5`;
 - Publicly reachable `https://` URLs, or Base64 Data URLs in the form `data:image/png;base64,...`.
+</Accordion>
 
-### 3.1 Mode and image count
+### Mode and image count
 
 | `params.mode` | Scenario | Max `params.images` |
 | --- | --- | --- |
@@ -77,9 +68,9 @@ Constraints for `params.images`:
 
 Mismatched mode and image count is rejected: `first-frame` needs at least 1, `first-last` at least 2, `reference` at least 1, and `text-to-video` must not carry images.
 
-## 4. Create a task
+## Create a task
 
-### 4.1 Text to video
+### Text to video
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -97,7 +88,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
   }'
 ```
 
-### 4.2 First frame / first-last frame
+### First frame / first-last frame
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -121,7 +112,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 In `first-last` mode the array order is first frame then last frame; `first-frame` mode needs only one image.
 
-### 4.3 Reference mode (real-person photos)
+### Reference mode (real-person photos)
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -146,7 +137,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 Reference images may be real-person photos and the likeness holds up well. Avoid unrelated content in the reference set, which would pull the style apart.
 
-### 4.4 Batch generation
+### Batch generation
 
 ```bash
 curl -X POST "$BASE_URL/v1/video/generations" \
@@ -167,7 +158,7 @@ curl -X POST "$BASE_URL/v1/video/generations" \
 
 `count` is the number of videos per request; with per-request pricing the total is the unit price × `count`.
 
-## 5. Create response
+### Create response
 
 ```json
 {
@@ -192,7 +183,7 @@ Some channels pass the upstream structure through unchanged:
 
 Both forms carry `task_id`; use it to poll the task. A successful create only means the task was queued, not that a video has been produced.
 
-## 6. Query a task
+## Query a task
 
 ```bash
 curl "$BASE_URL/v1/video/generations/task-1784660000-1" \
@@ -219,14 +210,13 @@ Typical response:
 
 Polling: start at 5-second intervals and widen to 10–20 seconds; stop once the task is `succeeded` / `failed`.
 
-## 7. Billing
+## Billing and troubleshooting
 
 - Per request: `5` / `10` / `15` seconds cost the same, and `params.count` multiplies the price.
 - Only successful tasks are billed; failed tasks are not.
 - See the console model gallery and your invoice for the exact unit price.
 
-## 8. Troubleshooting
-
+<Accordion title="Troubleshooting">
 | Symptom | Cause and fix |
 | --- | --- |
 | Invalid parameter | `duration` only accepts 5 / 10 / 15, `resolution` only `720p`, `aspect_ratio` must be one of the five values |
@@ -234,3 +224,15 @@ Polling: start at 5-second intervals and widen to 10–20 seconds; stop once the
 | Task stuck in `pending` | Special lane queue or upstream congestion; wait or retry with a smaller `count` |
 | Unstable likeness | In reference mode prefer a clear front-facing photo and drop unrelated references |
 | Video URL fails to open | Result URLs expire; download and archive right after generation |
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

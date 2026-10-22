@@ -1,8 +1,13 @@
 ---
 title: "Query authorization"
+description: "Issue read-only query tokens: scope, permission points and endpoints, for integrations."
 ---
 
-Issue read-only query tokens for external systems to securely read balance, logs, async tasks, and operational data. The query authorization token is independent of the model token and the profile access token.
+This page explains how to **issue read-only query tokens** for external systems to securely read balance, logs, async tasks, and operational data.
+
+<Note>
+Before you start: the query authorization token is independent of, and must not be mixed with, the model token and the profile access token. This page only covers the read-only query capability.
+</Note>
 
 ## Create token
 
@@ -22,7 +27,11 @@ Three credential types compared:
 
 Current-user tokens ignore `user_id` and always read self; a token becomes invalid when its issuer is disabled or the admin loses their role; `channel` / `channel_error` can only be authorized for the "all users" scope.
 
-## Permission points
+## Permission points and query endpoints
+
+<AccordionGroup>
+  <Accordion title="Permission points by scope">
+Takeaway: the wider the scope, the more permission points can be authorized; `balance_alert` is available only for the current user.
 
 | Permission ID | current user | specified users | all users |
 |---|---|---|---|
@@ -37,6 +46,11 @@ Current-user tokens ignore `user_id` and always read self; a token becomes inval
 | `channel_error` | - | - | ✓ |
 
 Only resource-level "read" permissions exist in the current version.
+  </Accordion>
+  <Accordion title="Query endpoint overview">
+All under `/api/query/v1/`: `balance`, `balance_alert`, `model_tokens`, `logs`, `logs/{id}`, `logs/export_jobs`(POST), `tasks`, `tasks/{id}`, `tasks/export_jobs`(POST), `users`, `customer_pricing`, `channels`, `channel_errors`, `channel_errors/{id}`, `channel_errors/export_jobs`(POST), `export_jobs/{id}`, `export_jobs/{id}/download`, `export_jobs/{id}/cancel`(POST).
+  </Accordion>
+</AccordionGroup>
 
 ## Calling conventions
 
@@ -44,10 +58,6 @@ Only resource-level "read" permissions exist in the current version.
 - Unified response envelope: success `{"success":true,"message":"","data":...}`, failure `{"success":false,...}`; auth failures return HTTP 401/403, business failures return HTTP 200 with `success=false`.
 - Pagination: `page` (default 1), `size` (default 30, max 100), `order`.
 - Time parameters: default to the last 24h when omitted; `time_preset=today|1h|24h|7d`; `start_time+end_time` come as a pair; `start_time` supports `YYYY-MM-DD`, `YYYY-MM-DD HH:mm:ss`, `YYYY-MM-DDTHH:mm:ss`, RFC3339, and Unix seconds; the five forms are mutually exclusive; logs/tasks span up to 31 days, channel errors 30 days — exceeding limits returns an error.
-
-## Query endpoint overview
-
-All under `/api/query/v1/`: `balance`, `balance_alert`, `model_tokens`, `logs`, `logs/{id}`, `logs/export_jobs`(POST), `tasks`, `tasks/{id}`, `tasks/export_jobs`(POST), `users`, `customer_pricing`, `channels`, `channel_errors`, `channel_errors/{id}`, `channel_errors/export_jobs`(POST), `export_jobs/{id}`, `export_jobs/{id}/download`, `export_jobs/{id}/cancel`(POST).
 
 ## Key endpoint fields
 
@@ -64,3 +74,17 @@ Three POST creation endpoints; `data` includes `id/resource/status/file_name/row
 ## Common errors
 
 Invalid token / query API token does not exist / token disabled / token expired / current source IP not allowed / token not authorized for this permission point / token not allowed to access this user's data / `user_id` cannot be empty / time range cannot use two forms at once / query time span exceeds limit / no matching user found / keyword matches multiple users.
+
+## Related
+
+<CardGroup cols={3}>
+  <Card title="Security" icon="shield" href="/en/security">
+    Credential isolation, access control and audit.
+  </Card>
+  <Card title="Support & tickets" icon="headset" href="/en/support">
+    Support channels and what to include in a ticket.
+  </Card>
+  <Card title="Common Conventions" icon="book" href="/en/api-reference/common">
+    Base URL, authentication and error structure.
+  </Card>
+</CardGroup>

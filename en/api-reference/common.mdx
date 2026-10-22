@@ -1,0 +1,128 @@
+---
+title: "Common Conventions"
+description: "Base URL, authentication, async task pattern, error structure and request tracing shared by all endpoints"
+---
+
+This page holds the rules shared by every model endpoint. Model pages only document the parameters and examples specific to that model and link back here for the common parts.
+
+<Note>
+Calling any endpoint needs just three things: a **Base URL**, an **API Token** and a **model name**. Tokens are issued in the console — you never need an upstream vendor key.
+</Note>
+
+## Base URL
+
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+All capabilities share one domain; append the path for the protocol you use:
+
+| Protocol / capability | Path prefix | Notes |
+|---|---|---|
+| OpenAI compatible | `/v1/*` | Chat, responses, image generation and editing, video generation |
+| Anthropic | `/v1/messages` | Claude native protocol |
+| Gemini | `/v1beta/*` | Gemini native protocol |
+| Volcengine Ark | `/volcark/*` | Doubao Seedance tasks and asset library |
+| MiniMax | `/minimaxi/*` | Video generation, speech synthesis, voice cloning |
+| Vidu | `/vidu/ent/v2/*` | Vidu video generation and query |
+| Console and account | `/api/user/*` | Balance, profile |
+| Query authorization | `/api/query/v1/*` | Read-only access to balance, logs, async tasks and other operational data |
+
+## Authentication
+
+Pass the token in the request header:
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+Three credential types exist and must not be mixed up:
+
+| Credential | Purpose | Where to get it |
+|---|---|---|
+| Model call token | Call `/v1/*`, `/volcark/*`, `/minimaxi/*`, `/vidu/*` and other model endpoints | Console · Profile |
+| Profile access token | Read your own account data under `/api/user/*` | Console · Profile |
+| Query authorization token | Read-only operational queries under `/api/query/v1/*` | Console · Query authorization |
+
+See [API Authentication](/en/authentication).
+
+## Async task pattern
+
+Long-running capabilities — video, async images, async speech — all follow the same flow:
+
+<Steps>
+  <Step title="Create the task">
+    Call the create endpoint and keep the task identifier (the field name differs per protocol, see below). A successful create only means the task is queued.
+  </Step>
+  <Step title="Poll or receive a callback">
+    Query the task by identifier until it reaches a terminal state, or receive the native callback on your own service.
+  </Step>
+  <Step title="Fetch the result">
+    Read the result location from the response (`video_url` / `url` / `b64_json`, etc.) and download it promptly.
+  </Step>
+</Steps>
+
+| Protocol | Create | Query | Task id field |
+|---|---|---|---|
+| OpenAI compatible video | `POST /v1/video/generations` | `GET /v1/video/generations/{task_id}` | `task_id` |
+| Volcengine Ark task | `POST /volcark/api/v3/contents/generations/tasks` | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` | `id` |
+| MiniMax video | `POST /minimaxi/v2/video_generation` | `GET /minimaxi/v2/query/video_generation/{task_id}` | `task_id` |
+
+Polling: start at 5-second intervals and widen to 10–20 seconds; stop as soon as the task is `succeeded` / `failed`.
+
+## Responses and errors
+
+Successful responses follow each vendor's native protocol with no extra wrapper. Failures return an HTTP status plus a JSON error body:
+
+```json
+{
+  "error": {
+    "message": "Invalid token (request id: 202610220309320892627448268d9d6Ul8JOAJI)",
+    "type": "new_api_error",
+    "code": ""
+  }
+}
+```
+
+| HTTP | Meaning | What to do |
+|---|---|---|
+| `400` | Invalid parameters | Check enums and formats against that model's parameter table |
+| `401` | Token missing or invalid | Check the `Authorization` header and token expiry |
+| `403` | Insufficient permission or scope | Confirm the model is enabled and the token has the needed scopes |
+| `404` | Path or resource not found | Check the protocol prefix and task ownership |
+| `429` | Rate limited or out of quota | Back off and retry, or check balance and concurrency limits |
+| `5xx` | Upstream error | Back off and retry; if it persists, open a ticket with the request ID |
+
+Full error taxonomy: [Errors and Responses](/en/errors).
+
+## Request tracing
+
+Every response carries a platform request ID. Quote it in a ticket to pinpoint the exact call:
+
+```http
+X-Oneapi-Request-Id: 202610220309320892627448268d9d6Ul8JOAJI
+```
+
+The `request id` inside an error body is the same value as the response header. You can also supply your own request ID — see [Request ID](/en/request-id).
+
+## Rate limits and retries
+
+- Limits apply per account and per model; exceeding them returns `429`. Contact support in advance if you need higher concurrency.
+- Retry with exponential backoff (1s / 2s / 4s…) and only on `429` and `5xx`.
+- Do not blindly retry task-creating calls: when unsure whether a task was created, list tasks first.
+
+## Related
+
+<CardGroup cols={3}>
+  <Card title="API Authentication" icon="lock" href="/en/authentication">
+    How to obtain the three credential types and what each can do.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+  <Card title="Request ID" icon="heartbeat" href="/en/request-id">
+    Trace a single call with its request ID.
+  </Card>
+</CardGroup>

@@ -1,6 +1,6 @@
 ---
 title: "Gemini 原生格式"
-description: "使用 Gemini 原生接口（generateContent / streamGenerateContent）进行对话与多模态交互。"
+description: "Gemini 原生 generateContent 接口用法与示例。"
 openapi: "openapi/llm.yaml POST /v1beta/models/{model}:generateContent"
 ---
 
@@ -108,3 +108,20 @@ response = client.models.generate_content(
 )
 print(response.text)
 ```
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用对话接口" icon="comments" href="/api-reference/texts/openai/chat-completions">
+    OpenAI 兼容的对话与工具调用接口。
+  </Card>
+  <Card title="OpenAI 多模态响应接口" icon="layer-group" href="/api-reference/texts/openai/responses">
+    统一的多模态响应接口。
+  </Card>
+  <Card title="Claude 消息接口" icon="message" href="/api-reference/texts/claude/messages">
+    Anthropic Messages 协议调用 Claude。
+  </Card>
+  <Card title="通用约定" icon="book" href="/api-reference/common">
+    Base URL、鉴权与错误结构。
+  </Card>
+</CardGroup>

@@ -1,8 +1,15 @@
 ---
 title: "Authentication"
+description: "Purposes, setup and security boundaries of the three credentials — for new setups."
 ---
 
-GregAPI commonly uses three token types, each with distinct purposes and security boundaries.
+This page explains which endpoints each of the three GregAPI credentials can access, how to obtain them, and how to store them safely.
+
+<Note>
+Before you start: the three credential types are **not interchangeable**. Use the model token to call models, the profile access token to read your own account data, and the query authorization token to expose read-only queries to external systems.
+</Note>
+
+## Credential overview
 
 | Token type | Primary use | Common paths |
 |---|---|---|
@@ -10,36 +17,52 @@ GregAPI commonly uses three token types, each with distinct purposes and securit
 | Profile access token | Query account profile, balance, and other console data | `/api/user/*` |
 | Query authorization token | Read-only query of balance, logs, tasks, and operational data | `/api/query/v1/*` |
 
-## Model token
+## Getting and using each credential
 
-Passed via the `Authorization` header. Keep it only in your server-side or trusted runtime environment; never put it in browser front-ends, mobile app bundles, or public repositories.
+<AccordionGroup>
+  <Accordion title="Model token">
+Create it in the console under "Profile" and pass it via the `Authorization` header. Keep it only in your server-side or trusted runtime environment; never put it in browser front-ends, mobile app bundles, or public repositories.
 
 ```bash
 curl "https://www.gregapi.com/v1/models" \
   -H "Authorization: Bearer $TOKEN"
 ```
-
-## Profile access token
-
+  </Accordion>
+  <Accordion title="Profile access token">
 Used to query personal console data such as account balance. Example endpoint: `/api/user/balance`. See [Balance API](/en/balance-api) for more fields.
 
 ```bash
 curl "https://www.gregapi.com/api/user/balance" \
   -H "Authorization: Bearer $PROFILE_TOKEN"
 ```
-
-## Query authorization token
-
-Exposes read-only data-query capability to external systems. Keys start with `qak-`. The readable scope falls into three levels: current user / specified users / all users. See [Query authorization](/en/query-authorization).
+  </Accordion>
+  <Accordion title="Query authorization token">
+Exposes read-only data-query capability to external systems. Keys start with `qak-`. The readable scope has three levels: current user / specified users / all users. See [Query authorization](/en/query-authorization).
 
 ```bash
 curl "https://www.gregapi.com/api/query/v1/logs?time_preset=24h" \
   -H "Authorization: Bearer $QUERY_TOKEN"
 ```
+  </Accordion>
+</AccordionGroup>
 
 ## Best practices
 
-- Create separate tokens for different business systems for easier permission control and fault isolation.
-- Store tokens in server-side environment variables or a secret manager.
-- Record request IDs in production for troubleshooting (see [Request ID](/en/request-id)).
-- Disable or rotate a token immediately after it is leaked.
+- **Create a separate token** for each business system for easier permission control and fault isolation.
+- **Store tokens server-side** in environment variables or a secret manager.
+- **Record request IDs** in production for troubleshooting (see [Request ID](/en/request-id)).
+- **Disable or rotate** a token immediately after it leaks.
+
+## Related
+
+<CardGroup cols={3}>
+  <Card title="Common Conventions" icon="book" href="/en/api-reference/common">
+    Base URL, authentication and error structure shared by all endpoints.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types and troubleshooting paths, including auth failures.
+  </Card>
+  <Card title="Request ID" icon="heartbeat" href="/en/request-id">
+    Trace a single call with its request ID.
+  </Card>
+</CardGroup>

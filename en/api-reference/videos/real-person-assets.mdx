@@ -1,5 +1,6 @@
 ---
 title: "Real-Person Asset Library API"
+description: "Verification, LivenessFace asset management and use in Seedance video tasks"
 ---
 
 Complete ByteDance domestic and overseas real-person verification, LivenessFace asset management, and Seedance video calls through GregAPI.
@@ -8,7 +9,7 @@ The real-person asset library stores images, videos, or audio that have been aut
 
 The "real-person verification" here means liveness detection and same-person comparison — not ID card, name, or police-database identity verification. Verification must be completed by the real person themselves on the returned H5 page.
 
-## 1. Endpoints and models
+## Endpoints and models
 
 All asset library requests use the same entry point:
 
@@ -32,7 +33,7 @@ The `model` field in the request body is only used by GregAPI to select the dome
 
 Real-person assets are not automatically migrated or downgraded across domestic, overseas, or third-party channels. After creating a real-person Group/Asset, continue using the original model region and Project.
 
-## 2. Full workflow
+## Full workflow
 
 1. Call `CreateVisualValidateSession` to create a one-time verification session.
 2. Save the `BytedToken` in the response and have the real person open `H5Link` to complete liveness verification.
@@ -46,7 +47,7 @@ The H5 callback is only a workflow notification. Even if `resultCode=10000`, the
 
 When a domestic request hits the ZLHub channel with real-person capability enabled, `H5Link` is a GregAPI-hosted verification page: it hosts the vendor H5, and after the trusted Group is bound successfully it redirects to `CallbackURL` with the same ByteDance parameters. The caller's flow does not need to distinguish channels.
 
-## 3. Create a real-person verification session
+## Create a verification session
 
 ```bash
 curl -X POST "$BASE_URL/volcark/?Action=CreateVisualValidateSession&Version=2024-01-01" \
@@ -88,7 +89,7 @@ If you do not have your own callback page, you can use the GregAPI-provided `htt
 
 To specify the H5 language, append `lng=zh`, `lng=en`, or `lng=zh-Hant` after `H5Link`.
 
-## 4. Query the verification result
+## Query the verification result
 
 After the real person completes the H5 flow, query with the original `BytedToken`:
 
@@ -121,7 +122,7 @@ Successful result:
 
 `GroupId` is bound by GregAPI to the current API user, official channel, region, and Project. Real-person Groups cannot be created via `CreateAssetGroup`, nor used as the asset group for other users or other regions.
 
-## 5. Create a real-person asset
+## Create a real-person asset
 
 ```bash
 curl -X POST "$BASE_URL/volcark/?Action=CreateAsset&Version=2024-01-01" \
@@ -173,7 +174,7 @@ Common media limits:
 
 `Moderation.Strategy=Skip` is not available.
 
-## 6. Query asset status
+## Query asset status
 
 `CreateAsset` is asynchronous. Query using the official `Id` field until it reaches a terminal state:
 
@@ -215,7 +216,7 @@ curl -X POST "$BASE_URL/volcark/?Action=GetAsset&Version=2024-01-01" \
 
 The asset URL in the query response is a short-lived address; do not store it or use it in Seedance requests.
 
-## 7. List, update, and delete
+## List, update, and delete
 
 The following Actions are supported:
 
@@ -263,7 +264,7 @@ curl -X POST "$BASE_URL/volcark/?Action=DeleteAsset&Version=2024-01-01" \
 
 After a delete request begins, the asset immediately stops accepting new `asset://` inference. If the upstream deletion fails, retry with the same official `Id`. Delete only accepts the `Id` field — not `ID`, `AssetId`, `AssetID`, or `asset_id`.
 
-## 8. Use real-person assets to generate video
+## Use real-person assets to generate video
 
 Only `Active` assets can be used for video. Native Seedance task example:
 
@@ -308,7 +309,7 @@ The OpenAI-style `/v1/videos` endpoint also accepts `asset://` reference assets:
 }
 ```
 
-## 9. Error responses
+## Error responses
 
 Errors keep the ByteDance `ResponseMetadata.Error` structure:
 
@@ -340,7 +341,7 @@ Common handling:
 
 Upstream errors for real-person assets use neutral error messages to avoid echoing one-time credentials or temporary media URLs into responses and logs.
 
-## 10. Billing and compliance
+## Billing and compliance
 
 * Real-person verification and asset Create/Get/List/Update/Delete currently do not deduct the GregAPI model balance.
 * When generating video with a real-person `asset://`, billing still occurs once based on the actual Seedance tokens returned by the successful task.

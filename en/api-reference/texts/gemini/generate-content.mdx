@@ -1,6 +1,6 @@
 ---
 title: "Gemini Native Format"
-description: "Use the Gemini native interface (generateContent / streamGenerateContent) for conversation and multimodal interaction."
+description: "Gemini native generateContent usage, for multimodal input and thinking mode."
 openapi: "openapi/llm-en.yaml POST /v1beta/models/{model}:generateContent"
 ---
 
@@ -108,3 +108,20 @@ response = client.models.generate_content(
 )
 print(response.text)
 ```
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Chat Completions" icon="comments" href="/en/api-reference/texts/openai/chat-completions">
+    OpenAI-compatible chat and tool-calling interface.
+  </Card>
+  <Card title="Responses" icon="layer-group" href="/en/api-reference/texts/openai/responses">
+    Unified multimodal response interface.
+  </Card>
+  <Card title="Messages API" icon="message" href="/en/api-reference/texts/claude/messages">
+    Call Claude via the Anthropic Messages protocol.
+  </Card>
+  <Card title="Common Conventions" icon="book" href="/en/api-reference/common">
+    Base URL, authentication and error structure.
+  </Card>
+</CardGroup>

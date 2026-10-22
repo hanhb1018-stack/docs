@@ -1,32 +1,17 @@
 ---
 title: "BytePlus Dreamina Seedance 2.0"
+description: "海外 BytePlus Dreamina Seedance 2.0 接口与价格"
 ---
 
-通过 GregAPI 调用 BytePlus 海外 Dreamina Seedance 2.0 原生任务接口和素材库工作流。
+通过 GregAPI 调用海外 BytePlus Dreamina Seedance 2.0 的原生任务接口和素材库工作流。
 
 本页只覆盖 **海外 BytePlus Dreamina Seedance 2.0**。国内 Doubao Seedance 2.0 使用独立模型、独立价格和独立素材能力，不在本页混写。
 
-需要使用经过本人认证的真人人像、视频或音频时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成海外 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
+本页只说明该模型的参数与示例；Base URL、鉴权与异步任务范式见 [通用约定](/api-reference/common)。BytePlus API Key、AK/SK、ProjectName 和 Endpoint 由平台统一托管，调用方只需要使用 GregAPI 发放的 API Token。
 
-GregAPI 对外提供 BytePlus 原生接口兼容。任务创建、查询和素材库请求的字段尽可能保持 BytePlus 原生形态；任务列表、取消/删除、素材库访问会限制在当前 GregAPI 租户可见范围内。
+需要经过本人认证的真人人像、视频或音频时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成海外 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
 
-## 1. 前置条件
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
-统一请求头：
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
-调用方只需要使用 GregAPI 发放的 API Token。BytePlus API Key、AK/SK、ProjectName 和 Endpoint 由平台统一托管。
-
-## 2. 模型
+## 模型与分辨率
 
 | 对外模型                                    | BytePlus 官方模型                       | 说明                                                     |
 | --------------------------------------- | ----------------------------------- | ------------------------------------------------------ |
@@ -50,7 +35,7 @@ Content-Type: application/json
 
 如需锁定官方具体模型版本，请联系平台配置官方版本映射，例如 `dreamina-seedance-2-0` -> `dreamina-seedance-2-0-260128`。Filter-Off 模型需要完成精确版本映射，避免静默降级到普通模型。
 
-### 2.1 4K 能力
+### 4K 能力
 
 海外标准模型支持 4K。请求体中 `resolution` 使用 `4k`；海外 fast 和 mini 模型不支持 `1080p` 或 `4k`，需要降级到 `480p` / `720p`。
 
@@ -65,7 +50,8 @@ Content-Type: application/json
 | `3:4`  | `2494x3326` |
 | `21:9` | `4398x1886` |
 
-## 3. 海外价格
+<Accordion title="价格明细">
+平台只对成功出片任务结算，失败任务不会按成功出片计费。
 
 | SKU                                   | 价格             |
 | ------------------------------------- | -------------- |
@@ -82,11 +68,12 @@ Content-Type: application/json
 | `dreamina-seedance-2-0-mini-novideo`  | \$3.5/M tokens |
 | `dreamina-seedance-2-0-mini-video`    | \$2.1/M tokens |
 
-`video` 表示请求包含视频参考输入；`novideo` 表示不包含视频参考输入。平台只对成功出片任务结算，失败任务不会按成功出片计费。
+`video` 表示请求包含视频参考输入；`novideo` 表示不包含视频参考输入。
 
 `dreamina-seedance-2-0-filter-off` 复用 `dreamina-seedance-2-0` 的全部 SKU 价格；`dreamina-seedance-2-0-fast-filter-off` 复用 `dreamina-seedance-2-0-fast` 的全部 SKU 价格。日志和任务审计仍保留创建请求中的 Filter-Off 对外模型名。
+</Accordion>
 
-## 4. 任务接口
+## 任务接口
 
 | 功能       | 路径                                                            |
 | -------- | ------------------------------------------------------------- |
@@ -95,11 +82,12 @@ Content-Type: application/json
 | 查询租户任务列表 | `GET /volcark/api/v3/contents/generations/tasks`              |
 | 取消或删除任务  | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
-需要 BytePlus 原生字段和响应的客户应使用本页的 `/volcark/api/v3/...` 路径。
+需要 BytePlus 原生字段和响应的客户应使用本页的 `/volcark/api/v3/...` 路径。GregAPI 对外提供 BytePlus 原生接口兼容：任务创建、查询和素材库请求的字段尽可能保持 BytePlus 原生形态；任务列表、取消/删除、素材库访问会限制在当前 GregAPI 租户可见范围内。
 
-## 5. 创建任务
+## 创建任务
 
-```bash
+<CodeGroup>
+```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -108,7 +96,7 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
     "content": [
       {
         "type": "text",
-        "text": "A quiet cinematic shot of a paper boat floating on calm water, soft morning light."
+        "text": "一艘纸船漂浮在清晨平静的水面上，电影感镜头，柔和自然光。"
       }
     ],
     "duration": 4,
@@ -123,6 +111,67 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
     "callback_url": "https://example.com/volcark/callback"
   }'
 ```
+
+```python Python
+import requests
+
+headers = {
+    "Authorization": "Bearer $TOKEN",
+    "Content-Type": "application/json",
+}
+
+data = {
+    "model": "dreamina-seedance-2-0",
+    "content": [
+        {"type": "text", "text": "A quiet cinematic shot of a paper boat floating on calm water, soft morning light."}
+    ],
+    "duration": 4,
+    "ratio": "16:9",
+    "resolution": "4k",
+    "generate_audio": False,
+    "watermark": True,
+    "return_last_frame": True,
+    "execution_expires_after": 3600,
+    "priority": 0,
+    "safety_identifier": "user-hash-001",
+    "callback_url": "https://example.com/volcark/callback",
+}
+
+resp = requests.post(
+    "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks",
+    headers=headers,
+    json=data,
+)
+print(resp.json())
+```
+
+```javascript JavaScript
+const resp = await fetch("https://www.gregapi.com/volcark/api/v3/contents/generations/tasks", {
+  method: "POST",
+  headers: {
+    "Authorization": "Bearer $TOKEN",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    model: "dreamina-seedance-2-0",
+    content: [
+      { type: "text", text: "A quiet cinematic shot of a paper boat floating on calm water, soft morning light." }
+    ],
+    duration: 4,
+    ratio: "16:9",
+    resolution: "4k",
+    generate_audio: false,
+    watermark: true,
+    return_last_frame: true,
+    execution_expires_after: 3600,
+    priority: 0,
+    safety_identifier: "user-hash-001",
+    callback_url: "https://example.com/volcark/callback"
+  }),
+});
+console.log(await resp.json());
+```
+</CodeGroup>
 
 Filter-Off 调用只需要替换 `model`，其他请求字段与普通海外 Dreamina 2.0 保持一致：
 
@@ -151,7 +200,7 @@ Filter-Off 调用只需要替换 `model`，其他请求字段与普通海外 Dre
 
 GregAPI native 响应默认不追加 `platform_id`，以保持 BytePlus 原生响应形态。
 
-常用字段：
+常用字段中只有 `content[]` 是必填项，其余按需传入：
 
 | 字段                        | 说明                                                                     |
 | ------------------------- | ---------------------------------------------------------------------- |
@@ -250,8 +299,7 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 
 `POST /volcark/api/v3/contents/generations/tasks` 支持在顶层传入 `callback_url`。平台会先校验 URL，再随创建任务请求提交给模型服务。
 
-校验规则：
-
+<Accordion title="回调校验规则">
 * 必须是字符串，且去除首尾空白后不能为空。
 * 必须使用 `https`。
 * 域名必须解析到公网可路由地址；本地、私网、链路本地、多播、CGNAT 等地址会被拒绝。
@@ -260,8 +308,11 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 兼容字段 `CallbackURL` 会被规范化为 `callback_url`，不会继续把 `CallbackURL` 原字段提交给模型服务。如果两个字段同时存在，以 `callback_url` 为准。
 
 这是原生任务回调透传能力，不是 GregAPI 平台 webhook broker。回调投递、重试、签名和回调体结构均以模型服务原生能力为准。
+</Accordion>
 
-## 6. 查询任务
+## 查询、列表与删除
+
+### 查询任务
 
 ```bash
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
@@ -299,18 +350,9 @@ curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-2026
 }
 ```
 
-常见状态：
+常见状态：`queued`、`running`、`succeeded`、`failed`、`expired`、`cancelled`。结果 URL 通常约 24 小时有效，请及时转存。若请求了 `return_last_frame=true`，成功结果可能包含 `content.last_frame_url`。
 
-* `queued`
-* `running`
-* `succeeded`
-* `failed`
-* `expired`
-* `cancelled`
-
-结果 URL 通常约 24 小时有效，请及时转存。若请求了 `return_last_frame=true`，成功结果可能包含 `content.last_frame_url`。
-
-## 7. 查询租户任务列表
+### 查询租户任务列表
 
 ```bash
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
@@ -347,7 +389,7 @@ curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num
 
 列表接口是 **当前 GregAPI 租户作用域内** 的 BytePlus 兼容列表，不返回其他租户或账号级全量任务。
 
-## 8. 取消或删除任务
+### 取消或删除任务
 
 ```bash
 curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
@@ -369,20 +411,25 @@ curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/task
 
 GregAPI 会保留本地任务审计和计费记录。对不支持运行中删除的任务，终态任务删除会在 GregAPI 租户内本地隐藏，运行中任务返回 `409`。删除或取消只允许操作当前租户自己的任务。
 
-## 9. 素材库工作流
+## 素材库工作流
 
-素材库能力随海外 Dreamina 2.0 提供，用于完成：
+素材库随海外 Dreamina 2.0 提供，用于上传图片、视频或音频素材，并在生成任务中以 `asset://<Asset_Id>` 引用。所有 Asset API 挂载在 `POST /volcark/?Action={ActionName}&Version=2024-01-01`。
 
-1. 创建素材组
-2. 上传图片、视频或音频素材
-3. 保存 `CreateAsset` 返回的 `Result.Id`
-4. 使用 `GetAsset` 查询素材生命周期，只有 `Active` 可进入生成任务
-
-所有 Asset API 挂载在：
-
-```http
-POST /volcark/?Action={ActionName}&Version=2024-01-01
-```
+<Accordion title="素材库接口与示例（创建素材组 / 创建素材 / 查询素材 / 列表）">
+<Steps>
+  <Step title="创建素材组">
+    调用 `CreateAssetGroup`，保存返回的素材组 ID。
+  </Step>
+  <Step title="上传素材">
+    调用 `CreateAsset` 上传图片、视频或音频，保存 `Result.Id`。
+  </Step>
+  <Step title="查询生命周期">
+    用 `GetAsset` 查询素材状态，只有 `Active` 可进入生成任务。
+  </Step>
+  <Step title="引用素材">
+    在创建任务时以 `asset://<Asset_Id>` 传入。
+  </Step>
+</Steps>
 
 支持的 Action：
 
@@ -395,11 +442,9 @@ POST /volcark/?Action={ActionName}&Version=2024-01-01
 | 查询单个素材组 | `GetAssetGroup`    |
 | 查询单个素材  | `GetAsset`         |
 
-不开放 `Update*`、`Delete*` 和 `Moderation.Strategy=Skip`。
+不开放 `Update*`、`Delete*` 和 `Moderation.Strategy=Skip`。`CreateAssetGroup` 与 `CreateAsset` 成功时 `Result` 只返回 `Id`。素材状态、URL、审核或预处理失败原因不在 Create 响应中展开；调用方应保存 `Result.Id`，再用 `GetAsset` 或 `ListAssets` 查询生命周期。
 
-`CreateAssetGroup` 与 `CreateAsset` 成功时 `Result` 只返回 `Id`。素材状态、URL、审核或预处理失败原因不在 Create 响应中展开；调用方应保存 `Result.Id`，再用 `GetAsset` 或 `ListAssets` 查询生命周期。
-
-### 9.1 创建素材组
+**创建素材组**
 
 ```bash
 curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
@@ -429,7 +474,7 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2
 }
 ```
 
-### 9.2 创建素材
+**创建素材**
 
 ```bash
 curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
@@ -467,7 +512,7 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-0
 }
 ```
 
-### 9.3 查询素材
+**查询素材**
 
 ```bash
 curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
@@ -479,17 +524,11 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-0
   }'
 ```
 
-常见状态：
+常见状态：`Processing`、`Active`、`Failed`。
 
-* `Processing`
-* `Active`
-* `Failed`
+`CreateAsset` 返回 `Result.Id` 后即可用 `GetAsset` 查询生命周期。若状态仍为 `Processing`，请按 2、5、10、20 秒退避轮询，直到进入 `Active` 或 `Failed`。`GetAsset` 是推荐的素材生命周期轮询入口。只有 `Status=Active` 的素材才能作为 `asset://<Result.Id>` 传入视频生成；`Status=Failed` 表示审核或预处理失败，需要重新创建素材。
 
-`CreateAsset` 返回 `Result.Id` 后即可用 `GetAsset` 查询生命周期。若状态仍为 `Processing`，请按 2、5、10、20 秒退避轮询，直到进入 `Active` 或 `Failed`。
-
-`GetAsset` 是推荐的素材生命周期轮询入口。只有 `Status=Active` 的素材才能作为 `asset://<Result.Id>` 传入视频生成；`Status=Failed` 表示审核或预处理失败，需要重新创建素材。
-
-### 9.4 查询素材列表
+**查询素材列表**
 
 ```bash
 curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
@@ -535,7 +574,7 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01
 }
 ```
 
-## 10. 在生成任务中使用素材
+**在生成任务中使用素材**
 
 素材进入 `Active` 后，用 `asset://<Asset_Id>` 作为 BytePlus content 输入：
 
@@ -565,12 +604,12 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
   }'
 ```
 
-平台也接受 `Asset://...`，并会在转发前规范化为 `asset://...`。
+平台也接受 `Asset://...`，并会在转发前规范化为 `asset://...`。如果素材是视频，使用 `type=video_url` 并设置 `role=reference_video`；该写法适用于视频编辑、视频延展和多段视频衔接。严格首帧或尾帧控制请改用图片素材并设置 `role=first_frame` / `last_frame`。
+</Accordion>
 
-如果素材是视频，使用 `type=video_url` 并设置 `role=reference_video`；该写法适用于视频编辑、视频延展和多段视频衔接。严格首帧或尾帧控制请改用图片素材并设置 `role=first_frame` / `last_frame`。
+## 多租户与错误码
 
-## 11. 多租户边界
-
+<Accordion title="多租户边界">
 | 能力     | GregAPI 行为                                 |
 | ------ | ---------------------------------------- |
 | 任务创建   | 请求参数尽量保持 BytePlus 原生形态，服务端兼容差异由 GregAPI 处理 |
@@ -579,9 +618,9 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 | 取消/删除  | 只能操作当前租户任务，并保留平台审计记录                     |
 | 素材组/素材 | 只允许访问当前租户拥有的资源                           |
 | 素材引用   | `asset://` 会绑定到当前租户的素材资源范围，避免跨范围或跨租户误用   |
+</Accordion>
 
-## 12. 常见错误
-
+<Accordion title="错误码明细">
 | HTTP  | code                                | 场景                                           |
 | ----- | ----------------------------------- | -------------------------------------------- |
 | `400` | `invalid_request`                   | 请求体不是合法 JSON，或缺少必填字段                         |
@@ -597,3 +636,15 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 | `503` | `model_mapping_required`            | Filter-Off 模型未完成精确官方版本映射，或映射到了普通 Dreamina 模型 |
 
 素材库控制面接口的错误响应使用火山/BytePlus 风格 `ResponseMetadata.Error`。素材审核或预处理失败不是 Create 错误响应，而是在 `GetAsset` / `ListAssets` 中以 `Status=Failed` 体现。
+</Accordion>
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" icon="scroll" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    错误类型、状态码与排查路径。
+  </Card>
+</CardGroup>

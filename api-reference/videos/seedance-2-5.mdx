@@ -1,26 +1,28 @@
 ---
 title: "Seedance 2.5"
+description: "Seedance 2.5 国内与海外任务接口、参数边界与价格"
 ---
 
 通过 GregAPI 调用国内 Doubao 与海外 BytePlus Dreamina Seedance 2.5。
 
 Seedance 2.5 同时提供国内 Doubao 和海外 BytePlus Dreamina 版本。两者共用 GregAPI 的任务接口和请求结构，但模型名、价格与联网搜索能力不同。需要使用经过本人认证的真人素材时，先按 [真人素材库 API](/api-reference/videos/real-person-assets) 完成对应地域的 H5 认证和素材入库，再使用 `asset://<AssetId>` 创建任务。
 
-## 1. 模型与价格
+本页只说明该模型的参数与示例；Base URL、鉴权与异步任务范式见 [通用约定](/api-reference/common)。
 
+## 模型与价格
+
+国内稳定模型为 `doubao-seedance-2-5`，海外稳定模型为 `dreamina-seedance-2-5`；请求中建议使用稳定模型名。平台也接受对应的官方版本 ID，并自动映射到稳定模型；查询和列表响应仍回显稳定模型名。
+
+<Accordion title="价格明细">
 | 区域 | GregAPI 稳定模型名 | 官方版本 ID | 无视频输入 | 含视频输入 |
 | --- | --- | --- | --- | --- |
 | 国内 | `doubao-seedance-2-5` | `doubao-seedance-2-5-260628` | ¥70/M tokens | ¥42/M tokens |
 | 海外 | `dreamina-seedance-2-5` | `dreamina-seedance-2-5-260628` | \$10.70/M tokens | \$6.40/M tokens |
+</Accordion>
 
-建议在请求中使用稳定模型名。平台也接受对应的官方版本 ID，并自动映射到稳定模型；查询和列表响应仍回显稳定模型名。`video` 档表示 `content[]` 中包含 `video_url`，否则使用 `novideo` 档。480p 与 720p 单价相同；只对成功生成的视频结算，实际视频用量以查询响应中的 `usage.completion_tokens` 为准。国内模型还支持纯文本任务使用 `tools: [{"type":"web_search"}]`。联网搜索按响应中的 `usage.tool_usage.web_search` 实际次数独立结算；海外模型不支持该工具，具体客户价格以 GregAPI 控制台为准。
+`video` 档表示 `content[]` 中包含 `video_url`，否则使用 `novideo` 档。480p 与 720p 单价相同；只对成功生成的视频结算，实际视频用量以查询响应中的 `usage.completion_tokens` 为准。国内模型还支持纯文本任务使用 `tools: [{"type":"web_search"}]`。联网搜索按响应中的 `usage.tool_usage.web_search` 实际次数独立结算；海外模型不支持该工具，具体客户价格以 GregAPI 控制台为准。
 
-## 2. 接口
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## 接口
 
 | 功能 | 路径 |
 | --- | --- |
@@ -29,15 +31,14 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | 查询任务列表 | `GET /volcark/api/v3/contents/generations/tasks` |
 | 取消或删除任务 | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
-所有请求使用 GregAPI API Token：
+以上请求均使用 GregAPI API Token，鉴权方式见 [通用约定](/api-reference/common)。
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+## 创建任务
 
-## 3. 创建任务
+Seedance 2.5 支持原生任务接口和 OpenAI 风格接口两种调用方式。
 
+<Tabs>
+<Tab title="原生任务接口">
 国内文生视频示例：
 
 ```bash
@@ -69,6 +70,27 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
   "model": "doubao-seedance-2-5"
 }
 ```
+</Tab>
+<Tab title="OpenAI 风格接口">
+Seedance 2.5 也可通过 `POST /v1/videos` 创建任务：
+
+```bash
+curl -X POST "$BASE_URL/v1/videos" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "prompt": "一艘纸船漂浮在清晨的水面上",
+    "seconds": 5,
+    "resolution": "720p",
+    "ratio": "16:9",
+    "generate_audio": true
+  }'
+```
+
+OpenAI 风格接口适合基础文生视频和参考素材调用。需要 `content[].role`、`output_format`、`tools.web_search` 等完整原生能力时，请使用 `/volcark/api/v3/contents/generations/tasks`。
+</Tab>
+</Tabs>
 
 ### 多模态参考
 
@@ -135,8 +157,7 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
 }
 ```
 
-## 4. 参数边界
-
+<Accordion title="参数边界与不支持字段">
 | 字段 | Seedance 2.5 约束 |
 | --- | --- |
 | `resolution` | 仅 `480p`、`720p`，不支持 `1080p` 或 `4k` |
@@ -151,8 +172,9 @@ curl -X POST "$BASE_URL/volcark/api/v3/contents/generations/tasks" \
 | `draft` | 仅支持 `false` |
 
 `seed`、`frames`、`frames_per_second`、`frame_rate`、`fps`、`camera_fixed` 不适用于 Seedance 2.5，传入时会在请求模型服务前返回 HTTP 400。
+</Accordion>
 
-## 5. 查询结果
+## 查询结果
 
 ```bash
 curl "$BASE_URL/volcark/api/v3/contents/generations/tasks/cgt-202608130001-example" \
@@ -177,22 +199,13 @@ curl "$BASE_URL/volcark/api/v3/contents/generations/tasks/cgt-202608130001-examp
 
 成功视频 URL 通常有效 24 小时，且存在下载次数限制，请及时转存；失败任务应读取响应中的结构化 `error`。
 
-## 6. OpenAI 风格接口
+## 相关内容
 
-Seedance 2.5 也可通过 `POST /v1/videos` 创建任务：
-
-```bash
-curl -X POST "$BASE_URL/v1/videos" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "doubao-seedance-2-5",
-    "prompt": "一艘纸船漂浮在清晨的水面上",
-    "seconds": 5,
-    "resolution": "720p",
-    "ratio": "16:9",
-    "generate_audio": true
-  }'
-```
-
-OpenAI 风格接口适合基础文生视频和参考素材调用。需要 `content[].role`、`output_format`、`tools.web_search` 等完整原生能力时，请使用 `/volcark/api/v3/contents/generations/tasks`。
+<CardGroup cols={2}>
+  <Card title="通用约定" icon="scroll" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    错误类型、状态码与排查路径。
+  </Card>
+</CardGroup>

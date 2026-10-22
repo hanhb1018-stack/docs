@@ -1,10 +1,13 @@
 ---
 title: "MiniMax-H3/H3-Max"
+description: "MiniMax-H3 / H3-Max video generation v2 API, media rules and billing"
 ---
 
 Call the MiniMax-H3 and MiniMax-H3-Max video generation (v2) capabilities through GregAPI. MiniMax's official v2 capability creates tasks with `POST /v2/video_generation` and queries them with `GET /v2/query/video_generation/{task_id}`; GregAPI exposes these as proxy endpoints, and both require a Bearer token.
 
-## 1. Models and capabilities
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern.
+
+## Models and capabilities
 
 | Model | Resolution | Duration range | Input capabilities |
 | --- | --- | --- | --- |
@@ -13,26 +16,16 @@ Call the MiniMax-H3 and MiniMax-H3-Max video generation (v2) capabilities throug
 
 `minimax-h3-768p-second`, `minimax-h3-2k-second`, `minimax-h3-extra-input-image`, `minimax-h3-max-480p-second`, and `minimax-h3-max-768p-second` are GregAPI's internal billing component SKUs. They cannot be used as `model` values, nor are they configurable model allowlist entries.
 
-## 2. Endpoints
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## Endpoints
 
 | Operation | Path |
 | --- | --- |
 | Create task | `POST /minimaxi/v2/video_generation` |
 | Query task | `GET /minimaxi/v2/query/video_generation/{task_id}` |
 
-All requests use the GregAPI API Token:
+All requests use the GregAPI API Token; see [Common Conventions](/en/api-reference/common) for authentication.
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
-## 3. Create a task
+## Create a task
 
 ### Request body
 
@@ -83,7 +76,7 @@ A successful creation returns only GregAPI's stable public identifiers:
 }
 ```
 
-## 4. Content and media rules
+## Content and media rules
 
 Media items in `content` are limited by type and count:
 
@@ -108,8 +101,7 @@ An `image_url` without a `role` is treated as `first_frame`. Constraints:
 
 H3-Max supports only the first/last-frame mode; reference material is not supported.
 
-## 5. Media locators and size limits
-
+<Accordion title="Media locators and size limits">
 Each `image_url.url`, `video_url.url`, and `audio_url.url` may only use these locators:
 
 - A public `https://` URL. GregAPI performs DNS fail-closed and private/loopback address blocking; HTTP, `file:`, `ftp:`, `blob:`, `javascript:`, and protocol-relative URLs are not accepted.
@@ -125,8 +117,9 @@ For data URIs, GregAPI validates the decoded per-file size and MIME:
 | `audio_url` | `audio/wav`, `audio/mp3` | 15 MiB |
 
 Public HTTPS URLs and `mm_file` references are not fetched or locally inspected by GregAPI; official media-format constraints are validated upstream. The full JSON request body is capped at 64 MiB; the Base64 expansion of data URIs and other fields count toward this limit, so the actual decoded size available will be lower than the per-file cap.
+</Accordion>
 
-## 6. Query a task
+## Query a task
 
 Put the `task_id` (or `platform_id`) from the creation response into the path parameter:
 
@@ -155,7 +148,18 @@ The query response keeps the upstream `task` object and appends `platform_id` at
 }
 ```
 
-## 7. Billing and notes
+## Billing and notes
 
 - On success, `task.content.url` is an upstream signed URL and will expire; the exact validity depends on the URL and the upstream response. Use it promptly and do not write the full signed URL into logs or long-term storage.
 - Billing for creation failures, task failures, or cancellations is subject to the GregAPI account and actual task settlement records.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

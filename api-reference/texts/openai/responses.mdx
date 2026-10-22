@@ -1,6 +1,6 @@
 ---
 title: "OpenAI 多模态响应接口"
-description: "统一的多模态响应接口，支持 JSON mode、工具序列与图文混合。"
+description: "统一的多模态响应接口，适合需要 JSON 输出、图文混合与工具序列的场景。"
 openapi: "openapi/llm.yaml POST /v1/responses"
 ---
 
@@ -38,3 +38,20 @@ curl -X POST "https://www.gregapi.com/v1/responses" \
 - `response_format` 支持 `json_schema`、`text` 等选项；结合 GregAPI 的流控策略，可实现结构化自动化处理。
 - 若需要工具调用，请在 `tools` 中声明可选函数，返回结果将出现在 `output` 的 `tool_calls` 字段里。
 - 费用提示：当启用 Web Search Preview、Code Interpreter、File Search 等工具时，GregAPI 会在 `usage` 中附加额外计费元数据用于对账。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用对话接口" icon="comments" href="/api-reference/texts/openai/chat-completions">
+    OpenAI 兼容的对话与工具调用接口。
+  </Card>
+  <Card title="Claude 消息接口" icon="message" href="/api-reference/texts/claude/messages">
+    Anthropic Messages 协议调用 Claude。
+  </Card>
+  <Card title="Gemini 原生格式" icon="gem" href="/api-reference/texts/gemini/generate-content">
+    Gemini 原生 generateContent 接口。
+  </Card>
+  <Card title="通用约定" icon="book" href="/api-reference/common">
+    Base URL、鉴权与错误结构。
+  </Card>
+</CardGroup>

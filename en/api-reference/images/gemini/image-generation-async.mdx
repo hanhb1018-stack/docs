@@ -1,8 +1,11 @@
 ---
 title: "Image Generation (Async)"
+description: "Create Gemini image-generation tasks via the async API and poll for 24-hour image URLs"
 ---
 
 Create Gemini image-generation tasks via the async API, then poll with `GET` to obtain image URLs valid for 24 hours. Ideal for time-consuming 2K / 4K high-resolution generation.
+
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
 ## Prerequisite: Object Storage (required)
 
@@ -17,19 +20,24 @@ Async image tasks require configured object storage (S3 or AliOSS) to upload gen
 | Query text-to-image task | `GET` | `/v1/images/generations/{id}` |
 | Query edit task | `GET` | `/v1/images/edits/{id}` |
 
-**Base URL**: `https://www.gregapi.com`
-
-### Authentication
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
 ### Task ID format
 
 - Format: `image_<ULID>`, e.g. `image_01KCRVET35FAVZME1CEEED9VBS`
 - `task_id` is an alias, equal to `id`
+
+## Task Flow
+
+<Steps>
+  <Step title="Create the task">
+    Call `/v1/images/generations/async` for text-to-image, or multipart-call `/v1/images/edits/async` for editing, and keep the returned `id`.
+  </Step>
+  <Step title="Poll the task">
+    Query `GET /v1/images/generations/{id}` or `GET /v1/images/edits/{id}` until the status is `completed` / `failed`.
+  </Step>
+  <Step title="Fetch the result">
+    On `completed`, read the 24-hour image URL from `data[].url` and download it promptly.
+  </Step>
+</Steps>
 
 ## Text-to-image: Create task
 
@@ -184,3 +192,20 @@ Edit async tasks support Gemini image models only. Responses match text-to-image
 | Endpoints | `/v1/images/generations`, `/v1/images/edits` | `/v1/images/*/async` |
 | `response_format` | `b64_json` or `url` | Fixed `url` (`b64_json` ignored) |
 | Object storage | Required only when returning URL | Required (S3/AliOSS), 24h signed URL |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="Gemini Image Generation" href="/en/api-reference/images/gemini/image-generation">
+    Models, resolution tiers and calling-style selection.
+  </Card>
+  <Card title="OpenAI-compatible" href="/en/api-reference/images/gemini/image-generation-openai">
+    Text-to-image and reference-image editing over `/v1/images/*`.
+  </Card>
+  <Card title="Native API" href="/en/api-reference/images/gemini/image-generation-native">
+    Full field control over the `generateContent` protocol.
+  </Card>
+</CardGroup>

@@ -1,8 +1,11 @@
 ---
 title: "Image Generation (OpenAI)"
+description: "Call Gemini image models via OpenAI-compatible endpoints for text-to-image and reference-image editing"
 ---
 
 Call Gemini image models through OpenAI-compatible endpoints (`/v1/images/generations` and `/v1/images/edits`) for text-to-image and reference-image editing. Compatible with the OpenAI SDK.
+
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
 ## Supported Models
 
@@ -13,13 +16,6 @@ Call Gemini image models through OpenAI-compatible endpoints (`/v1/images/genera
 | `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
 | `gemini-nano-banana-2.1` | 1K / 2K / 4K |
 
-## Authentication
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
 ## Text-to-image `/v1/images/generations`
 
 **Method**: `POST`
@@ -27,6 +23,8 @@ Content-Type: application/json
 **Base URL**: `https://www.gregapi.com/v1/images/generations`
 
 ### Request Parameters
+
+A minimal request only needs `model` and `prompt`; everything else is optional: `size` and `aspect_ratio` control composition, `response_format` selects base64 or URL.
 
 | Parameter | Type | Required | Default | Values | Description |
 |---|---|---|---|---|---|
@@ -60,7 +58,12 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-### Response (`response_format=b64_json`)
+### Response
+
+Choose one depending on `response_format`:
+
+<Tabs>
+<Tab title="b64_json">
 
 ```json
 {
@@ -74,7 +77,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }
 ```
 
-### Response (`response_format=url`)
+</Tab>
+<Tab title="url">
 
 ```json
 {
@@ -87,7 +91,10 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }
 ```
 
-### Billed-but-blocked error response
+</Tab>
+</Tabs>
+
+<Accordion title="Billed-but-blocked error response">
 
 ```json
 {
@@ -111,6 +118,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 
 `usage` is only returned when the failure already incurred billable prompt/input tokens. Ordinary failures (parameter validation, quota, network) do not return `usage`.
 
+</Accordion>
+
 ## Image editing `/v1/images/edits`
 
 **Method**: `POST` (multipart/form-data)
@@ -118,6 +127,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 **Base URL**: `https://www.gregapi.com/v1/images/edits`
 
 ### Request Parameters
+
+Use `image` (local file) or `image_urls[]` (public URL) for the base image; the rest are editing controls.
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
@@ -151,8 +162,29 @@ curl -X POST "https://www.gregapi.com/v1/images/edits" \
 
 ## Error Codes
 
+<Accordion title="Error Codes">
+
 | HTTP status | Description | Solution |
 |---|---|---|
 | 400 | Invalid parameter | Check prompt, size format |
 | 413 | Image too large | Compress reference image under 10 MB |
 | 429 | Quota exceeded | Check quota or retry later |
+
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="Gemini Image Generation" href="/en/api-reference/images/gemini/image-generation">
+    Models, resolution tiers and calling-style selection.
+  </Card>
+  <Card title="Native API" href="/en/api-reference/images/gemini/image-generation-native">
+    Full field control over the `generateContent` protocol.
+  </Card>
+  <Card title="Async API" href="/en/api-reference/images/gemini/image-generation-async">
+    Create a task and poll for 24-hour image URLs.
+  </Card>
+</CardGroup>

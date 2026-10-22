@@ -1,8 +1,13 @@
 ---
-title: "GPT生图"
+title: "GPT 生图"
+description: "通过 OpenAI 兼容接口调用 GPT 生图模型，覆盖文生图、改图与异步任务"
 ---
 
 通过 OpenAI 兼容接口调用 GPT 图像生成模型，支持文生图与图像编辑。本文档同时覆盖 `gpt-image-2` 与 `gpt-image-2.5` 两个系列，二者共用同一套生图、改图及异步接口，仅在模型名、质量档位与分辨率表现上存在差异。
+
+<Note>
+本页只讲 **GPT 生图**（`gpt-image-2` 与 `gpt-image-2.5` 系列）。需要 Doubao Seedream 见 [Seedream 5.0](/api-reference/images/doubao-seedream-5-0)，需要 Gemini 生图见 [Gemini 图像生成](/api-reference/images/gemini/image-generation)。
+</Note>
 
 ## 模型总览
 
@@ -16,7 +21,9 @@ title: "GPT生图"
 
 ## 快速开始
 
-```bash
+<CodeGroup>
+
+```bash cURL
 curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -29,9 +36,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-Python SDK:
-
-```python
+```python Python
 from openai import OpenAI
 
 client = OpenAI(base_url="https://www.gregapi.com/v1", api_key="$TOKEN")
@@ -46,6 +51,8 @@ result = client.images.generate(
 
 print(result.data[0].b64_json)
 ```
+
+</CodeGroup>
 
 ## gpt-image-2
 
@@ -137,9 +144,12 @@ print(result.data[0].b64_json)
 - 返回 URL 需要平台对象存储配置。
 - 默认按 token 计费：文本输入 $5/M、缓存文本 $1.25/M、图片输入 $8/M、缓存图片 $2/M、图片输出 $30/M（M 为百万 tokens；客户价以账号配置为准）。费率来源：[OpenAI 定价](https://developers.openai.com/api/docs/pricing#image-generation)。
 
-## 文生图 `/v1/images/generations`
+## 调用方式
 
-两种系列共用该端点，`model` 字段决定走哪个模型。请求体示例：
+<Tabs>
+<Tab title="文生图">
+
+两种系列共用端点 `/v1/images/generations`，`model` 字段决定走哪个模型。请求体示例：
 
 ```bash
 curl -X POST "https://www.gregapi.com/v1/images/generations" \
@@ -154,7 +164,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-## 响应体
+### 响应体
 
 ```json
 {
@@ -181,7 +191,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 | `data[].revised_prompt` | 模型优化后的提示词 |
 | `usage` | token 用量；token 计费通道会优先按平台记录或上游返回的 usage 结算 |
 
-## URL 输出
+### URL 输出
 
 设置 `response_format=url` 可获取图片 URL：
 
@@ -213,7 +223,10 @@ print(result.data[0].url)
 
 - 不会静默降级为 `b64_json`。
 
-## 改图 `/v1/images/edits`
+</Tab>
+<Tab title="改图">
+
+改图端点 `/v1/images/edits`。
 
 ### JSON 请求体
 
@@ -287,9 +300,10 @@ curl -X POST "https://www.gregapi.com/v1/images/edits" \
 
 `images[].image_url` 和 `images[].file_id` 二选一。部分兼容渠道会由平台在内部改写为 multipart 请求以保证可执行，不影响对外接口形态。
 
-## 异步图片任务
+</Tab>
+<Tab title="异步任务">
 
-平台提供托管异步图片任务接口。异步接口不是 OpenAI 官方后台任务协议，而是平台先创建 `image_<ULID>` 任务，再由后台 worker 执行同步图像请求，最后通过轮询接口返回托管图片 URL。
+平台提供托管异步图片任务接口，端点 `/v1/images/generations/async` 与 `/v1/images/edits/async`。异步接口不是 OpenAI 官方后台任务协议，而是平台先创建 `image_<ULID>` 任务，再由后台 worker 执行同步图像请求，最后通过轮询接口返回托管图片 URL。
 
 ### 文生图任务
 
@@ -333,6 +347,9 @@ curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
 
 异步任务要求平台已配置公开可访问的对象存储。未配置时，创建任务会返回 `storage_not_configured`。
 
+</Tab>
+</Tabs>
+
 ## 计费
 
 `gpt-image-2` 支持两种计费模式，`gpt-image-2.5` 系列仅支持 Token 计费：
@@ -355,7 +372,7 @@ curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
 
 有上游 `usage` 时按该用量结算；缺失时按成功返回图片数量、尺寸和 2.5 质量系数估算。`auto` 的用量取决于上游选择，缺失 usage 的结果只代表平台估算。单张预估只用于成本预估，实际账单以消费日志和控制台「模型价格」页面为准。
 
-### 按张计费
+<Accordion title="按张计费明细（分辨率 SKU 表）">
 
 按张计费是 `gpt-image-2` 的稳定低成本通道，按成功解码的图片张数 × 分辨率 SKU 单价结算；文生图、改图与异步任务共用同一组稳定参数。
 
@@ -383,9 +400,13 @@ curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
 - `size=auto`、非 SKU 表内尺寸、`background`、`moderation`、`user`、`input_fidelity`、`stream`、`partial_images` 等参数不在按张计费稳定承诺内。
 - 按张计费下 `usage.*` 可能被记录用于排查，但不作为客户账单依据。
 
+</Accordion>
+
 两种模式下，对账都以消费日志中的实际金额为准，不要把展示用 token bucket 当成额外账单行。
 
 ## 错误码
+
+<Accordion title="错误码">
 
 | 错误码 | 说明 |
 |---|---|
@@ -394,3 +415,19 @@ curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
 | `unsupported_image_input` | 异步改图暂不支持该输入形式 |
 | `content_policy_violation` | 内容审核未通过 |
 | `suspected_black_image_from_upstream` | 返回疑似纯黑图，已拦截 |
+
+</Accordion>
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构的公共规则。
+  </Card>
+  <Card title="Doubao Seedream 5.0" href="/api-reference/images/doubao-seedream-5-0">
+    火山方舟图像模型，支持文生图与图生图。
+  </Card>
+  <Card title="Gemini 图像生成" href="/api-reference/images/gemini/image-generation">
+    Gemini 生图总览与三种调用方式选型。
+  </Card>
+</CardGroup>

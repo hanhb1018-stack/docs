@@ -1,6 +1,6 @@
 ---
 title: "Claude 消息接口"
-description: "使用 Anthropic Messages API 协议调用 Claude 模型。"
+description: "用 Anthropic Messages 协议调用 Claude 的示例。"
 openapi: "openapi/llm.yaml POST /v1/messages"
 ---
 
@@ -16,9 +16,10 @@ Content-Type: application/json
 
 ## 请求示例
 
-### cURL
+安装 SDK：`pip install anthropic`（Python）、`npm install @anthropic-ai/sdk`（TypeScript）。
 
-```bash
+<CodeGroup>
+```bash cURL
 curl -X POST "https://www.gregapi.com/v1/messages" \
   -H "Authorization: Bearer $TOKEN" \
   -H "anthropic-version: 2023-06-01" \
@@ -31,14 +32,7 @@ curl -X POST "https://www.gregapi.com/v1/messages" \
     ]
   }'
 ```
-
-### Python SDK
-
-```bash
-pip install anthropic
-```
-
-```python
+```python Python SDK
 import os
 import anthropic
 
@@ -54,14 +48,7 @@ message = client.messages.create(
 )
 print(message)
 ```
-
-### TypeScript SDK
-
-```bash
-npm install @anthropic-ai/sdk
-```
-
-```typescript
+```typescript TypeScript SDK
 import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({
@@ -76,6 +63,7 @@ const message = await client.messages.create({
 });
 console.log(message);
 ```
+</CodeGroup>
 
 ## 构建方式
 
@@ -97,3 +85,20 @@ console.log(message);
 - **GregAPI 用户文档**：平台能力说明与多产品线导航。
 
 网关行为以 GregAPI 控制台说明为准；Anthropic 原生能力以官方文档为准。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用对话接口" icon="comments" href="/api-reference/texts/openai/chat-completions">
+    OpenAI 兼容的对话与工具调用接口。
+  </Card>
+  <Card title="OpenAI 多模态响应接口" icon="layer-group" href="/api-reference/texts/openai/responses">
+    统一的多模态响应接口。
+  </Card>
+  <Card title="Gemini 原生格式" icon="gem" href="/api-reference/texts/gemini/generate-content">
+    Gemini 原生 generateContent 接口。
+  </Card>
+  <Card title="通用约定" icon="book" href="/api-reference/common">
+    Base URL、鉴权与错误结构。
+  </Card>
+</CardGroup>

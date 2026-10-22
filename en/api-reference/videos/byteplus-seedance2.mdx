@@ -1,38 +1,19 @@
 ---
 title: "BytePlus Dreamina Seedance 2.0"
+description: "Overseas BytePlus Dreamina Seedance 2.0: task API, asset library and pricing"
 ---
 
-Call the overseas BytePlus Dreamina Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the BytePlus native shape as closely as possible.
+Call the overseas BytePlus Dreamina Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow.
 
 <Info>
 This page only covers the **overseas BytePlus Dreamina Seedance 2.0**. The domestic [Doubao Seedance 2.0](/en/api-reference/videos/seedance2) uses separate models, pricing, and asset capabilities.
 </Info>
 
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern. Callers only need the API token issued by GregAPI; the BytePlus API key, AK/SK, project name, and endpoint are all hosted by the platform.
+
 When you need to use real-person imagery, video, or audio that has been verified by the person themselves, first complete overseas H5 verification and asset ingestion through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
 
-## Endpoint
-
-**POST** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
-
-The overseas entry point is the BytePlus native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
-
-| Feature | Method & path |
-| ------- | ---- |
-| Create task | `POST /volcark/api/v3/contents/generations/tasks` |
-| Query task | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` |
-| List tenant tasks | `GET /volcark/api/v3/contents/generations/tasks` |
-| Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
-
-## Authentication
-
-Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GregAPI; the BytePlus API key, AK/SK, project name, and endpoint are all hosted by the platform.
-
-| Header | Description |
-| ------- | ---- |
-| `Authorization` | `Bearer <API_KEY>` — the API token issued by GregAPI |
-| `Content-Type` | `application/json` |
-
-## Models
+## Models and resolution
 
 | External model | BytePlus official model | Description |
 | ------- | ------- | ---- |
@@ -63,8 +44,7 @@ The overseas standard model supports 4K: set `resolution` to `4k`; output is **1
 | `3:4` | `2494x3326` |
 | `21:9` | `4398x1886` |
 
-## Overseas pricing
-
+<Accordion title="Pricing details">
 Only successfully rendered tasks are settled; failed tasks are not billed as successful renders.
 
 | SKU | Price |
@@ -83,35 +63,25 @@ Only successfully rendered tasks are settled; failed tasks are not billed as suc
 | `dreamina-seedance-2-0-mini-video` | \$2.1/M tokens |
 
 `video` means the request includes a video reference input; `novideo` means it does not. `dreamina-seedance-2-0-filter-off` reuses all SKUs of `dreamina-seedance-2-0`; `dreamina-seedance-2-0-fast-filter-off` reuses all SKUs of `dreamina-seedance-2-0-fast`. Logs and task audits keep the Filter-Off external model name from the creation request.
+</Accordion>
 
-## Request parameters
+## Endpoints
 
-| Parameter | Type | Required | Description |
-| ------- | ---- | ---- | ---- |
-| `model` | string | Yes | Model ID, e.g. `dreamina-seedance-2-0`. |
-| `content` | array | Yes | BytePlus multimodal input array; at least a prompt text or reference asset. |
-| `duration` | integer | Yes | Video duration in seconds, `4-15`; pass `-1` to let the model service auto-select. |
-| `ratio` | string | No | Aspect ratio: `adaptive`, `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9`. |
-| `resolution` | string | No | `480p`, `720p`, `1080p`, `4k`; 4K only for the standard model. |
-| `generate_audio` | boolean | No | Whether to generate audio. |
-| `watermark` | boolean | No | Whether to keep the watermark. |
-| `return_last_frame` | boolean | No | Return `content.last_frame_url` on success. |
-| `execution_expires_after` | integer | No | Task execution expiry in seconds; official range is typically `3600-259200`. |
-| `priority` | integer | No | Queue priority `0-9`. |
-| `safety_identifier` | string | No | Stable end-user identifier; pass a hashed user ID. |
-| `callback_url` | string | No | BytePlus native task status callback URL; must be a non-empty public HTTPS URL. |
-| `CallbackURL` | string | No | Compatibility alias; normalized to `callback_url` before submitting to the model service. |
+The overseas entry point is the BytePlus native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope. Customers who need BytePlus-native fields and responses should use the `/volcark/api/v3/...` paths on this page.
 
-<Info>
-The overseas Mini supports only `480p` / `720p` and supports audio reference input. `references.audio` or native `content[].type=audio_url` is passed through as ordinary reference audio; `service_tier=flex` and `draft=true` are still rejected before calling BytePlus. The overseas Mini is delivered in the BytePlus AP region by default; the EU region must be probed before being opened.
-</Info>
+| Feature | Method & path |
+| ------- | ---- |
+| Create task | `POST /volcark/api/v3/contents/generations/tasks` |
+| Query task | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` |
+| List tenant tasks | `GET /volcark/api/v3/contents/generations/tasks` |
+| Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
 ## Create a task
 
 <CodeGroup>
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "dreamina-seedance-2-0",
@@ -138,7 +108,7 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 import requests
 
 headers = {
-    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Authorization": "Bearer $TOKEN",
     "Content-Type": "application/json",
 }
 
@@ -171,7 +141,7 @@ print(resp.json())
 const resp = await fetch("https://www.gregapi.com/volcark/api/v3/contents/generations/tasks", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Authorization": "Bearer $TOKEN",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -220,13 +190,112 @@ A Filter-Off call only replaces `model`; other request fields stay the same as t
 Task creation is asynchronous; a successful response only returns the task ID. Query the task to retrieve the final video result. The GregAPI native response does not append `platform_id` by default, preserving the BytePlus native response shape.
 </Info>
 
-## Query a task
+| Parameter | Type | Required | Description |
+| ------- | ---- | ---- | ---- |
+| `model` | string | Yes | Model ID, e.g. `dreamina-seedance-2-0`. |
+| `content` | array | Yes | BytePlus multimodal input array; at least a prompt text or reference asset. |
+| `duration` | integer | Yes | Video duration in seconds, `4-15`; pass `-1` to let the model service auto-select. |
+| `ratio` | string | No | Aspect ratio: `adaptive`, `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9`. |
+| `resolution` | string | No | `480p`, `720p`, `1080p`, `4k`; 4K only for the standard model. |
+| `generate_audio` | boolean | No | Whether to generate audio. |
+| `watermark` | boolean | No | Whether to keep the watermark. |
+| `return_last_frame` | boolean | No | Return `content.last_frame_url` on success. |
+| `execution_expires_after` | integer | No | Task execution expiry in seconds; official range is typically `3600-259200`. |
+| `priority` | integer | No | Queue priority `0-9`. |
+| `safety_identifier` | string | No | Stable end-user identifier; pass a hashed user ID. |
+| `callback_url` | string | No | BytePlus native task status callback URL; must be a non-empty public HTTPS URL. |
+| `CallbackURL` | string | No | Compatibility alias; normalized to `callback_url` before submitting to the model service. |
 
-**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+<Info>
+The overseas Mini supports only `480p` / `720p` and supports audio reference input. `references.audio` or native `content[].type=audio_url` is passed through as ordinary reference audio; `service_tier=flex` and `draft=true` are still rejected before calling BytePlus. The overseas Mini is delivered in the BytePlus AP region by default; the EU region must be probed before being opened.
+</Info>
+
+### Video editing and extension
+
+Video generation, editing, and extension are all expressed through the same creation endpoint. Pass the video, reference image, or reference audio to edit or extend via `content[]`, and describe the target result with a text prompt.
+
+| Scenario | Recommended input |
+| ------- | ---- |
+| Video editing | `text` + `video_url` (`role=reference_video`), optional `image_url.role=reference_image` / `audio_url.role=reference_audio` |
+| Extend forward or backward | `text` + 1 `video_url` (`role=reference_video`), state the direction in the prompt |
+| Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
+| Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
+
+GregAPI requires you to first upload images, videos, or audio through the asset library and wait until the asset becomes `Active` before passing it as `asset://<Asset_Id>`. Tasks that include `content[].type=video_url` are billed under the video-reference-input SKU; tasks without `video_url` do not enter the `*-video` SKU.
+
+```bash Video editing
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "dreamina-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "Edit Video 1: replace the red mug with a glass teapot while preserving the original camera movement."
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": { "url": "asset://asset-20260611210200-video1" }
+      },
+      {
+        "type": "image_url",
+        "role": "reference_image",
+        "image_url": { "url": "asset://asset-20260611210100-image1" }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+```bash Video extension
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "dreamina-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "Extend Video 1 backward with the same character, lighting, and handheld camera motion, then end with Video 1."
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": { "url": "asset://asset-20260611210200-video1" }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+### Native callback
+
+`POST /volcark/api/v3/contents/generations/tasks` supports a top-level `callback_url`. The platform validates the URL before submitting the creation request to the model service.
+
+<Accordion title="Callback validation rules">
+- It must be a string and must not be empty after trimming whitespace.
+- It must use `https`.
+- The domain must resolve to a publicly routable address; local, private, link-local, multicast, and CGNAT addresses are rejected.
+- On validation failure, the platform returns HTTP `400` with error code `invalid_request` before submitting to the model service.
+
+The compatibility field `CallbackURL` is normalized to `callback_url`. If both are present, `callback_url` takes precedence. This is native task callback passthrough, not a GregAPI webhook broker; callback delivery, retry, signing, and payload structure all follow the model service's native capabilities.
+</Accordion>
+
+## Query, list, and delete
+
+### Query a task
 
 ```bash cURL
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ```json Success response
@@ -260,13 +329,11 @@ curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-2026
 
 Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancelled`. Result URLs are usually valid for about 24 hours; save them promptly. If `return_last_frame=true` was requested, the success result may include `content.last_frame_url`.
 
-## List tenant tasks
-
-**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
+### List tenant tasks
 
 ```bash cURL
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=dreamina-seedance-2-0" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ```json Response example
@@ -295,13 +362,11 @@ curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num
 
 The list endpoint is the BytePlus-compatible list within the current GregAPI tenant scope and does not return other tenants' or account-level full task lists.
 
-## Cancel or delete a task
-
-**DELETE** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+### Cancel or delete a task
 
 ```bash cURL
 curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 A running task may return `409`:
@@ -319,88 +384,25 @@ A running task may return `409`:
 
 GregAPI keeps local task audit and billing records. For tasks that do not support in-flight deletion, deleting a terminal task hides it locally within the GregAPI tenant, while a running task returns `409`. You can only delete or cancel tasks that belong to the current tenant.
 
-## Video editing and extension
-
-Video generation, editing, and extension are all expressed through the same creation endpoint. Pass the video, reference image, or reference audio to edit or extend via `content[]`, and describe the target result with a text prompt.
-
-| Scenario | Recommended input |
-| ------- | ---- |
-| Video editing | `text` + `video_url` (`role=reference_video`), optional `image_url.role=reference_image` / `audio_url.role=reference_audio` |
-| Extend forward or backward | `text` + 1 `video_url` (`role=reference_video`), state the direction in the prompt |
-| Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
-| Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
-
-GregAPI requires you to first upload images, videos, or audio through the asset library and wait until the asset becomes `Active` before passing it as `asset://<Asset_Id>`. Tasks that include `content[].type=video_url` are billed under the video-reference-input SKU; tasks without `video_url` do not enter the `*-video` SKU.
-
-```bash Video editing
-curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "dreamina-seedance-2-0",
-    "content": [
-      {
-        "type": "text",
-        "text": "Edit Video 1: replace the red mug with a glass teapot while preserving the original camera movement."
-      },
-      {
-        "type": "video_url",
-        "role": "reference_video",
-        "video_url": { "url": "asset://asset-20260611210200-video1" }
-      },
-      {
-        "type": "image_url",
-        "role": "reference_image",
-        "image_url": { "url": "asset://asset-20260611210100-image1" }
-      }
-    ],
-    "duration": 6,
-    "ratio": "16:9",
-    "resolution": "720p",
-    "generate_audio": false
-  }'
-```
-
-```bash Video extension
-curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "dreamina-seedance-2-0",
-    "content": [
-      {
-        "type": "text",
-        "text": "Extend Video 1 backward with the same character, lighting, and handheld camera motion, then end with Video 1."
-      },
-      {
-        "type": "video_url",
-        "role": "reference_video",
-        "video_url": { "url": "asset://asset-20260611210200-video1" }
-      }
-    ],
-    "duration": 6,
-    "ratio": "16:9",
-    "resolution": "720p",
-    "generate_audio": false
-  }'
-```
-
-## Native callback
-
-`POST /volcark/api/v3/contents/generations/tasks` supports a top-level `callback_url`. The platform validates the URL before submitting the creation request to the model service. Validation rules:
-
-- It must be a string and must not be empty after trimming whitespace.
-- It must use `https`.
-- The domain must resolve to a publicly routable address; local, private, link-local, multicast, and CGNAT addresses are rejected.
-- On validation failure, the platform returns HTTP `400` with error code `invalid_request` before submitting to the model service.
-
-The compatibility field `CallbackURL` is normalized to `callback_url`. If both are present, `callback_url` takes precedence. This is native task callback passthrough, not a GregAPI webhook broker; callback delivery, retry, signing, and payload structure all follow the model service's native capabilities.
-
 ## Asset library workflow
 
-The asset library comes with the overseas Dreamina 2.0. Use it to: create asset groups, upload image/video/audio assets, save the `Result.Id` returned by `CreateAsset`, and query the asset lifecycle with `GetAsset` (only `Active` assets can enter generation tasks).
+The asset library comes with the overseas Dreamina 2.0. All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-01-01`.
 
-All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-01-01`.
+<Accordion title="Asset library APIs and examples (create group / create asset / query / list)">
+<Steps>
+  <Step title="Create an asset group">
+    Call `CreateAssetGroup` and save the returned group ID.
+  </Step>
+  <Step title="Upload assets">
+    Call `CreateAsset` to upload image, video, or audio, and save `Result.Id`.
+  </Step>
+  <Step title="Query the lifecycle">
+    Use `GetAsset` to check the status; only `Active` assets can enter generation tasks.
+  </Step>
+  <Step title="Reference the asset">
+    Pass it as `asset://<Asset_Id>` when creating a task.
+  </Step>
+</Steps>
 
 | Feature | Action |
 | ------- | ---- |
@@ -413,11 +415,11 @@ All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-0
 
 `Update*`, `Delete*`, and `Moderation.Strategy=Skip` are not enabled. On success, `CreateAssetGroup` and `CreateAsset` return only `Id` in `Result`; asset status, URL, moderation, or preprocessing failure reasons are not expanded in the Create response.
 
-### Create asset group
+**Create asset group**
 
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2024-01-01" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "dreamina-seedance-2-0-fast",
@@ -439,11 +441,11 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAssetGroup&Version=2
 }
 ```
 
-### Create asset
+**Create asset**
 
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "dreamina-seedance-2-0-fast",
@@ -471,11 +473,11 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-0
 }
 ```
 
-### Query an asset
+**Query an asset**
 
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-01" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "dreamina-seedance-2-0-fast",
@@ -485,28 +487,30 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=GetAsset&Version=2024-01-0
 
 Common statuses: `Processing`, `Active`, `Failed`. After `CreateAsset` returns `Result.Id`, use `GetAsset` to query the lifecycle; if the status is still `Processing`, poll `GetAsset` with backoff until it enters `Active` or `Failed`. On success, pass it as `asset://<Asset_Id>` in the generation task.
 
-### List assets
+**List assets**
 
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "dreamina-seedance-2-0-fast",
-    "GroupId": "group-20260611210000-abcd1"
+    "Filter": { "GroupType": "AIGC", "GroupIds": ["group-20260611210000-abcd1"] },
+    "PageNumber": 1,
+    "PageSize": 20
   }'
 ```
 
-<Info>
-Only assets with `Status=Active` can be used for video generation. Asset URLs must be publicly downloadable. After `CreateAsset` returns `Result.Id`, poll `GetAsset` with backoff until the asset enters `Active` or `Failed`.
-</Info>
+Only assets with `Status=Active` can be used for video generation. `ListAssets` and `ListAssetGroups` only return assets visible to the current GregAPI tenant, and the caller must provide `Filter.GroupType=AIGC` per the official asset-library contract.
+</Accordion>
 
-## Multi-tenant boundary
+## Multi-tenant boundary and error codes
 
+<Accordion title="Multi-tenant boundary">
 Task listing, cancellation/deletion, and asset library access are all restricted to the current GregAPI tenant scope and do not return other tenants' or account-level full tasks and assets. Billing and permissions are based on the GregAPI external model from the creation request, the final resolution, and the reference input type.
+</Accordion>
 
-## Error codes
-
+<Accordion title="Error code details">
 | Status | Error type | Description |
 | ------- | ------- | ---- |
 | 400 | `invalid_request` | The request body is not valid JSON or is missing required fields. |
@@ -517,3 +521,16 @@ Task listing, cancellation/deletion, and asset library access are all restricted
 | 409 | `InvalidAction.RunningTaskDeletion` | A running task cannot be deleted. |
 | 502 | `service_error` | The model service returned an error. |
 | 503 | `service_unavailable` | The account has not yet enabled the overseas BytePlus Dreamina Seedance 2.0 or asset library capability. |
+| 503 | `model_mapping_required` | The Filter-Off model has no exact official version mapping, or is mapped to a regular Dreamina model. |
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

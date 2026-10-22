@@ -1,8 +1,9 @@
 ---
 title: "账号余额查询 API"
+description: "查询账号剩余与累计已用额度的接口，适合在自有系统展示余额。"
 ---
 
-通过 `GET /api/user/balance` 查询账号剩余额度与累计已用额度，供自有系统展示。
+本页说明如何通过 `GET /api/user/balance` 查询账号剩余额度与累计已用额度，供自有系统展示。
 
 ## 认证方式
 
@@ -61,3 +62,17 @@ curl -H "Authorization: Bearer <个人资料访问令牌>" \
 - **sk-xxx 调用返回认证失败**：属预期行为，本接口使用个人资料访问令牌。
 - **展示币种**：只在「个人资料—额度展示币种」调整，不影响实际扣费。
 - **display 禁用**：此时不要假设站点金额换算配置。
+
+## 相关内容
+
+<CardGroup cols={3}>
+  <Card title="额度计费原理" icon="calculator" href="/quota-billing">
+    额度点、汇率与扣费取整规则。
+  </Card>
+  <Card title="查询授权" icon="key" href="/query-authorization">
+    面向外部系统的只读查询授权。
+  </Card>
+  <Card title="API 认证" icon="lock" href="/authentication">
+    三类凭证的用途与获取方式。
+  </Card>
+</CardGroup>

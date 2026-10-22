@@ -1,8 +1,9 @@
 ---
 title: "Balance API"
+description: "Query remaining and cumulative used quota, for display in your own system."
 ---
 
-Query your remaining and cumulative used quota via `GET /api/user/balance`, for display in your own system.
+This page shows how to query your remaining and cumulative used quota via `GET /api/user/balance`, for display in your own system.
 
 ## Authentication
 
@@ -61,3 +62,17 @@ With amount display disabled: `"display": { "enabled": false }`.
 - **sk-xxx returns auth failure**: expected; this endpoint uses a profile access token.
 - **Display currency**: adjusted only under "Profile — balance display currency"; does not affect actual charges.
 - **display disabled**: don't assume site-level amount conversion config in this case.
+
+## Related
+
+<CardGroup cols={3}>
+  <Card title="Quota billing" icon="calculator" href="/en/quota-billing">
+    Quota points, FX and rounding rules.
+  </Card>
+  <Card title="Query authorization" icon="key" href="/en/query-authorization">
+    Read-only query tokens for external systems.
+  </Card>
+  <Card title="Authentication" icon="lock" href="/en/authentication">
+    Purposes and setup of the three credentials.
+  </Card>
+</CardGroup>

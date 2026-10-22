@@ -1,8 +1,30 @@
 ---
 title: "API Reference Overview"
+description: "Index of the four generation capabilities and which group to read first."
 ---
 
-GregAPI provides unified multi-capability generation APIs. A single gateway and one API Token give you access to text, image, video, and speech generation. The following documentation is organized by capability type to help you find the endpoints you need.
+This page helps you **find the right endpoint by capability type**: text, image, video, and speech generation all go through the same gateway and API Token.
+
+## Four capabilities → which group to read
+
+<CardGroup cols={2}>
+  <Card title="Large Language Models (LLM)" icon="comments" href="/en/api-reference/texts/openai/chat-completions">
+    Text generation and chat completion: classic chat, responses, and Gemini native.
+  </Card>
+  <Card title="Image Models" icon="image" href="/en/api-reference/images/overview">
+    Text-to-image, image editing, multi-reference and group generation, and async image tasks.
+  </Card>
+  <Card title="Video Models" icon="video" href="/en/api-reference/videos/seedance-2-5">
+    Text-to-video, image-to-video, first/last-frame and reference-material generation.
+  </Card>
+  <Card title="Speech Models" icon="microphone" href="/en/api-reference/audio/minimax/tts">
+    Speech synthesis and voice customization (quick voice cloning).
+  </Card>
+</CardGroup>
+
+<Note>
+Before calling any endpoint, read [Common Conventions](/en/api-reference/common): Base URL, authentication, the async task pattern, and the error structure are all collected there.
+</Note>
 
 ## Capability categories
 

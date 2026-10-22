@@ -1,10 +1,13 @@
 ---
 title: "Video Generation"
+description: "Vidu video generation: four modes, common parameters and usage notes"
 ---
 
 Create Vidu video generation tasks through GregAPI, supporting text-to-video, image-to-video, first/last-frame, and reference-to-video.
 
-## 1. Overview
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern.
+
+## Overview
 
 | Mode | Path | Description |
 | --- | --- | --- |
@@ -13,22 +16,12 @@ Create Vidu video generation tasks through GregAPI, supporting text-to-video, im
 | First/last frame | `/vidu/ent/v2/start-end2video` | Generate a transition video from a first frame + last frame |
 | Reference-to-video | `/vidu/ent/v2/reference2video` | Generate video from reference images + text description |
 
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
 - GregAPI endpoint: `POST $BASE_URL/vidu/ent/v2/{action}`
 - Vidu official endpoint: `POST https://api.vidu.cn/ent/v2/{action}`
 
-All requests use the GregAPI API Token:
+All requests use the GregAPI API Token; see [Common Conventions](/en/api-reference/common) for authentication.
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
-## 2. Available models
+## Available models
 
 | Scenario | Models |
 | --- | --- |
@@ -37,7 +30,9 @@ Content-Type: application/json
 | Text-to-video | `viduq3-turbo`, `viduq3-pro`, `viduq2`, `viduq1`, `vidu2.0`, `vidu1.5` |
 | Reference-to-video | `viduq2`, `viduq1`, `vidu2.0`, `vidu1.5` |
 
-## 3. Common parameters
+## Common parameters
+
+These parameters are shared by all modes (`model` is required); mode-specific parameters are listed with each mode.
 
 | Parameter | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -51,7 +46,9 @@ Content-Type: application/json
 | `wm_url` | string | ❌ | Watermark image URL |
 | `callback_url` | string | ❌ | Callback URL |
 
-## 4. Text-to-video
+## Mode examples
+
+### Text-to-video
 
 ```bash
 curl -X POST "$BASE_URL/vidu/ent/v2/text2video" \
@@ -74,7 +71,7 @@ Mode-specific parameters:
 - `style`: `general` (general) or `anime` (anime)
 - `audio`: whether video and audio are generated together (q3 series only)
 
-## 5. Image-to-video
+### Image-to-video
 
 ```bash
 curl -X POST "$BASE_URL/vidu/ent/v2/img2video" \
@@ -95,7 +92,7 @@ Mode-specific parameters:
 
 - `images` (required): image URL array, must contain exactly 1 image
 
-## 6. First/last-frame generation
+### First/last-frame generation
 
 ```bash
 curl -X POST "$BASE_URL/vidu/ent/v2/start-end2video" \
@@ -116,7 +113,7 @@ Mode-specific parameters:
 
 - `images` (required): image URL array, must contain exactly 2 images (first frame + last frame)
 
-## 7. Reference-to-video
+### Reference-to-video
 
 ```bash
 curl -X POST "$BASE_URL/vidu/ent/v2/reference2video" \
@@ -139,7 +136,7 @@ Mode-specific parameters:
 - `images` (required): reference image URL array, 1–7 images
 - `prompt` (required): prompt, up to 2000 characters
 
-## 8. Response example
+## Response example
 
 ```json
 {
@@ -153,8 +150,19 @@ Mode-specific parameters:
 
 A successful creation only means the task is enqueued; get the final result through the [Task Query](/en/api-reference/videos/vidu-video-query) endpoint.
 
-## 9. Notes
+## Notes
 
 - **Off-peak mode**: `off_peak=true` halves the price but may delay generation
 - **Resolution and duration**: the q3 series supports 1–16 seconds; the Q2 series supports 1–8 seconds; `vidu2.0` supports 4s/8s; `vidu1.5` does not support first/last frame
 - **Async tasks**: all generations are asynchronous; poll or set a callback to get results
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

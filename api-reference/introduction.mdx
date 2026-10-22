@@ -1,8 +1,30 @@
 ---
 title: "API 参考概览"
+description: "四类生成能力的接口索引与选用指引，适合第一次挑选要看哪页。"
 ---
 
-GregAPI 提供统一的多能力生成接口，通过单一网关与同一个 API Token 即可调用文本、图像、视频、语音四类生成能力。以下文档按能力类型组织，方便您快速定位所需接口。
+本页帮你**按能力类型定位接口**：文本、图像、视频、语音四类生成能力都通过同一个网关与同一个 API Token 调用。
+
+## 四类能力 → 该看哪个分组
+
+<CardGroup cols={2}>
+  <Card title="大语言模型（LLM）" icon="comments" href="/api-reference/texts/openai/chat-completions">
+    文本生成与对话补全：经典对话、响应式与 Gemini 原生生成。
+  </Card>
+  <Card title="图像模型" icon="image" href="/api-reference/images/overview">
+    文生图、图像编辑、多参考图与组图，以及异步图片任务。
+  </Card>
+  <Card title="视频模型" icon="video" href="/api-reference/videos/seedance-2-5">
+    文生视频、图生视频、首尾帧与参考素材。
+  </Card>
+  <Card title="语音模型" icon="microphone" href="/api-reference/audio/minimax/tts">
+    语音合成与音色定制（快速复刻）。
+  </Card>
+</CardGroup>
+
+<Note>
+调用任意接口前先读 [通用约定](/api-reference/common)：Base URL、鉴权、异步任务范式与错误结构都集中在那里。
+</Note>
 
 ## 能力分类
 

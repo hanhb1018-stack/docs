@@ -1,0 +1,128 @@
+---
+title: "通用约定"
+description: "Base URL、鉴权、异步任务、错误结构与请求追踪的公共规则，所有接口页适用"
+---
+
+本页是所有模型接口的公共规则。各模型页面只说明该模型特有的参数与示例，遇到下面的通用内容直接引用本页。
+
+<Note>
+调用任意接口前只需要三样东西：**Base URL**、**API Token**、**一个模型名**。Token 在控制台获取，不需要申请上游厂商的 Key。
+</Note>
+
+## Base URL
+
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
+
+所有能力共用同一个域名，按协议追加路径：
+
+| 协议 / 能力 | 路径前缀 | 说明 |
+|---|---|---|
+| OpenAI 兼容 | `/v1/*` | 对话、响应、图像生成与编辑、视频生成 |
+| Anthropic | `/v1/messages` | Claude 原生协议 |
+| Gemini | `/v1beta/*` | Gemini 原生协议 |
+| 火山方舟 | `/volcark/*` | Doubao Seedance 任务与素材库 |
+| MiniMax | `/minimaxi/*` | 视频生成、语音合成、音色复刻 |
+| Vidu | `/vidu/ent/v2/*` | Vidu 视频生成与查询 |
+| 控制台与账号 | `/api/user/*` | 余额、个人资料 |
+| 查询授权 | `/api/query/v1/*` | 只读查询余额、日志、异步任务等运营数据 |
+
+## 鉴权
+
+统一使用请求头携带 Token：
+
+```http
+Authorization: Bearer <TOKEN>
+Content-Type: application/json
+```
+
+平台有三类凭证，用途不同，不要混用：
+
+| 凭证 | 用途 | 获取位置 |
+|---|---|---|
+| 模型调用 Token | 调用 `/v1/*`、`/volcark/*`、`/minimaxi/*`、`/vidu/*` 等模型接口 | 控制台 · 个人资料 |
+| 个人资料访问令牌 | 访问 `/api/user/*` 读取自己的账号数据 | 控制台 · 个人资料 |
+| 查询授权 Token | 访问 `/api/query/v1/*`，只读查询运营数据 | 控制台 · 查询授权 |
+
+详见 [API 认证](/authentication)。
+
+## 异步任务范式
+
+视频、异步图像、异步语音等耗时能力都遵循同一套流程：
+
+<Steps>
+  <Step title="创建任务">
+    调用创建接口，拿到任务标识（不同协议的字段名不同，见下表），此时仅代表任务已入队。
+  </Step>
+  <Step title="轮询或回调">
+    用任务标识查询状态，直到进入终态；也支持在你自己的服务上接收原生回调。
+  </Step>
+  <Step title="取回结果">
+    成功后从响应里读取结果地址（`video_url` / `url` / `b64_json` 等），及时下载转存。
+  </Step>
+</Steps>
+
+| 协议 | 创建 | 查询 | 任务标识字段 |
+|---|---|---|---|
+| OpenAI 兼容视频 | `POST /v1/video/generations` | `GET /v1/video/generations/{task_id}` | `task_id` |
+| 火山方舟任务 | `POST /volcark/api/v3/contents/generations/tasks` | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` | `id` |
+| MiniMax 视频 | `POST /minimaxi/v2/video_generation` | `GET /minimaxi/v2/query/video_generation/{task_id}` | `task_id` |
+
+轮询建议：首次间隔 5 秒，逐步放宽到 10–20 秒；进入 `succeeded` / `failed` 后立即停止。
+
+## 响应与错误结构
+
+成功响应按各家原生协议返回，不做二次包装。失败时统一返回 HTTP 状态码 + JSON 错误体：
+
+```json
+{
+  "error": {
+    "message": "Invalid token (request id: 202610220309320892627448268d9d6Ul8JOAJI)",
+    "type": "new_api_error",
+    "code": ""
+  }
+}
+```
+
+| HTTP | 含义 | 处理建议 |
+|---|---|---|
+| `400` | 参数不合法 | 对照该模型页的参数表检查枚举与格式 |
+| `401` | Token 无效或缺失 | 检查 `Authorization` 头与 Token 是否过期 |
+| `403` | 权限或范围不足 | 确认该模型是否已开通、Token 权限点是否覆盖 |
+| `404` | 路径或资源不存在 | 检查协议前缀与任务归属 |
+| `429` | 限流或额度不足 | 退避重试，或检查余额与并发限制 |
+| `5xx` | 上游异常 | 退避重试；持续失败请带请求 ID 提工单 |
+
+错误码与排查建议详见 [错误码与响应说明](/errors)。
+
+## 请求追踪
+
+每次响应都会带上平台请求 ID，报障时提供它即可精确定位到这一次调用：
+
+```http
+X-Oneapi-Request-Id: 202610220309320892627448268d9d6Ul8JOAJI
+```
+
+错误响应中的 `request id` 与响应头是同一个值。你也可以在请求中自定义请求 ID，详见 [请求 ID](/request-id)。
+
+## 限流与重试
+
+- 按账号与模型维度限流，触发后返回 `429`。并发需求请提前联系支持评估。
+- 重试请使用指数退避（1s / 2s / 4s…），并且只重试 `429` 与 `5xx`。
+- 创建任务类的接口不要盲目重试：不确定是否已创建时，先查询任务列表再决定。
+
+## 相关内容
+
+<CardGroup cols={3}>
+  <Card title="API 认证" icon="lock" href="/authentication">
+    三类凭证的获取方式与权限范围。
+  </Card>
+  <Card title="错误码与响应说明" icon="bug" href="/errors">
+    错误类型、状态码与排查路径。
+  </Card>
+  <Card title="请求 ID" icon="heartbeat" href="/request-id">
+    用请求 ID 追踪一次调用。
+  </Card>
+</CardGroup>

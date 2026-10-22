@@ -1,36 +1,123 @@
 ---
 title: "快速开始"
-description: "三步完成账号注册、基础配置与上线前检查"
+description: "5 分钟跑通第一条请求：注册 → 取 Token → 调用文本、图像、视频接口"
 ---
 
-通过以下三步，即可完成 GregAPI 的注册开通、基础配置与上线前检查。
+按下面三步，5 分钟内就能跑通第一条请求。本页示例全部可直接复制执行，只需要替换 Token 和模型名。
 
-## 第一步：注册与登录
+<Steps>
+  <Step title="注册与登录">
+    访问 [www.gregapi.com](https://www.gregapi.com/) 注册账号并登录控制台，确认个人资料与初始权限。
+  </Step>
+  <Step title="创建 API Token">
+    进入控制台「个人资料」创建模型调用 Token，复制保存。Token 只在创建时完整显示一次。
+  </Step>
+  <Step title="发起第一次调用">
+    用下面的示例替换 `$TOKEN` 执行，确认能拿到返回结果。
+  </Step>
+</Steps>
 
-访问 GregAPI 平台自行注册账号。注册完成后登录控制台确认个人资料与初始权限。
+## 准备环境
 
-## 第二步：基础配置
+```bash
+export BASE_URL="https://www.gregapi.com"
+export TOKEN="oh-xxxxxxxxxxxxxxxx"
+```
 
-- 普通用户：确认个人资料、团队权限、额度与可用功能。
-- 平台级设置（渠道、回调等）通常由管理员完成，详见 [控制台指南](/console)。
-- 确认账号可见的模型、账单与日志范围；权限不足请联系管理员或支持。
+## 调用文本模型
 
-## 第三步：上线前检查
+<CodeGroup>
+```bash cURL
+curl -X POST "$BASE_URL/v1/chat/completions" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4o-mini",
+    "messages": [{"role": "user", "content": "用一句话介绍你自己"}]
+  }'
+```
 
-- 按已开通范围确认模型、额度、计费口径和使用场景。
-- 避免在公开环境暴露敏感配置（如 Token）。
-- 在控制台查看日志、账单与结果页面，验证业务与成本预期一致。
+```python Python
+from openai import OpenAI
+
+client = OpenAI(base_url="https://www.gregapi.com/v1", api_key="oh-xxxxxxxxxxxxxxxx")
+resp = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": "用一句话介绍你自己"}],
+)
+print(resp.choices[0].message.content)
+```
+
+```js Node.js
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  baseURL: "https://www.gregapi.com/v1",
+  apiKey: "oh-xxxxxxxxxxxxxxxx",
+});
+const resp = await client.chat.completions.create({
+  model: "gpt-4o-mini",
+  messages: [{ role: "user", content: "用一句话介绍你自己" }],
+});
+console.log(resp.choices[0].message.content);
+```
+</CodeGroup>
+
+模型名请换成控制台「模型广场」中你已开通的模型，完整清单与参数见 [大语言模型接口](/api-reference/texts/openai/chat-completions)。
+
+## 调用图像模型
+
+```bash
+curl -X POST "$BASE_URL/v1/images/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-image-2",
+    "prompt": "一只戴墨镜的橘猫，扁平插画风格",
+    "size": "1024x1024"
+  }'
+```
+
+详见 [GPT 生图](/api-reference/images/overview) 与 [Seedream 生图](/api-reference/images/doubao-seedream-5-0)。
+
+## 调用视频模型
+
+视频是异步任务：先创建，再轮询结果。
+
+```bash
+# 1. 创建任务
+curl -X POST "$BASE_URL/v1/video/generations" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "seedance-2-0-manju-special",
+    "prompt": "雨夜长街上人物回眸，镜头缓慢推近",
+    "params": {"aspect_ratio": "9:16", "duration": "5", "mode": "text-to-video"}
+  }'
+
+# 2. 用返回的 task_id 查询
+curl "$BASE_URL/v1/video/generations/{task_id}" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+更多视频模型见 [视频模型接口](/api-reference/videos/seedance2)。
+
+## 上线前检查
+
+- 确认已开通模型、额度与计费口径，避免上线后才发现额度不足。
+- Token 只放在服务端环境变量里，不要写进前端代码或公开仓库。
+- 用 [请求 ID](/request-id) 串联日志，用 [使用日志](/console) 核对调用记录与费用。
 
 ## 接下来
 
 <CardGroup cols={3}>
+  <Card title="API 概览" icon="book" href="/api-overview">
+    三类接口分别解决什么问题。
+  </Card>
   <Card title="控制台指南" icon="desktop" href="/console">
     掌握控制台导航与常用操作。
   </Card>
-  <Card title="安全与合规" icon="shield" href="/security">
-    了解数据安全与权限控制。
-  </Card>
-  <Card title="账号与计费" icon="user" href="/account-billing">
-    管理团队、订阅、额度与发票。
+  <Card title="计费原理" icon="coins" href="/quota-billing">
+    搞懂额度点是怎么扣的。
   </Card>
 </CardGroup>

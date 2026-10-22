@@ -1,26 +1,28 @@
 ---
 title: "Seedance 2.5"
+description: "Seedance 2.5 domestic and overseas task API, parameter boundaries and pricing"
 ---
 
 Call the domestic Doubao and overseas BytePlus Dreamina Seedance 2.5 through GregAPI.
 
 Seedance 2.5 offers both a domestic Doubao and an overseas BytePlus Dreamina variant. The two share GregAPI's task interface and request structure, but differ in model names, pricing, and web-search capability. When you need to use real-person imagery that has been verified by the person themselves, first complete the H5 verification and asset ingestion for the relevant region through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
 
-## 1. Models and pricing
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern.
 
+## Models and pricing
+
+The domestic stable model is `doubao-seedance-2-5` and the overseas stable model is `dreamina-seedance-2-5`; use the stable model name in requests. The platform also accepts the corresponding official version ID and maps it to the stable model automatically; query and list responses still echo the stable model name.
+
+<Accordion title="Pricing details">
 | Region | GregAPI stable model | Official version ID | No video input | With video input |
 | --- | --- | --- | --- | --- |
 | Domestic | `doubao-seedance-2-5` | `doubao-seedance-2-5-260628` | ¥70/M tokens | ¥42/M tokens |
 | Overseas | `dreamina-seedance-2-5` | `dreamina-seedance-2-5-260628` | \$10.70/M tokens | \$6.40/M tokens |
+</Accordion>
 
-We recommend using the stable model name in requests. The platform also accepts the corresponding official version ID and maps it to the stable model automatically; query and list responses still echo the stable model name. The `video` tier means `content[]` contains `video_url`; otherwise the `novideo` tier applies. 480p and 720p share the same unit price; only successfully generated videos are billed, and the actual video usage is based on `usage.completion_tokens` in the query response. The domestic model additionally supports `tools: [{"type":"web_search"}]` for text-only tasks. Web search is billed separately according to the actual `usage.tool_usage.web_search` count in the response; the overseas model does not support this tool, and specific customer pricing is subject to the GregAPI console.
+The `video` tier means `content[]` contains `video_url`; otherwise the `novideo` tier applies. 480p and 720p share the same unit price; only successfully generated videos are billed, and the actual video usage is based on `usage.completion_tokens` in the query response. The domestic model additionally supports `tools: [{"type":"web_search"}]` for text-only tasks. Web search is billed separately according to the actual `usage.tool_usage.web_search` count in the response; the overseas model does not support this tool, and specific customer pricing is subject to the GregAPI console.
 
-## 2. Endpoint
-
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
+## Endpoint
 
 | Feature | Path |
 | --- | --- |
@@ -29,15 +31,14 @@ export TOKEN="oh-xxxxxxxxxxxxxxxx"
 | List tasks | `GET /volcark/api/v3/contents/generations/tasks` |
 | Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
-All requests use the GregAPI API Token:
+All requests use the GregAPI API Token; see [Common Conventions](/en/api-reference/common) for authentication.
 
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+## Create a task
 
-## 3. Create task
+Seedance 2.5 supports both the native task endpoint and an OpenAI-style endpoint.
 
+<Tabs>
+<Tab title="Native task endpoint">
 Domestic text-to-video example:
 
 ```bash
@@ -69,6 +70,27 @@ For overseas calls, simply change `model` to `dreamina-seedance-2-5`; the endpoi
   "model": "doubao-seedance-2-5"
 }
 ```
+</Tab>
+<Tab title="OpenAI-style endpoint">
+Seedance 2.5 can also create tasks via `POST /v1/videos`:
+
+```bash
+curl -X POST "$BASE_URL/v1/videos" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-5",
+    "prompt": "A paper boat floating on the water in the early morning",
+    "seconds": 5,
+    "resolution": "720p",
+    "ratio": "16:9",
+    "generate_audio": true
+  }'
+```
+
+The OpenAI-style endpoint is suitable for basic text-to-video and reference-asset calls. When you need full native capabilities such as `content[].role`, `output_format`, and `tools.web_search`, use `/volcark/api/v3/contents/generations/tasks`.
+</Tab>
+</Tabs>
 
 ### Multimodal references
 
@@ -135,8 +157,7 @@ Web search is supported only by the domestic `doubao-seedance-2-5`, and `content
 }
 ```
 
-## 4. Parameter boundaries
-
+<Accordion title="Parameter boundaries and unsupported fields">
 | Field | Seedance 2.5 constraint |
 | --- | --- |
 | `resolution` | Only `480p`, `720p`; `1080p` and `4k` are not supported |
@@ -151,8 +172,9 @@ Web search is supported only by the domestic `doubao-seedance-2-5`, and `content
 | `draft` | Only `false` is supported |
 
 `seed`, `frames`, `frames_per_second`, `frame_rate`, `fps`, and `camera_fixed` do not apply to Seedance 2.5; passing them returns HTTP 400 before the request reaches the model service.
+</Accordion>
 
-## 5. Query result
+## Query result
 
 ```bash
 curl "$BASE_URL/volcark/api/v3/contents/generations/tasks/cgt-202608130001-example" \
@@ -177,22 +199,13 @@ Task statuses include `queued`, `running`, `succeeded`, `failed`, and `expired`.
 
 Successful video URLs are typically valid for 24 hours and are subject to download limits; please transfer them promptly. Failed tasks should read the structured `error` in the response.
 
-## 6. OpenAI-style endpoint
+## Related
 
-Seedance 2.5 can also create tasks via `POST /v1/videos`:
-
-```bash
-curl -X POST "$BASE_URL/v1/videos" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "doubao-seedance-2-5",
-    "prompt": "A paper boat floating on the water in the early morning",
-    "seconds": 5,
-    "resolution": "720p",
-    "ratio": "16:9",
-    "generate_audio": true
-  }'
-```
-
-The OpenAI-style endpoint is suitable for basic text-to-video and reference-asset calls. When you need full native capabilities such as `content[].role`, `output_format`, and `tools.web_search`, use `/volcark/api/v3/contents/generations/tasks`.
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

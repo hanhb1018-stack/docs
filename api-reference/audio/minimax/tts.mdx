@@ -1,20 +1,11 @@
 ---
 title: "语音合成"
+description: "MiniMax 语音合成（TTS）接口：同步与异步合成、情感音效枚举与音色别名"
 ---
 
-使用 MiniMax 语音合成（TTS）能力，支持同步与异步两种调用方式。所有请求由 GregAPI 转发到 MiniMax，无需自行签名，只需在 Header 中携带 GregAPI API Key。
+使用 MiniMax 语音合成（TTS）能力，支持同步与异步两种调用方式。所有请求由 GregAPI 转发到 MiniMax，无需自行签名。
 
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
-统一使用：
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+Base URL、鉴权与错误结构见 [通用约定](/api-reference/common)。
 
 ## 接口列表
 
@@ -43,17 +34,20 @@ Content-Type: application/json
 | `emotion` | string | 否 | 情感，见下方枚举 |
 | `sound_effects` | string | 否 | 音效，见下方枚举 |
 
-### 情感枚举（emotion）
+<AccordionGroup>
+<Accordion title="情感枚举（emotion）">
 
 `happy`、`sad`、`angry`、`fearful`、`disgusted`、`surprised`、`calm`、`fluent`、`whisper`
 
 该能力受模型与音色组合限制，并非所有 `voice_id` 都支持。
 
-### 音效枚举（sound_effects）
+</Accordion>
+<Accordion title="音效枚举（sound_effects）">
 
 `spacious_echo`、`auditorium_echo`、`lofi_telephone`、`robotic`
 
-## 音色别名
+</Accordion>
+<Accordion title="音色别名">
 
 为与 OpenAI 风格保持一致，平台为常见音色提供别名到 MiniMax 实际音色的映射：
 
@@ -67,6 +61,9 @@ Content-Type: application/json
 | `shimmer` | `audiobook_female_1` |
 
 在 `voice_id` 中填写上述别名时，平台会自动转换为 MiniMax 实际音色；当该音色存在默认情感时，会在未显式指定 `emotion` 时自动补全。
+
+</Accordion>
+</AccordionGroup>
 
 ## 返回格式（audio_mode）
 
@@ -118,3 +115,14 @@ curl "https://www.gregapi.com/minimaxi/v1/query/t2a_async_query_v2?task_id=$TASK
 
 - 按成功合成的音频计费，具体价格以控制台「模型价格」页面的 MiniMax 语音条目为准。
 - 以上游消费日志的实际结算金额为准。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构的公共规则。
+  </Card>
+  <Card title="音色快速复刻" href="/api-reference/audio/minimax/voice-cloning">
+    克隆音色并用指定文本试听。
+  </Card>
+</CardGroup>

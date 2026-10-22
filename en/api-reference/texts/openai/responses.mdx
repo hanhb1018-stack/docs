@@ -1,6 +1,6 @@
 ---
 title: "Responses"
-description: "A unified multimodal response interface supporting JSON mode, tool sequences, and mixed text-plus-image input."
+description: "Unified multimodal responses with JSON output, tools and mixed text-image input."
 openapi: "openapi/llm-en.yaml POST /v1/responses"
 ---
 
@@ -38,3 +38,20 @@ curl -X POST "https://www.gregapi.com/v1/responses" \
 - `response_format` supports `json_schema`, `text`, and other options. Combined with GregAPI's flow-control strategy, it enables structured automation.
 - For tool calls, declare optional functions in `tools`; results appear in the `tool_calls` field of `output`.
 - Billing note: when tools such as Web Search Preview, Code Interpreter, or File Search are enabled, GregAPI attaches extra billing metadata in `usage` for reconciliation.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Chat Completions" icon="comments" href="/en/api-reference/texts/openai/chat-completions">
+    OpenAI-compatible chat and tool-calling interface.
+  </Card>
+  <Card title="Messages API" icon="message" href="/en/api-reference/texts/claude/messages">
+    Call Claude via the Anthropic Messages protocol.
+  </Card>
+  <Card title="Gemini Native Format" icon="gem" href="/en/api-reference/texts/gemini/generate-content">
+    Gemini native generateContent interface.
+  </Card>
+  <Card title="Common Conventions" icon="book" href="/en/api-reference/common">
+    Base URL, authentication and error structure.
+  </Card>
+</CardGroup>

@@ -1,8 +1,11 @@
 ---
 title: "图像生成（OpenAI 风格）"
+description: "用 OpenAI 兼容接口调用 Gemini 生图：文生图与参考图编辑的参数、示例与错误码"
 ---
 
 使用 OpenAI 兼容接口（`/v1/images/generations` 和 `/v1/images/edits`）调用 Gemini 图像生成模型，提供文生图和参考图编辑两个同步接口。兼容 OpenAI SDK，迁移成本低。
+
+Base URL、鉴权与错误结构见 [通用约定](/api-reference/common)。
 
 ## 支持的模型
 
@@ -13,13 +16,6 @@ title: "图像生成（OpenAI 风格）"
 | `gemini-3.1-flash-image` | 512 / 1K / 2K / 4K |
 | `gemini-nano-banana-2.1` | 1K / 2K / 4K |
 
-## 认证方式
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
-
 ## 文生图 `/v1/images/generations`
 
 **方法**：`POST`
@@ -27,6 +23,8 @@ Content-Type: application/json
 **Base URL**：`https://www.gregapi.com/v1/images/generations`
 
 ### 请求参数
+
+最小可用请求只需 `model`、`prompt` 两个字段，其余均为可选：`size` 与 `aspect_ratio` 决定构图，`response_format` 决定返回 base64 还是 URL。
 
 | 参数 | 类型 | 必填 | 默认值 | 取值 | 说明 |
 |---|---|---|---|---|---|
@@ -60,7 +58,12 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-### 响应结构（`response_format=b64_json`）
+### 响应结构
+
+按 `response_format` 二选一：
+
+<Tabs>
+<Tab title="b64_json">
 
 ```json
 {
@@ -74,7 +77,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }
 ```
 
-### 响应结构（`response_format=url`）
+</Tab>
+<Tab title="url">
 
 ```json
 {
@@ -87,7 +91,10 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }
 ```
 
-### 封控但已计费的错误响应
+</Tab>
+</Tabs>
+
+<Accordion title="封控但已计费的错误响应">
 
 ```json
 {
@@ -111,6 +118,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 
 仅当本次失败已产生可计费 prompt/input tokens 时才会返回 `usage`；参数校验失败、额度不足、网络失败或上游未返回 usage 的普通失败不会返回 `usage`。
 
+</Accordion>
+
 ## 参考图编辑 `/v1/images/edits`
 
 **方法**：`POST`（multipart/form-data）
@@ -118,6 +127,8 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 **Base URL**：`https://www.gregapi.com/v1/images/edits`
 
 ### 请求参数
+
+底图用 `image`（本地文件）或 `image_urls[]`（公网 URL）二选一，其余为编辑控制参数。
 
 | 参数 | 类型 | 必填 | 默认值 | 说明 |
 |---|---|---|---|---|
@@ -151,8 +162,29 @@ curl -X POST "https://www.gregapi.com/v1/images/edits" \
 
 ## 错误码
 
+<Accordion title="错误码">
+
 | HTTP 状态码 | 说明 | 解决方案 |
 |---|---|---|
 | 400 | 参数错误 | 检查 prompt、size 格式 |
 | 413 | 图片过大 | 压缩参考图至 10MB 以内 |
 | 429 | 超出限额 | 检查配额或等待重试 |
+
+</Accordion>
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构的公共规则。
+  </Card>
+  <Card title="Gemini 生图总览" href="/api-reference/images/gemini/image-generation">
+    模型、分辨率档位与调用方式选型。
+  </Card>
+  <Card title="原生 API" href="/api-reference/images/gemini/image-generation-native">
+    `generateContent` 协议的完整字段控制。
+  </Card>
+  <Card title="异步接口" href="/api-reference/images/gemini/image-generation-async">
+    创建任务并轮询 24 小时有效图片 URL。
+  </Card>
+</CardGroup>

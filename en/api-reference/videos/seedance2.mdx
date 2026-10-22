@@ -1,38 +1,19 @@
 ---
 title: "Doubao Seedance 2.0"
+description: "Domestic Doubao Seedance 2.0: task API, asset library workflow and pricing"
 ---
 
-Call the domestic Doubao Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow. Task creation, querying, and asset library request fields follow the Volcano Ark native shape as closely as possible.
+Call the domestic Doubao Seedance 2.0 model through GregAPI, covering video generation, video editing, video extension, and the asset library workflow.
 
 <Info>
 This page only covers the **domestic Doubao Seedance 2.0**. The overseas [BytePlus Dreamina Seedance 2.0](/en/api-reference/videos/byteplus-seedance2) uses separate models, pricing, and asset capabilities.
 </Info>
 
+This page only documents the parameters and examples specific to this model; see [Common Conventions](/en/api-reference/common) for the Base URL, authentication, and the async task pattern. Callers only need the API token issued by GregAPI; the Volcano Ark API key, AK/SK, project name, and endpoint are all hosted by the platform.
+
 When you need to use real-person imagery, video, or audio that has been verified by the person themselves, first complete H5 verification and asset ingestion through the [Real-Person Asset Library API](/en/api-reference/videos/real-person-assets), then create tasks with `asset://<AssetId>`.
 
-## Endpoint
-
-**POST** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
-
-The domestic entry point is the Volcano Ark native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
-
-| Feature | Method & path |
-| ------- | ---- |
-| Create task | `POST /volcark/api/v3/contents/generations/tasks` |
-| Query task | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` |
-| List tenant tasks | `GET /volcark/api/v3/contents/generations/tasks` |
-| Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
-
-## Authentication
-
-Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY` to the request header. Callers only need the API token issued by GregAPI; the Volcano Ark API key, AK/SK, project name, and endpoint are all hosted by the platform.
-
-| Header | Description |
-| ------- | ---- |
-| `Authorization` | `Bearer <API_KEY>` — the API token issued by GregAPI |
-| `Content-Type` | `application/json` |
-
-## Models
+## Models and resolution
 
 | External model | Official version alias | Description |
 | ------- | ------- | ---- |
@@ -41,6 +22,8 @@ Authenticate with your API key by adding `Authorization: Bearer $GRAPAPI_API_KEY
 | `doubao-seedance-2-0-mini` | `doubao-seedance-2-0-mini-260615` | Domestic Mini model; supports only `480p` / `720p` |
 
 For the `model` field, use the stable external model name on the left. The platform also accepts the official version alias on the right and normalizes billing as a standard, fast, or mini model. In query and list responses the `model` field echoes the GregAPI external model from the creation request to avoid exposing service configuration, billing details, or implementation specifics.
+
+### 4K capability
 
 The domestic standard model supports 4K: set `resolution` to `4k`; output is **10-bit / H.265**. The fast and mini models do not support `1080p` or `4k` and must fall back to `480p` / `720p`.
 
@@ -53,8 +36,7 @@ The domestic standard model supports 4K: set `resolution` to `4k`; output is **1
 | `3:4` | `2494x3326` |
 | `21:9` | `4398x1886` |
 
-## Domestic pricing
-
+<Accordion title="Pricing details">
 Default prices follow the official RMB token unit pricing, converted to the GregAPI rate at the platform USD exchange rate. Only successfully rendered tasks are settled.
 
 | SKU | Official price |
@@ -73,30 +55,25 @@ Default prices follow the official RMB token unit pricing, converted to the Greg
 | `doubao-seedance-2-0-mini-video` | ¥14/M tokens |
 
 `video` means the request includes a video reference input; `novideo` means it does not.
+</Accordion>
 
-## Request parameters
+## Endpoints
 
-| Parameter | Type | Required | Description |
-| ------- | ---- | ---- | ---- |
-| `model` | string | Yes | Model ID, e.g. `doubao-seedance-2-0`. |
-| `content` | array | Yes | Official multimodal input array; at least a prompt text or reference asset. |
-| `duration` | integer | Yes | Video duration in seconds, validated against official model capability. |
-| `ratio` | string | No | Aspect ratio: `adaptive`, `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9`. |
-| `resolution` | string | No | `480p`, `720p`, `1080p`, `4k`; 4K only for the standard model. |
-| `generate_audio` | boolean | No | Whether to generate audio. |
-| `watermark` | boolean | No | Whether to keep the watermark. |
-| `return_last_frame` | boolean | No | Return `content.last_frame_url` on success. |
-| `execution_expires_after` | integer | No | Task execution expiry time. |
-| `priority` | integer | No | Queue priority `0-9`. |
-| `safety_identifier` | string | No | Stable end-user identifier; pass a hashed user ID. |
-| `callback_url` | string | No | Volcano Ark native callback URL; must be a non-empty public HTTPS URL. |
+The domestic entry point is the Volcano Ark native task API. Task listing, cancellation/deletion, and asset library access are restricted to the current GregAPI tenant scope.
+
+| Feature | Method & path |
+| ------- | ---- |
+| Create task | `POST /volcark/api/v3/contents/generations/tasks` |
+| Query task | `GET /volcark/api/v3/contents/generations/tasks/{task_id}` |
+| List tenant tasks | `GET /volcark/api/v3/contents/generations/tasks` |
+| Cancel or delete task | `DELETE /volcark/api/v3/contents/generations/tasks/{task_id}` |
 
 ## Create a task
 
 <CodeGroup>
 ```bash cURL
 curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "doubao-seedance-2-0",
@@ -117,7 +94,7 @@ curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks"
 import requests
 
 headers = {
-    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Authorization": "Bearer $TOKEN",
     "Content-Type": "application/json",
 }
 
@@ -144,7 +121,7 @@ print(resp.json())
 const resp = await fetch("https://www.gregapi.com/volcark/api/v3/contents/generations/tasks", {
   method: "POST",
   headers: {
-    "Authorization": "Bearer $GRAPAPI_API_KEY",
+    "Authorization": "Bearer $TOKEN",
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
@@ -170,13 +147,78 @@ Task creation is asynchronous; a successful response only returns the task ID. Q
 { "id": "cgt-20260611204121-462cw" }
 ```
 
-## Query a task
+| Parameter | Type | Required | Description |
+| ------- | ---- | ---- | ---- |
+| `model` | string | Yes | Model ID, e.g. `doubao-seedance-2-0`. |
+| `content` | array | Yes | Official multimodal input array; at least a prompt text or reference asset. |
+| `duration` | integer | Yes | Video duration in seconds, validated against official model capability. |
+| `ratio` | string | No | Aspect ratio: `adaptive`, `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9`. |
+| `resolution` | string | No | `480p`, `720p`, `1080p`, `4k`; 4K only for the standard model. |
+| `generate_audio` | boolean | No | Whether to generate audio. |
+| `watermark` | boolean | No | Whether to keep the watermark. |
+| `return_last_frame` | boolean | No | Return `content.last_frame_url` on success. |
+| `execution_expires_after` | integer | No | Task execution expiry time. |
+| `priority` | integer | No | Queue priority `0-9`. |
+| `safety_identifier` | string | No | Stable end-user identifier; pass a hashed user ID. |
+| `callback_url` | string | No | Volcano Ark native callback URL; must be a non-empty public HTTPS URL. |
 
-**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+### Video editing and extension
+
+Video generation, editing, and extension are all expressed through the same creation endpoint. Pass the video, reference image, or reference audio to edit or extend via `content[]`, and describe the target result with a text prompt.
+
+| Scenario | Recommended input |
+| ------- | ---- |
+| Video editing | `text` + `video_url` (`role=reference_video`), optional `image_url` / `audio_url` references |
+| Extend forward or backward | `text` + 1 `video_url` (`role=reference_video`), state the direction in the prompt |
+| Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
+| Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
+
+```bash Video editing
+curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "content": [
+      {
+        "type": "text",
+        "text": "Edit Video 1: replace the red mug with a glass teapot while preserving the original camera movement."
+      },
+      {
+        "type": "video_url",
+        "role": "reference_video",
+        "video_url": { "url": "asset://asset-20260611210200-video1" }
+      }
+    ],
+    "duration": 6,
+    "ratio": "16:9",
+    "resolution": "720p",
+    "generate_audio": false
+  }'
+```
+
+### Native callback
+
+`POST /volcark/api/v3/contents/generations/tasks` accepts a top-level `callback_url`. GregAPI validates the URL first and then submits it to the model service together with the task creation request. Callers only need the public GregAPI model names `doubao-seedance-2-0`, `doubao-seedance-2-0-fast`, or `doubao-seedance-2-0-mini`; service-side configuration, model version mapping, and credentials are all managed by the platform and are neither required nor exposed in the public API.
+
+<Accordion title="Callback validation rules">
+- It must be a string and must not be empty after trimming leading and trailing whitespace.
+- It must use `https`.
+- The domain must resolve to a publicly routable address; local, private, link-local, multicast, and CGNAT addresses are rejected.
+- On validation failure, the platform returns HTTP `400` with the error code `invalid_request` before submitting the request to the model service.
+</Accordion>
+
+The compatible field `CallbackURL` is normalized to `callback_url` and the original `CallbackURL` value is not forwarded to the model service. If both fields are present, `callback_url` wins.
+
+This passes through the native task callback capability; it is not a GregAPI platform webhook broker. Callback delivery, retries, signatures, and payload structure follow the model service's native behavior.
+
+## Query, list, and delete
+
+### Query a task
 
 ```bash cURL
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ```json Success response
@@ -206,66 +248,43 @@ curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-2026
 
 Common statuses: `queued`, `running`, `succeeded`, `failed`, `expired`, `cancelled`.
 
-## List tenant tasks
-
-**GET** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks`
+### List tenant tasks
 
 ```bash cURL
 curl "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks?page_num=1&page_size=20&filter.status=succeeded&filter.model=doubao-seedance-2-0" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 The list endpoint is the official-compatible list within the current GregAPI tenant scope and does not return tasks from other tenants.
 
-## Cancel or delete a task
-
-**DELETE** `https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/{task_id}`
+### Cancel or delete a task
 
 ```bash cURL
 curl -X DELETE "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks/cgt-20260611204121-462cw" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 You can only delete or cancel tasks that belong to the current tenant. GregAPI keeps local task audit and billing records.
 
-## Video editing and extension
-
-Video generation, editing, and extension are all expressed through the same creation endpoint. Pass the video, reference image, or reference audio to edit or extend via `content[]`, and describe the target result with a text prompt.
-
-| Scenario | Recommended input |
-| ------- | ---- |
-| Video editing | `text` + `video_url` (`role=reference_video`), optional `image_url` / `audio_url` references |
-| Extend forward or backward | `text` + 1 `video_url` (`role=reference_video`), state the direction in the prompt |
-| Join multiple clips | `text` + 2-3 `video_url` (`role=reference_video`) |
-| Strict first or last frame | `image_url` (`role=first_frame` / `last_frame`) |
-
-```bash Video editing
-curl -X POST "https://www.gregapi.com/volcark/api/v3/contents/generations/tasks" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "doubao-seedance-2-0",
-    "content": [
-      {
-        "type": "text",
-        "text": "Edit Video 1: replace the red mug with a glass teapot while preserving the original camera movement."
-      },
-      {
-        "type": "video_url",
-        "role": "reference_video",
-        "video_url": { "url": "asset://asset-20260611210200-video1" }
-      }
-    ],
-    "duration": 6,
-    "ratio": "16:9",
-    "resolution": "720p",
-    "generate_audio": false
-  }'
-```
-
 ## Asset library workflow
 
 The asset library comes with the domestic Doubao Seedance 2.0. All Asset APIs are mounted at `POST /volcark/?Action={ActionName}&Version=2024-01-01`.
+
+<Accordion title="Asset library APIs and examples (create group / create asset / query / list)">
+<Steps>
+  <Step title="Create an asset group">
+    Call `CreateAssetGroup` and save the returned group ID.
+  </Step>
+  <Step title="Upload assets">
+    Call `CreateAsset` to upload image, video, or audio, and save `Result.Id`.
+  </Step>
+  <Step title="Query the lifecycle">
+    Use `GetAsset` to check the status; only `Active` assets can enter generation tasks.
+  </Step>
+  <Step title="Reference the asset">
+    Pass it as `asset://<Asset_Id>` when creating a task.
+  </Step>
+</Steps>
 
 | Feature | Action |
 | ------- | ---- |
@@ -276,9 +295,11 @@ The asset library comes with the domestic Doubao Seedance 2.0. All Asset APIs ar
 | Get a single asset group | `GetAssetGroup` |
 | Get a single asset | `GetAsset` |
 
+**Create asset**
+
 ```bash Create asset
 curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-01-01" \
-  -H "Authorization: Bearer $GRAPAPI_API_KEY" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "doubao-seedance-2-0",
@@ -300,19 +321,60 @@ curl -X POST "https://www.gregapi.com/volcark/?Action=CreateAsset&Version=2024-0
 }
 ```
 
-<Info>
 Only assets with `Status=Active` can be used for video generation. Asset URLs must be publicly downloadable. After `CreateAsset` returns `Result.Id`, poll `GetAsset` with backoff until the asset enters `Active` or `Failed`; on success, pass it as `asset://<Asset_Id>` in the generation task.
-</Info>
 
-## Error codes
+**List assets**
 
-| Status | Error type | Description |
-| ------- | ------- | ---- |
-| 400 | `invalid_request` | The request body is not valid JSON or is missing required fields. |
-| 400 | `invalid_duration` | `duration` is outside the allowed range. |
-| 403 | `InvalidAction` | An asset `Update*` / `Delete*` operation that is not enabled was requested. |
-| 404 | `task_not_found` | The task does not exist or does not belong to the current tenant. |
-| 404 | `ResourceNotFound.Asset` | The asset does not exist or does not belong to the current tenant. |
-| 409 | `InvalidAction.RunningTaskDeletion` | A running task cannot be deleted. |
-| 502 | `service_error` | The model service returned an error. |
-| 503 | `service_unavailable` | The account has not yet enabled the domestic Doubao Seedance 2.0 or asset library capability. |
+```bash List assets
+curl -X POST "https://www.gregapi.com/volcark/?Action=ListAssets&Version=2024-01-01" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "doubao-seedance-2-0",
+    "GroupId": "group-20260611210000-abcd1"
+  }'
+```
+
+Only assets with `Status=Active` can be used for video generation. You can always call `GetAsset` for a single asset's latest status.
+</Accordion>
+
+## Multi-tenant boundary and error codes
+
+<Accordion title="Multi-tenant and resource boundaries">
+| Capability | GregAPI behavior |
+| ------ | ---- |
+| Task query | Only tasks created by the current tenant can be queried |
+| Task list | Only current-tenant tasks are returned |
+| Cancel / delete | Only current-tenant tasks can be operated on |
+| Asset groups / assets | Only resources owned by the current tenant are accessible |
+| Asset references | `asset://` is bound to the current tenant's asset scope, preventing cross-scope or cross-tenant misuse |
+| Billing | Settled by final resolution, whether video input is included, and the usage tokens of successful tasks |
+</Accordion>
+
+<Accordion title="Error code details">
+| HTTP | code | Scenario |
+| ----- | --- | --- |
+| `400` | `invalid_request` | The request body is not valid JSON or is missing required fields |
+| `400` | `invalid_duration` | `duration` is outside the allowed range |
+| `400` | `moderation_skip_not_allowed` | An asset library request tried to use `Moderation.Strategy=Skip` |
+| `403` | `InvalidAction` | An asset `Update*` / `Delete*` operation that is not enabled was requested |
+| `404` | `task_not_found` | The task does not exist or does not belong to the current tenant |
+| `404` | `ResourceNotFound.Asset` | The asset does not exist or does not belong to the current tenant |
+| `404` | `ResourceNotFound.AssetGroup` | The asset group does not exist or does not belong to the current tenant |
+| `409` | `InvalidAction.RunningTaskDeletion` | A running task cannot be deleted |
+| `502` | `service_error` | The model service returned an error |
+| `503` | `service_unavailable` | The account has not yet enabled the domestic Doubao Seedance 2.0 or asset library capability |
+</Accordion>
+
+Asset library control-plane errors use the Volcano/BytePlus-style `ResponseMetadata.Error`. Moderation or preprocessing failures are not Create errors; they surface as `Status=Failed` in `GetAsset` / `ListAssets`.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" icon="scroll" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure.
+  </Card>
+  <Card title="Errors and Responses" icon="bug" href="/en/errors">
+    Error types, status codes and troubleshooting paths.
+  </Card>
+</CardGroup>

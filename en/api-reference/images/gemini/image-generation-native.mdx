@@ -1,21 +1,17 @@
 ---
 title: "Image Generation (Native)"
+description: "Call Gemini image models via the native generateContent protocol with full contents and generationConfig fields"
 ---
 
 Call Gemini image models through the native `generateContent` protocol for full parameter control in advanced scenarios.
+
+Base URL, authentication and error structure: see [Common Conventions](/en/api-reference/common).
 
 ## Endpoint
 
 **Method**: `POST`
 
 **Base URL**: `https://www.gregapi.com/v1beta/models/{model}:generateContent`
-
-### Authentication
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
 
 ## Supported Models
 
@@ -55,7 +51,9 @@ The request body follows the standard `generateContent` protocol:
 }
 ```
 
-### `contents` array (required)
+<Accordion title="contents and generationConfig field reference">
+
+#### `contents` array (required)
 
 Each content object contains a `parts` array with the following part types:
 
@@ -64,18 +62,20 @@ Each content object contains a `parts` array with the following part types:
 | `text` | Text prompt |
 | `inline_data` | Base64-encoded reference image (for image editing) |
 
-### `generationConfig` object
+#### `generationConfig` object
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `responseModalities` | string[] | Yes | - | Response modalities; image generation must include `"image"` |
 
-### `generationConfig.imageConfig` object
+#### `generationConfig.imageConfig` object
 
 | Parameter | Type | Required | Default | Description |
 |---|---|---|---|---|
 | `aspectRatio` | string | No | `1:1` | Aspect ratio |
 | `imageSize` | string | No | `1K` | Resolution tier: `512` / `1K` / `2K` / `4K` |
+
+</Accordion>
 
 ## Aspect Ratio Values
 
@@ -142,7 +142,7 @@ Pass reference images via `inline_data` for editing. Multiple `inline_data` entr
 | `usageMetadata.promptTokenCount` | Input text tokens |
 | `usageMetadata.candidatesTokenCount` | Output tokens |
 
-## Billed-but-blocked error response
+<Accordion title="Billed-but-blocked error response">
 
 The native API keeps Gemini protocol field names. If no image was generated but the upstream already returned billable prompt usage, the error response retains `usageMetadata` instead of an OpenAI-style top-level `usage`.
 
@@ -166,3 +166,22 @@ The native API keeps Gemini protocol field names. If no image was generated but 
 ```
 
 When no image is produced, `candidatesTokenCount` is usually `0`; ordinary unpaid failures do not return `usageMetadata`.
+
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="Gemini Image Generation" href="/en/api-reference/images/gemini/image-generation">
+    Models, resolution tiers and calling-style selection.
+  </Card>
+  <Card title="OpenAI-compatible" href="/en/api-reference/images/gemini/image-generation-openai">
+    Text-to-image and reference-image editing over `/v1/images/*`.
+  </Card>
+  <Card title="Async API" href="/en/api-reference/images/gemini/image-generation-async">
+    Create a task and poll for 24-hour image URLs.
+  </Card>
+</CardGroup>

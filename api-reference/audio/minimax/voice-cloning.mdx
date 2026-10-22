@@ -1,18 +1,11 @@
 ---
 title: "音色快速复刻"
+description: "MiniMax 音色快速复刻：上传音频、生成克隆音色并用指定文本试听"
 ---
 
 使用 MiniMax 音色快速复刻（Voice Cloning）能力，克隆某一音色并以指定文本试听。与 MiniMax 官方 `/v1/voice_clone` 接口保持一致，由 GregAPI 转发，无需自行签名。
 
-```bash
-export BASE_URL="https://www.gregapi.com"
-export TOKEN="oh-xxxxxxxxxxxxxxxx"
-```
-
-```http
-Authorization: Bearer <TOKEN>
-Content-Type: application/json
-```
+Base URL、鉴权与错误结构见 [通用约定](/api-reference/common)。
 
 ## 接口
 
@@ -24,7 +17,8 @@ Content-Type: application/json
 
 ## 快速开始：三步完成音色复刻
 
-### 1. 上传待复刻音频，获取 `file_id`
+<Steps>
+<Step title="上传待复刻音频，获取 file_id">
 
 ```bash
 curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
@@ -35,7 +29,8 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
 
 响应体中的 `file.file_id` 后续传给 `POST /minimaxi/v1/voice_clone`，`file.filename` 为原始文件名。
 
-### 2.（可选）上传示例音频，获取 `prompt_audio` 的 `file_id`
+</Step>
+<Step title="（可选）上传示例音频，获取 prompt_audio 的 file_id">
 
 ```bash
 curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
@@ -44,7 +39,13 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/files/upload" \
   -F "file=@/path/to/short-sample.mp3"
 ```
 
-### 3. 调用复刻接口，完成克隆并获取试听音频
+</Step>
+<Step title="调用复刻接口，完成克隆并获取试听音频">
+
+见下方「示例：带试听音频返回」，将上一步的 `file_id` 传入 `voice_clone`。
+
+</Step>
+</Steps>
 
 ## 请求参数（对齐 MiniMax 官方 `/v1/voice_clone`）
 
@@ -90,3 +91,14 @@ curl -X POST "https://www.gregapi.com/minimaxi/v1/voice_clone" \
 
 - 按复刻与试听的实际用量计费，具体价格以控制台「模型价格」页面的 MiniMax 语音条目为准。
 - 以上游消费日志的实际结算金额为准。
+
+## 相关内容
+
+<CardGroup cols={2}>
+  <Card title="通用约定" href="/api-reference/common">
+    Base URL、鉴权、异步任务与错误结构的公共规则。
+  </Card>
+  <Card title="语音合成" href="/api-reference/audio/minimax/tts">
+    MiniMax TTS 的同步与异步合成。
+  </Card>
+</CardGroup>

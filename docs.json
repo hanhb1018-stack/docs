@@ -15,12 +15,30 @@
         "tabs": [
           {
             "tab": "开发指南",
-            "pages": ["index", "quickstart", "api-overview", "authentication", "console", "account-billing", "quota-billing", "billing-reconciliation", "balance-api", "query-authorization", "request-id", "errors", "support", "security"]
+            "pages": [
+              {
+                "group": "开始使用",
+                "pages": ["index", "quickstart"]
+              },
+              {
+                "group": "接入与调试",
+                "pages": ["api-overview", "authentication", "console", "request-id", "errors"]
+              },
+              {
+                "group": "计费与账号",
+                "pages": ["quota-billing", "account-billing", "billing-reconciliation", "balance-api"]
+              },
+              {
+                "group": "安全与支持",
+                "pages": ["query-authorization", "security", "support"]
+              }
+            ]
           },
           {
             "tab": "API 参考",
             "pages": [
               "api-reference/introduction",
+              "api-reference/common",
               {
                 "group": "大语言模型（LLM）",
                 "pages": [
@@ -94,12 +112,30 @@
         "tabs": [
           {
             "tab": "Guide",
-            "pages": ["en/index", "en/quickstart", "en/api-overview", "en/authentication", "en/console", "en/account-billing", "en/quota-billing", "en/billing-reconciliation", "en/balance-api", "en/query-authorization", "en/request-id", "en/errors", "en/support", "en/security"]
+            "pages": [
+              {
+                "group": "Get Started",
+                "pages": ["en/index", "en/quickstart"]
+              },
+              {
+                "group": "Integration & Debugging",
+                "pages": ["en/api-overview", "en/authentication", "en/console", "en/request-id", "en/errors"]
+              },
+              {
+                "group": "Billing & Account",
+                "pages": ["en/quota-billing", "en/account-billing", "en/billing-reconciliation", "en/balance-api"]
+              },
+              {
+                "group": "Security & Support",
+                "pages": ["en/query-authorization", "en/security", "en/support"]
+              }
+            ]
           },
           {
             "tab": "API Reference",
             "pages": [
               "en/api-reference/introduction",
+              "en/api-reference/common",
               {
                 "group": "Large Language Models (LLM)",
                 "pages": [
@@ -174,13 +210,13 @@
     "links": [
       {
         "label": "联系我们",
-        "href": "https://gregapi.com/"
+        "href": "https://www.gregapi.com/"
       }
     ],
     "primary": {
       "type": "button",
       "label": "开始使用",
-      "href": "https://gregapi.com/"
+      "href": "https://www.gregapi.com/"
     }
   }
 }

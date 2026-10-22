@@ -1,8 +1,13 @@
 ---
 title: "GPT Image Generation"
+description: "Call GPT image models via the OpenAI-compatible API for text-to-image, editing and async tasks"
 ---
 
 Generate and edit images with OpenAI GPT image models through the OpenAI-compatible interface. This document covers both the `gpt-image-2` and `gpt-image-2.5` series, which share the same generation, editing, and async endpoints but differ in model names, quality tiers, and resolution behavior.
+
+<Note>
+This page covers **GPT image generation only** (`gpt-image-2` and the `gpt-image-2.5` series). For Doubao Seedream see [Seedream 5.0](/en/api-reference/images/doubao-seedream-5-0); for Gemini image generation see [Gemini Image Generation](/en/api-reference/images/gemini/image-generation).
+</Note>
 
 ## Model Overview
 
@@ -16,7 +21,9 @@ Generate and edit images with OpenAI GPT image models through the OpenAI-compati
 
 ## Quickstart
 
-```bash
+<CodeGroup>
+
+```bash cURL
 curl -X POST "https://www.gregapi.com/v1/images/generations" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
@@ -29,9 +36,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-Python SDK:
-
-```python
+```python Python
 from openai import OpenAI
 
 client = OpenAI(base_url="https://www.gregapi.com/v1", api_key="$TOKEN")
@@ -46,6 +51,8 @@ result = client.images.generate(
 
 print(result.data[0].b64_json)
 ```
+
+</CodeGroup>
 
 ## gpt-image-2
 
@@ -137,9 +144,12 @@ Actual available sizes remain subject to the channel your account routes to.
 - Returning URLs requires platform object storage configuration.
 - Billing is token-based by default: text input $5/M, cached text $1.25/M, image input $8/M, cached image $2/M, image output $30/M (M = million tokens; account pricing prevails). Rate source: [OpenAI pricing](https://developers.openai.com/api/docs/pricing#image-generation).
 
-## Text-to-image `/v1/images/generations`
+## Calling Styles
 
-Both series share this endpoint; the `model` field selects the model. Example request:
+<Tabs>
+<Tab title="Text-to-image">
+
+Both series share the endpoint `/v1/images/generations`; the `model` field selects the model. Example request:
 
 ```bash
 curl -X POST "https://www.gregapi.com/v1/images/generations" \
@@ -154,7 +164,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 }'
 ```
 
-## Response
+### Response
 
 ```json
 {
@@ -181,7 +191,7 @@ curl -X POST "https://www.gregapi.com/v1/images/generations" \
 | `data[].revised_prompt` | Model-optimized prompt |
 | `usage` | Token usage; token-billed channels settle by recorded or upstream usage first |
 
-## URL output
+### URL output
 
 Set `response_format=url` to obtain an image URL:
 
@@ -213,7 +223,10 @@ The behavior is deterministic:
 
 - It never silently degrades to `b64_json`.
 
-## Image editing `/v1/images/edits`
+</Tab>
+<Tab title="Editing">
+
+Editing endpoint `/v1/images/edits`.
 
 ### JSON request body
 
@@ -287,9 +300,10 @@ curl -X POST "https://www.gregapi.com/v1/images/edits" \
 
 `images[].image_url` and `images[].file_id` are mutually exclusive. Some compatible channels are internally rewritten to multipart by the platform to guarantee execution, which does not change the externally exposed interface.
 
-## Async image tasks
+</Tab>
+<Tab title="Async tasks">
 
-The platform offers managed async image task endpoints. This is not OpenAI's backend task protocol; the platform first creates an `image_<ULID>` task, a background worker runs the synchronous image request, and the polling endpoint returns the hosted image URL.
+The platform offers managed async image task endpoints, `/v1/images/generations/async` and `/v1/images/edits/async`. This is not OpenAI's backend task protocol; the platform first creates an `image_<ULID>` task, a background worker runs the synchronous image request, and the polling endpoint returns the hosted image URL.
 
 ### Text-to-image task
 
@@ -333,6 +347,9 @@ curl -X POST "https://www.gregapi.com/v1/images/edits/async" \
 
 Async tasks require publicly accessible object storage. Without it, creating a task returns `storage_not_configured`.
 
+</Tab>
+</Tabs>
+
 ## Billing
 
 `gpt-image-2` supports two billing modes; the `gpt-image-2.5` series supports token billing only:
@@ -355,7 +372,7 @@ The `model` parameter stays `gpt-image-2` in both cases; whether a request is bi
 
 With upstream `usage`, billing follows that usage; otherwise it is estimated from the number of successfully returned images, sizes, and the 2.5 quality coefficient. For `auto`, usage depends on upstream selection; results without usage represent only a platform estimate. Per-image estimates are for cost estimation only — actual bills follow consumption logs and the platform's "Model Pricing" page.
 
-### Per-image billing
+<Accordion title="Per-image billing details (resolution SKU table)">
 
 Per-image billing is the stable, low-cost channel for `gpt-image-2`, billed by successfully decoded images × the resolution SKU unit price. Text-to-image, editing, and async tasks share the same stable parameter set.
 
@@ -383,9 +400,13 @@ Per-image billing limitations:
 - `size=auto`, sizes outside the SKU table, `background`, `moderation`, `user`, `input_fidelity`, `stream`, and `partial_images` are not stable per-image parameters.
 - Under per-image billing, `usage.*` may be recorded for troubleshooting but is not a billing basis.
 
+</Accordion>
+
 In both modes, reconcile against actual amounts in consumption logs; do not treat the display token bucket as an extra billing line.
 
 ## Error codes
+
+<Accordion title="Error codes">
 
 | Error code | Description |
 |---|---|
@@ -394,3 +415,19 @@ In both modes, reconcile against actual amounts in consumption logs; do not trea
 | `unsupported_image_input` | Async editing does not support that input form |
 | `content_policy_violation` | Content moderation failed |
 | `suspected_black_image_from_upstream` | Suspected all-black image returned, blocked |
+
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Common Conventions" href="/en/api-reference/common">
+    Base URL, authentication, async tasks and error structure shared by all endpoints.
+  </Card>
+  <Card title="Doubao Seedream 5.0" href="/en/api-reference/images/doubao-seedream-5-0">
+    Volcengine Ark image model with text-to-image and image-to-image.
+  </Card>
+  <Card title="Gemini Image Generation" href="/en/api-reference/images/gemini/image-generation">
+    Gemini image generation overview and calling-style selection.
+  </Card>
+</CardGroup>
